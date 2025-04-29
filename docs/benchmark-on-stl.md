@@ -126,7 +126,7 @@ for item in time_data.items():
 <details>
 <summary>点击查看代码</summary>
 
-#### 使用 `std::vector`
+使用 `std::vector`：
 
 <details>
 <summary>点击查看代码</summary>
@@ -160,7 +160,7 @@ int main()
 
 </details>
 
-#### 使用 `std::array`
+使用 `std::array`：
 
 
 <details>
@@ -195,7 +195,7 @@ int main()
 ```
 </details>
 
-#### 使用原生数组
+使用原生数组：
 
 <details>
 <summary>点击查看代码</summary>
@@ -237,7 +237,7 @@ int main()
 <summary>点击查看代码</summary>
 
 
-#### 使用 `std::vector`
+使用 `std::vector`：
 
 <details>
 <summary>点击查看代码</summary>
@@ -275,7 +275,7 @@ int main()
 
 </details>
 
-#### 使用 `std::array`
+使用 `std::array`：
 
 
 <details>
@@ -315,7 +315,7 @@ int main()
 
 </details>
 
-#### 使用原生数组
+使用原生数组：
 
 
 <details>
@@ -363,7 +363,7 @@ int main()
 <details>
 <summary>点击查看代码</summary>
 
-#### 使用 `std::vector` 
+使用 `std::vector` ：
 
 
 <details>
@@ -397,7 +397,7 @@ int main()
 </details>
 
 
-#### 使用 `std::array`
+使用 `std::array`：
 
 
 <details>
@@ -432,7 +432,7 @@ int main()
 </details>
 
 
-#### 使用原生数组
+使用原生数组：
 
 
 <details>
