@@ -115,6 +115,9 @@ for item in time_data.items():
 
 #### 使用 `std::vector`
 
+<details>
+<summary>点击查看代码</summary>
+
 ```cpp
 #include<iostream>
 #include<vector>
@@ -142,7 +145,13 @@ int main()
 }
 ```
 
+</details>
+
 #### 使用 `std::array`
+
+
+<details>
+<summary>点击查看代码</summary>
 
 ```cpp
 #include<iostream>
@@ -171,8 +180,12 @@ int main()
     return 0;
 }
 ```
+</details>
 
 #### 使用原生数组
+
+<details>
+<summary>点击查看代码</summary>
 
 ```cpp
 #include<iostream>
@@ -200,9 +213,18 @@ int main()
     return 0;
 }
 ```
+</details>
+
+
 ### 随机访问测试
 
 #### 使用 `std::vector`
+
+
+<details>
+<summary>点击查看代码</summary>
+
+
 ```cpp
 #include<iostream>
 #include<vector>
@@ -232,7 +254,16 @@ int main()
     return 0;
 }
 ```
+
+</details>
+
 #### 使用 `std::array`
+
+
+<details>
+<summary>点击查看代码</summary>
+
+
 ```cpp
 #include<iostream>
 #include<array>
@@ -264,7 +295,15 @@ int main()
 }
 ```
 
+</details>
+
 #### 使用原生数组
+
+
+<details>
+<summary>点击查看代码</summary>
+
+
 ```cpp
 #include<iostream>
 #include<array>
@@ -296,8 +335,13 @@ int main()
 }
 ```
 
+</details>
 
 ### 结果和分析
+
+
+<details>
+<summary>点击查看测试结果</summary>
 
 ```
 -*- Results -*-
@@ -385,6 +429,8 @@ file a_clang average run time: 1619.85 ± 148.65 ms (9.177%).
 file b_clang average run time: 1602.1 ± 137.03 ms (8.553%).
 file c_clang average run time: 1648.2 ± 238.51 ms (14.471%).
 ```
+
+</details>
 
 注意这里`gcc`和`clang`有一定的I/O性能差距，但是容器本身的用时差距不大，甚至没有因为性能波动导致的时间差大。
 
