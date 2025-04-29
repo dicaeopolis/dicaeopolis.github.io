@@ -126,7 +126,7 @@ for item in time_data.items():
 <details>
 <summary>点击查看代码</summary>
 
-使用 `std::vector`：
+使用 `std::vector` ：
 
 <details>
 <summary>点击查看代码</summary>
