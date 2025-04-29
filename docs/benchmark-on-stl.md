@@ -10,6 +10,10 @@
 
 测试数据由随机算法生成并保存。例如：
 
+
+<details>
+<summary>点击查看代码</summary>
+
 ```cpp
 #include<iostream>
 #include<random>
@@ -32,7 +36,13 @@ int main()
 }
 ```
 
+</details>
+
 测试计时使用下面的脚本：
+
+
+<details>
+<summary>点击查看代码</summary>
 
 ```python
 import os
@@ -99,6 +109,8 @@ for item in time_data.items():
     print(f'file {item[0]} average run time: {int(item[1] / test_round)} ms.')
 ```
 
+</details>
+
 所有输入输出都使用 `std::cin` 和 `std::cout` 进行，流同步已经关闭。
 
 ## `std::vector`, `std::array` 和原生数组
@@ -110,8 +122,6 @@ for item in time_data.items():
 - 使用 `std::sort` 排序
 
 ### 顺序存储测试
-
-测试代码如下：
 
 #### 使用 `std::vector`
 
@@ -434,8 +444,8 @@ file c_clang average run time: 1648.2 ± 238.51 ms (14.471%).
 
 注意这里`gcc`和`clang`有一定的I/O性能差距，但是容器本身的用时差距不大，甚至没有因为性能波动导致的时间差大。
 
-结论：连续访问情形，各个容器的性能基本没有差别，因为这三个容器底层都是连续的内存块，抽象的时间成本非常低。但是考虑到数组并不是一个很“类型”的类型（比如[这个](https://makeinu-daily.pages.dev/2025/04/20)），还是更推荐使用 `std::array` 和 `std::vector` 。
+结论：对于所有情形，各个容器的性能基本没有差别，因为这三个容器底层都是连续的内存块，抽象的时间成本非常低。但是考虑到数组和裸指针纠缠不清的关系，还是更推荐使用 `std::array` 和 `std::vector` 。
 
-由于 `std::vector` 是指数扩容，均摊的时间复杂度为常数级。一般 `std::vector` 扩容的场合都是在读入阶段，所以性能开销也不大。
+由于 `std::vector` 是指数扩容，均摊的时间复杂度为 $O(1)$ 。一般 `std::vector` 扩容的场合都是在读入阶段，所以性能开销也不大。
 
 当然 `std::array` 就是原生数组很经典的零成本抽象了。
