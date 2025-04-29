@@ -16,5 +16,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CONFIG_FILE: mkdocs.yml
           EXTRA_PACKAGES: build-base
-      - run: pip install mkdocs-mathjax2
-      
+      - run: pip install mkdocs-math
+      - run: pip install pymdown-extensions
