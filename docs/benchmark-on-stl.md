@@ -123,6 +123,9 @@ for item in time_data.items():
 
 ### 顺序存储测试
 
+<details>
+<summary>点击查看代码</summary>
+
 #### 使用 `std::vector`
 
 <details>
@@ -225,11 +228,16 @@ int main()
 ```
 </details>
 
+</details>
+
 
 ### 随机访问测试
 
-#### 使用 `std::vector`
+<details>
+<summary>点击查看代码</summary>
 
+
+#### 使用 `std::vector`
 
 <details>
 <summary>点击查看代码</summary>
@@ -347,12 +355,126 @@ int main()
 
 </details>
 
+</details>
+
+
+### 排序测试
+
+<details>
+<summary>点击查看代码</summary>
+
+#### 使用 `std::vector` 
+
+
+<details>
+<summary>点击查看代码</summary>
+
+
+```cpp
+#include<iostream>
+#include<vector>
+#include<random>
+#include<algorithm>
+int main()
+{
+    std::random_device device;
+    unsigned int seed = device();
+    std::mt19937 engine(seed);
+    std::vector<int> vec;
+    int n, m;
+    std::cin >> n;
+    m = n;
+    while (n--) {
+        int x;
+        std::cin >> x;
+        vec.push_back(x);
+    }
+    std::sort(vec.begin(), vec.end());
+    return 0;
+}
+```
+
+</details>
+
+
+#### 使用 `std::array`
+
+
+<details>
+<summary>点击查看代码</summary>
+
+
+```cpp
+#include<iostream>
+#include<array>
+#include<random>
+#include<algorithm>
+constexpr size_t SIZE = 1e6+5;
+std::array<int, SIZE> vec;
+int main()
+{
+    std::random_device device;
+    unsigned int seed = device();
+    std::mt19937 engine(seed);
+    int n, m;
+    std::cin >> n;
+    m = n;
+    for(int i = 0; i < n; ++i) {
+        int x;
+        std::cin >> x;
+        vec[i] = x;
+    }
+    std::sort(vec.begin(), vec.begin() + m + 1);
+    return 0;
+}
+```
+
+</details>
+
+
+#### 使用原生数组
+
+
+<details>
+<summary>点击查看代码</summary>
+
+
+```cpp
+#include<iostream>
+#include<array>
+#include<random>
+#include<algorithm>
+
+constexpr size_t SIZE = 1e6+5;
+int vec[SIZE];
+int main()
+{
+    std::random_device device;
+    unsigned int seed = device();
+    std::mt19937 engine(seed);
+    int n, m;
+    std::cin >> n;
+    m = n;
+    for(int i = 0; i < n; ++i) {
+        int x;
+        std::cin >> x;
+        vec[i] = x;
+    }
+    std::sort(vec, vec + m + 1);
+    return 0;
+}
+```
+
+</details>
+
+</details>
+
 ### 结果和分析
 
 
 <details>
 <summary>点击查看测试结果</summary>
-
+测试1：
 ```
 -*- Results -*-
 Ran 50 rounds for 1000 items.
@@ -381,7 +503,7 @@ file a_clang average run time: 3186.65 ± 296.0 ms (9.289%).
 file b_clang average run time: 3225.5 ± 329.33 ms (10.21%).
 file c_clang average run time: 3218.15 ± 303.94 ms (9.445%).
 ```
-
+测试2：
 ```
 -*- Results -*-
 Ran 50 rounds for 1000 items.
@@ -410,7 +532,7 @@ file a_clang average run time: 1614.05 ± 114.01 ms (7.064%).
 file b_clang average run time: 1641.65 ± 185.24 ms (11.284%).
 file c_clang average run time: 1641.5 ± 146.92 ms (8.95%).
 ```
-
+测试3：
 ```
 -*- Results -*-
 Ran 50 rounds for 1000 items.
