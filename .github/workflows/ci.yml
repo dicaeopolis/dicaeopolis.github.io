@@ -15,4 +15,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CONFIG_FILE: mkdocs.yml
-          EXTRA_PACKAGES: build-base mkdocs-math pymdown-extensions
+          EXTRA_PACKAGES: build-base
+    -run: pip install pymdown-extensions
