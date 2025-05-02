@@ -10,7 +10,11 @@
 
 <details class = "warning">
 <summary>Warning</summary>
-你也看到了笔者的电脑很鶸，并且 MSYS2 环境造成的 I/O 瓶颈会对程序总的运行时间造成很大影响，所以本文会先独立跑一次纯数据I/O的计时测试，再从总运行时间里面扣除 I/O 损耗，得到最终结果。
+
+<p></p>
+<p>你也看到了笔者的电脑很鶸，并且 MSYS2 环境造成的 I/O 瓶颈会对程序总的运行时间造成很大影响，所以本文会先独立跑一次纯数据I/O的计时测试，再从总运行时间里面扣除 I/O 损耗，得到最终结果。</p>
+<p></p>
+
 </details>
 
 测试数据由随机算法生成并保存。例如：
@@ -655,9 +659,10 @@ D:/msys64/clang64/include/c++/v1/array:268:65: note: declared here
 
 请确保在编译时加上 `-std=c++17` 选项。
 
+</details>
+
 ### 测试代码
 
-</details>
 
 - `a.cc` : 原生 `std::unordered_map` 加 CRC64 哈希
 
