@@ -4,9 +4,14 @@
 
 ## 测试平台和流程
 
-本次测试使用 Intel® Pentium® Gold 8505 @ 2.50GHz 芯片，机带内存 8GB，操作系统为 Windows 24H2 26100.3775 ，编译环境为 MSYS2 ，编译器使用 clang 20.1.3 和 gcc 13.3.0。
+本次测试使用 Intel® Pentium® Gold 8505 @ 2.50GHz 芯片，机带内存 8GB，操作系统为 Windows 24H2 26100.3775 ，编译及运行环境为 MSYS2 ，编译器使用 clang 20.1.3 和 gcc 13.3.0。
 
-对每一次测试取不同数据量，每个数据量针对不同编译器测量多次后取平均值。
+对每一次测试取不同数据量，每个数据量针对不同编译器测量多次后取平均值并计算绝对和相对不确定度。
+
+<details class = "warning">
+<summary>Warning</summary>
+你也看到了笔者的电脑很鶸，并且 MSYS2 环境造成的 I/O 瓶颈会对程序总的运行时间造成很大影响，所以本文会先独立跑一次纯数据I/O的计时测试，再从总运行时间里面扣除 I/O 损耗，得到最终结果。
+</details>
 
 测试数据由随机算法生成并保存。例如：
 
@@ -38,7 +43,16 @@ int main()
 
 </details>
 
-测试计时使用下面的脚本：
+测试计时流程如下：
+
+1. 使用 `gcc` 和 `clang` 开 `-O2` 编译待测源码
+1. 编译数据生成器
+1. 开启一轮测试
+1. 对每轮测试，先运行数据生成器生成数据，再打乱可执行文件运行顺序，按打乱后的顺序依次运行并记录用时，所有 I/O 均使用 `shell` 重定向符号将 `iostream` 重定向到文件 I/O。
+1. 回到步骤 4 并重复若干次，记录每次运行用时
+1. 计算平均用时和不确定度。
+
+使用下面的脚本：
 
 
 <details>
@@ -48,21 +62,33 @@ int main()
 import os
 import time
 import random
+def calculate_uncertainties(data):
+    n = len(data)
+    if n == 0:
+        return 0.0, 0.0, 0.0
+    total = sum(data)
+    mean = total / n
+    squared_diff_sum = sum((x - mean) ** 2 for x in data)
+    absolute_uncertainty = (squared_diff_sum / (n - 1)) ** 0.5 if n > 1 else 0
+    relative_uncertainty = absolute_uncertainty / mean * 100 if mean != 0 else 0
 
-data_size = int(1e5)
-test_round = 50
+    return mean, round(absolute_uncertainty, 2), round(relative_uncertainty, 3)
+
+data_size = int(1e6)
+test_round = 30
 sorces_filename = ['a', 'b', 'c']
-datagen_path = 'datagen.exe'
+datagen_name = 'datagen'
 testdata_filename = 'testdata.in'
 output_filename = 'output.out'
 
 print('[+] Cleaning directory.')
-os.system('find . -type f -name "*.exe" ! -name "datagen.exe" -exec rm -f {} +')
-os.system('rm *.in *.out')
+os.system('rm *.in *.out *.exe')
+print('[+] Compiling data generator.')
+os.system(f'g++ -O2 .\\{datagen_name}.cc -o {datagen_name}.exe')
 
 #compile
-gcc_instructions = [f'g++ -O2 -lm -o {fn}_gcc {fn}.cc' for fn in sorces_filename]
-clang_instructions = [f'clang++ -O2 -lm -o {fn}_clang {fn}.cc' for fn in sorces_filename]
+gcc_instructions = [f'g++ -O2 -lm -o {fn}_gcc.exe {fn}.cc' for fn in sorces_filename]
+clang_instructions = [f'clang++ -O2 -lm -o {fn}_clang.exe {fn}.cc' for fn in sorces_filename]
 instructions = gcc_instructions + clang_instructions
 
 print('[+] Compiling files.')
@@ -70,23 +96,25 @@ for cmd in instructions:
     print(f'  [+] Using command: {cmd}')
     os.system(cmd)
 
-gcc_run_cmd = [(f'.\\{fn}_gcc < {testdata_filename} > {output_filename}', f'{fn}_gcc')\
+gcc_run_cmd = [(f'.\\{fn}_gcc.exe < {testdata_filename} > {output_filename}', f'{fn}_gcc')\
                 for fn in sorces_filename]
-clang_run_cmd = [(f'.\\{fn}_clang < {testdata_filename} > {output_filename}', f'{fn}_clang')\
+clang_run_cmd = [(f'.\\{fn}_clang.exe < {testdata_filename} > {output_filename}', f'{fn}_clang')\
                   for fn in sorces_filename]
 run_cmds = gcc_run_cmd + clang_run_cmd
 
 time_data = {}
 for cmd in run_cmds:
-    time_data[cmd[1]] = 0
+    time_data[cmd[1]] = []
+
+print('[+] Start test.')
 
 #test
-for round in range(test_round):
+for once_round in range(test_round):
     random.shuffle(run_cmds)
-    print(f'[+] Test round {round + 1}:')
+    print(f'[+] Test round {once_round + 1}:')
     print('[+] Cleaning directory.')
     os.system('rm *.in *.out')
-    test_gen = f'({datagen_path} {data_size}) > {testdata_filename}'
+    test_gen = f'(.\\{datagen_name}.exe {data_size}) > {testdata_filename}'
     print('[+] Generating test data.')
     os.system(test_gen)
     for cmd in run_cmds:
@@ -98,15 +126,15 @@ for round in range(test_round):
         end_time = time.time()
         elapsed_time_ms = int(1000 * (end_time - start_time))
         print(f'  [-] Over. time usage: {elapsed_time_ms} ms')
-        time_data[cmd[1]] += elapsed_time_ms
-        #time.sleep(random.uniform(0,3))
+        time_data[cmd[1]].append(elapsed_time_ms)
 
 print('[-] Time benchmark over.')
 print()
 print('-*- Results -*-')
 print(f'Ran {test_round} rounds for {data_size} items.')
 for item in time_data.items():
-    print(f'file {item[0]} average run time: {int(item[1] / test_round)} ms.')
+    mean, u, up = calculate_uncertainties(item[1])
+    print(f'File {item[0]} average run time: {mean} ± {u} ms ({up}%).')
 ```
 
 </details>
@@ -573,26 +601,14 @@ file c_clang average run time: 1648.2 ± 238.51 ms (14.471%).
 当然 `std::array` 就是原生数组很经典的零成本抽象了。
 
 
-```
--*- Results -*-
-Ran 20 rounds for 100000 items.
-File a_gcc average run time: 2186.8 ± 306.2 ms (14.002%).
-File b_gcc average run time: 2183.45 ± 462.09 ms (21.163%).
-File c_gcc average run time: 2193.9 ± 496.88 ms (22.648%).
-File unordered_map_gcc average run time: 3621.0 ± 416.51 ms (11.503%).
-File a_clang average run time: 1509.0 ± 278.87 ms (18.48%).
-File b_clang average run time: 1611.0 ± 418.77 ms (25.995%).
-File c_clang average run time: 1510.6 ± 292.32 ms (19.351%).
-File unordered_map_clang average run time: 3298.75 ± 1400.99 ms (42.47%).
-```
-
 ## `std::unordered_map` 和手写哈希
 
 本轮测试使用以下几份代码：
 
 <details class = "warning">
 <summary>Warning</summary>
-由于 CRC64 的实现利用了编译期生成 CRC 表，以及手写 `unordered_map` 的实现里面用到了一些比较新的语言特性，请确保你的编译器支持 `c++17`。如果遇到如下错误：
+
+由于 CRC64 的实现利用了编译期生成 CRC 表，以及手写 unordered_map 的实现里面用到了一些比较新的语言特性，请确保你的编译器支持 c++17。如果遇到如下错误：
 
 ```
 ./unordered_map.cc:13:35: warning: variable declaration in a constexpr function is a C++14 extension [-Wc++14-extensions]
@@ -637,7 +653,10 @@ D:/msys64/clang64/include/c++/v1/array:268:65: note: declared here
 2 errors generated.
 ```
 
-请确保加上 `-std=c++17` 选项。
+请确保在编译时加上 `-std=c++17` 选项。
+
+### 测试代码
+
 </details>
 
 - `a.cc` : 原生 `std::unordered_map` 加 CRC64 哈希
@@ -645,7 +664,7 @@ D:/msys64/clang64/include/c++/v1/array:268:65: note: declared here
 <details>
 <summary>点击查看代码</summary>
 
-```
+```cpp
 #include <array>
 #include <string>
 #include <iostream>
@@ -713,7 +732,7 @@ int main()
 <details>
 <summary>点击查看代码</summary>
 
-```
+```cpp
 #include <array>
 #include <string>
 #include <iostream>
@@ -747,7 +766,7 @@ int main()
 <details>
 <summary>点击查看代码</summary>
 
-```
+```cpp
 #include <array>
 #include <chrono>
 #include <string>
@@ -797,7 +816,7 @@ int main()
 <details>
 <summary>点击查看代码</summary>
 
-```
+```cpp
 #include <list>
 #include <array>
 #include <vector>
@@ -927,7 +946,7 @@ int main()
 <details>
 <summary>点击查看代码</summary>
 
-```
+```cpp
 #include<iostream>
 #include<random>
 #include<chrono>
@@ -952,5 +971,82 @@ int main(int argc, char* argv[])
 
 </details>
 
-本来这个测试数据是准备卡原生哈希 `126271` 的模数的，
+本来这个测试数据是准备卡原生哈希 `126271` 的模数的，但是可能是因为编译器比较新（？）貌似没卡掉，所以我改写了一下手写哈希让它能被 `126271` 卡掉。
 
+### 结果和分析
+
+<details>
+<summary>点击查看测试结果</summary>
+
+I/O 用时：
+```
+-*- Results -*-
+Ran 30 rounds for 1000000 items.
+File a_gcc average run time: 17040.7 ± 82.11 ms (0.482%).
+File b_gcc average run time: 17060.333333333332 ± 132.67 ms (0.778%).
+File c_gcc average run time: 16987.466666666667 ± 179.95 ms (1.059%).
+File unordered_map_gcc average run time: 17438.1 ± 702.97 ms (4.031%).
+File a_clang average run time: 11680.5 ± 478.32 ms (4.095%).
+File b_clang average run time: 11649.066666666668 ± 265.44 ms (2.279%).
+File c_clang average run time: 11746.3 ± 497.44 ms (4.235%).
+File unordered_map_clang average run time: 11663.466666666667 ± 262.6 ms (2.251%).
+```
+
+总用时：
+
+```
+-*- Results -*-
+Ran 30 rounds for 1000000 items.
+File a_gcc average run time: 19452.466666666667 ± 586.76 ms (3.016%).
+File b_gcc average run time: 19013.066666666666 ± 135.53 ms (0.713%).
+File c_gcc average run time: 19388.8 ± 535.83 ms (2.764%).
+File unordered_map_gcc average run time: 18337.833333333332 ± 683.24 ms (3.726%).
+File a_clang average run time: 13868.1 ± 262.02 ms (1.889%).
+File b_clang average run time: 13662.266666666666 ± 109.66 ms (0.803%).
+File c_clang average run time: 13723.433333333332 ± 68.47 ms (0.499%).
+File unordered_map_clang average run time: 12740.7 ± 140.08 ms (1.099%).
+```
+
+</details>
+
+可见扣除 I/O 用时后，使用原生 `std::unordered_map` 无论采用什么哈希算法，运行时间都在 `2s` 左右，而且新引入的哈希算法还会增大原本就很大的常数。手写的 `unordered_map` 则可以把时间卡进 `1s` 左右。
+
+下面我们来卡一下手写哈希，用相同的数据生成器，只不过把手写哈希的 CRC64 换成了按输入数据原样返回：
+
+<details>
+<summary>点击查看测试结果</summary>
+
+I/O 用时：
+```
+-*- Results -*-
+Ran 20 rounds for 100000 items.
+File a_gcc average run time: 1911.85 ± 357.35 ms (18.691%).
+File b_gcc average run time: 1838.35 ± 166.73 ms (9.069%).
+File c_gcc average run time: 1835.6 ± 153.11 ms (8.341%).
+File unordered_map_gcc average run time: 1855.55 ± 179.25 ms (9.66%).
+File a_clang average run time: 1259.5 ± 144.72 ms (11.49%).
+File b_clang average run time: 1215.6 ± 114.12 ms (9.388%).
+File c_clang average run time: 1229.0 ± 120.62 ms (9.814%).
+File unordered_map_clang average run time: 1250.1 ± 146.91 ms (11.752%).
+```
+
+总用时：
+```
+-*- Results -*-
+Ran 20 rounds for 100000 items.
+File a_gcc averag run time: 2186.8 ± 306.2 ms (14.002%).
+File b_gcc average run time: 2183.45 ± 462.09 ms (21.163%).
+File c_gcc average run time: 2193.9 ± 496.88 ms (22.648%).
+File unordered_map_gcc average run time: 3621.0 ± 416.51 ms (11.503%).
+File a_clang average run time: 1509.0 ± 278.87 ms (18.48%).
+File b_clang avera`ge run time: 1611.0 ± 418.77 ms (25.995%).
+File c_clang average run time: 1510.6 ± 292.32 ms (19.351%).
+File unordered_map_clang average run time: 3298.75 ± 1400.99 ms (42.47%).
+```
+
+</details>
+
+可以看到常规算法 `300ms` 级一下子就被卡到了 `2000ms` 级。所以可以得出结论了：
+
+- 原生的 `std::unordered_map` 常数巨大，随便手写一个都能快一倍。
+- 卡哈希对算法性能影响巨大。为了避免被卡哈希，可以用其他密码学安全的哈希或者利用时间引入随机性。
