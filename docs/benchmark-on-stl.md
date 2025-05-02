@@ -568,6 +568,389 @@ file c_clang average run time: 1648.2 ± 238.51 ms (14.471%).
 
 结论：对于所有情形，各个容器的性能基本没有差别，因为这三个容器底层都是连续的内存块，抽象的时间成本非常低。但是考虑到数组和裸指针纠缠不清的关系，还是更推荐使用 `std::array` 和 `std::vector` 。
 
-由于 `std::vector` 是指数扩容，均摊的时间复杂度为 $O(1)$ 。一般 `std::vector` 扩容的场合都是在读入阶段，所以性能开销也不大。
+由于 `std::vector` 是指数扩容，均摊的时间复杂度为 $O(1)$ 。一般 `std::vector` 扩容的场合都是在读入阶段，所以性能开销也不大。而且即使 `std::vector` 的数据是申请在堆上面，对性能的影响也不大。
 
 当然 `std::array` 就是原生数组很经典的零成本抽象了。
+
+
+```
+-*- Results -*-
+Ran 20 rounds for 100000 items.
+File a_gcc average run time: 2186.8 ± 306.2 ms (14.002%).
+File b_gcc average run time: 2183.45 ± 462.09 ms (21.163%).
+File c_gcc average run time: 2193.9 ± 496.88 ms (22.648%).
+File unordered_map_gcc average run time: 3621.0 ± 416.51 ms (11.503%).
+File a_clang average run time: 1509.0 ± 278.87 ms (18.48%).
+File b_clang average run time: 1611.0 ± 418.77 ms (25.995%).
+File c_clang average run time: 1510.6 ± 292.32 ms (19.351%).
+File unordered_map_clang average run time: 3298.75 ± 1400.99 ms (42.47%).
+```
+
+## `std::unordered_map` 和手写哈希
+
+本轮测试使用以下几份代码：
+
+<details class = "warning">
+<summary>Warning</summary>
+由于 CRC64 的实现利用了编译期生成 CRC 表，以及手写 `unordered_map` 的实现里面用到了一些比较新的语言特性，请确保你的编译器支持 `c++17`。如果遇到如下错误：
+
+```
+./unordered_map.cc:13:35: warning: variable declaration in a constexpr function is a C++14 extension [-Wc++14-extensions]
+   13 |         std::array<uint64_t, 256> table = {};
+      |                                   ^
+./unordered_map.cc:14:9: error: statement not allowed in constexpr function
+   14 |         for (int i = 0; i < 256; ++i) {
+      |         ^
+./unordered_map.cc:55:9: error: 'auto' return without trailing return type; deduced return types are a C++14 extension
+   55 |         auto& get_item(const key_type& key)
+      |         ^
+./unordered_map.cc:60:15: error: 'auto' return without trailing return type; deduced return types are a C++14 extension
+   60 |         const auto& get_item(const key_type& key) const
+      |               ^
+1 warning and 3 errors generated.
+```
+
+或者如下错误：
+
+```
+./unordered_map.cc:11:41: error: constexpr function never produces a constant expression [-Winvalid-constexpr]
+   11 |     constexpr std::array<uint64_t, 256> generate_crc64_table()
+      |                                         ^~~~~~~~~~~~~~~~~~~~
+./unordered_map.cc:18:13: note: non-constexpr function 'operator[]' cannot be used in a constant expression
+   18 |             table[i] = crc;
+      |             ^
+D:/msys64/clang64/include/c++/v1/array:268:65: note: declared here
+  268 |   _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX17 reference operator[](size_type __n) _NOEXCEPT {
+      |                                                                 ^
+./unordered_map.cc:23:41: error: constexpr variable 'crc64_table' must be initialized by a constant expression
+   23 |     constexpr std::array<uint64_t, 256> crc64_table = generate_crc64_table();
+      |                                         ^             ~~~~~~~~~~~~~~~~~~~~~~
+./unordered_map.cc:18:13: note: non-constexpr function 'operator[]' cannot be used in a constant expression
+   18 |             table[i] = crc;
+      |             ^
+./unordered_map.cc:23:55: note: in call to 'generate_crc64_table()'
+   23 |     constexpr std::array<uint64_t, 256> crc64_table = generate_crc64_table();
+      |                                                       ^~~~~~~~~~~~~~~~~~~~~~
+D:/msys64/clang64/include/c++/v1/array:268:65: note: declared here
+  268 |   _LIBCPP_HIDE_FROM_ABI _LIBCPP_CONSTEXPR_SINCE_CXX17 reference operator[](size_type __n) _NOEXCEPT {
+      |                                                                 ^
+2 errors generated.
+```
+
+请确保加上 `-std=c++17` 选项。
+</details>
+
+- `a.cc` : 原生 `std::unordered_map` 加 CRC64 哈希
+
+<details>
+<summary>点击查看代码</summary>
+
+```
+#include <array>
+#include <string>
+#include <iostream>
+#include <unordered_map>
+
+constexpr uint64_t CRC64_POLY = 0x42F0E1EBA9EA3693ULL;
+
+constexpr std::array<uint64_t, 256> generate_crc64_table()
+{
+    std::array<uint64_t, 256> table = {};
+    for (int i = 0; i < 256; ++i) {
+        uint64_t crc = i;
+        for (int j = 0; j < 8; ++j)
+            crc = (crc & 1) ? (crc >> 1) ^ CRC64_POLY : crc >> 1;
+        table[i] = crc;
+    }
+    return table;
+}
+
+constexpr std::array<uint64_t, 256> crc64_table = generate_crc64_table();
+
+uint64_t crc64(const uint8_t *data, size_t length)
+{
+    uint64_t crc = 0xFFFFFFFFFFFFFFFFULL;
+    for (size_t i = 0; i < length; i++) {
+        uint8_t index = (uint8_t)(crc ^ data[i]);
+        crc = (crc >> 8) ^ crc64_table[index];
+    }
+    return crc ^ 0xFFFFFFFFFFFFFFFFULL;
+}
+
+struct my_hash {
+    uint64_t operator()(const uint64_t& q) const
+    {
+        uint64_t data = q;
+        uint8_t *d = (uint8_t*)&data;
+        return crc64(d, sizeof(data));
+    }
+};
+
+int main()
+{
+    int n, m;
+    std::cin>>n>>m;
+    std::unordered_map<uint64_t, bool, my_hash> map;
+    while(n--)
+    {
+        uint64_t s;
+        std::cin >> s;
+        map[s] = true;
+    }
+    while(m--)
+    {
+        uint64_t q;
+        std::cin >> q;
+        std::cout << (map[q] ? "hit\n" : "miss\n");
+    }
+    return 0;
+}    
+```
+</details>
+
+- `b.cc` : 原生 `std::unordered_map` 加原生哈希
+
+<details>
+<summary>点击查看代码</summary>
+
+```
+#include <array>
+#include <string>
+#include <iostream>
+#include <unordered_map>
+
+int main()
+{
+    int n, m;
+    std::cin>>n>>m;
+    std::unordered_map<uint64_t, bool> map;
+    while(n--)
+    {
+        uint64_t s;
+        std::cin >> s;
+        map[s] = true;
+    }
+    while(m--)
+    {
+        uint64_t q;
+        std::cin >> q;
+        std::cout << (map[q] ? "hit\n" : "miss\n");
+    }
+    return 0;
+}    
+```
+
+</details>
+
+- `c.cc` : 原生 `std::unordered_map` 加 [OI-Wiki 这个条目里面介绍的](https://oi-wiki.org/lang/csl/unordered-container/)哈希
+
+<details>
+<summary>点击查看代码</summary>
+
+```
+#include <array>
+#include <chrono>
+#include <string>
+#include <iostream>
+#include <unordered_map>
+
+struct my_hash {
+    static uint64_t splitmix64(uint64_t x) {
+        x += 0x9e3779b97f4a7c15;
+        x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9;
+        x = (x ^ (x >> 27)) * 0x94d049bb133111eb;
+        return x ^ (x >> 31);
+    }
+  
+    size_t operator()(uint64_t x) const {
+        static const uint64_t FIXED_RANDOM =
+            std::chrono::steady_clock::now().time_since_epoch().count();
+      return splitmix64(x + FIXED_RANDOM);
+    }
+  };
+
+int main()
+{
+    int n, m;
+    std::cin>>n>>m;
+    std::unordered_map<uint64_t, bool, my_hash> map;
+    while(n--)
+    {
+        uint64_t s;
+        std::cin >> s;
+        map[s] = true;
+    }
+    while(m--)
+    {
+        uint64_t q;
+        std::cin >> q;
+        std::cout << (map[q] ? "hit\n" : "miss\n");
+    }
+    return 0;
+}
+```
+
+</details>
+
+- `unordered_map.cc` : 手写实现哈希表加 CRC64 哈希
+
+<details>
+<summary>点击查看代码</summary>
+
+```
+#include <list>
+#include <array>
+#include <vector>
+#include <chrono>
+#include <utility>
+#include <iostream>
+
+namespace crc64 {    
+    constexpr uint64_t CRC64_POLY = 0x42F0E1EBA9EA3693ULL;
+
+    constexpr std::array<uint64_t, 256> generate_crc64_table()
+    {
+        std::array<uint64_t, 256> table = {};
+        for (int i = 0; i < 256; ++i) {
+            uint64_t crc = i;
+            for (int j = 0; j < 8; ++j)
+                crc = (crc & 1) ? (crc >> 1) ^ CRC64_POLY : crc >> 1;
+            table[i] = crc;
+        }
+        return table;
+    }
+
+    constexpr std::array<uint64_t, 256> crc64_table = generate_crc64_table();
+
+    uint64_t crc64(const uint8_t *data, size_t length)
+    {
+        uint64_t crc = 0xFFFFFFFFFFFFFFFFULL;
+        for (size_t i = 0; i < length; i++) {
+            uint8_t index = (uint8_t)(crc ^ data[i]);
+            crc = (crc >> 8) ^ crc64_table[index];
+        }
+        return crc ^ 0xFFFFFFFFFFFFFFFFULL;
+    }
+}
+
+
+constexpr size_t hash_mod = 126271;
+
+template<typename key_type, typename value_type>
+class unordered_map {
+    typedef std::pair<key_type, value_type> mapped_type;
+    private:
+        std::vector<std::list<mapped_type>> table;
+        size_t pair_cnt = 0;
+        size_t get_idx(const key_type& key)
+        {
+            auto hash = crc64::crc64((uint8_t*) &key, sizeof(key));
+            return static_cast<size_t>(hash % hash_mod);
+        }
+        const size_t get_idx(const key_type& key) const
+        {
+            auto hash = crc64::crc64((uint8_t*) &key, sizeof(key));
+            return static_cast<size_t>(hash % hash_mod);
+        }
+        auto& get_item(const key_type& key)
+        {
+            auto idx = get_idx(key);
+            return table[idx];
+        }
+        const auto& get_item(const key_type& key) const
+        {
+            auto idx = get_idx(key);
+            return table[idx];
+        }
+    public:
+        unordered_map() : table(hash_mod) {}
+        value_type& operator[](const key_type& key)
+        {
+            auto& item = get_item(key);
+            for(auto& val : item)
+                if(val.first == key)
+                    return val.second;
+            value_type val;
+            item.push_back(std::make_pair(key, val));
+            ++pair_cnt;
+            return item.back().second;
+        }
+        bool empty() const noexcept
+        {
+            return !(pair_cnt);
+        }
+        bool find(const key_type &key) const noexcept
+        {
+            const auto& item = get_item(key);
+            for(const auto& val : item)
+                if(val.first == key)
+                    return true;
+            return false;
+        }
+        void erase(const key_type& key)
+        {
+            auto& item = get_item(key);
+            for(auto it = item.begin(); it != item.end(); ++it)
+                if(it->first == key) {
+                    item.erase(it);
+                    --pair_cnt;
+                    break;
+                }
+        }      
+};
+
+int main()
+{
+    int n, m;
+    std::cin>>n>>m;
+    unordered_map<uint64_t, bool> map;
+    while(n--)
+    {
+        uint64_t s;
+        std::cin >> s;
+        map[s] = true;
+    }
+    while(m--)
+    {
+        uint64_t q;
+        std::cin >> q;
+        std::cout << (map.find(q) ? "hit\n" : "miss\n");
+    }
+    return 0;
+}
+```
+
+</details>
+
+测试数据使用下面的代码生成：
+
+<details>
+<summary>点击查看代码</summary>
+
+```
+#include<iostream>
+#include<random>
+#include<chrono>
+
+int main(int argc, char* argv[])
+{
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::cout.tie(nullptr);
+    std::random_device device;
+    unsigned int seed = device();
+    std::mt19937 engine(seed);
+    int n = atoi(argv[1]), m = 3 * n;
+    std::cout << n << ' ' << m << ' ';
+    while(n--)
+        std::cout<< (engine() % 100000) * 126271 + (n % 2) <<' ';
+    while(m--)
+        std::cout<< (engine() % 100000) * 126271 + (engine()) % 100 <<' ';
+    return 0;
+}
+```
+
+</details>
+
+本来这个测试数据是准备卡原生哈希 `126271` 的模数的，
+
