@@ -612,7 +612,7 @@ file c_clang average run time: 1648.2 ± 238.51 ms (14.471%).
 <details class = "warning">
 <summary>Warning</summary>
 
-由于 CRC64 的实现利用了编译期生成 CRC 表，以及手写 unordered_map 的实现里面用到了一些比较新的语言特性，请确保你的编译器支持 c++17。如果遇到如下错误：
+<p>由于 CRC64 的实现利用了编译期生成 CRC 表，以及手写 unordered_map 的实现里面用到了一些比较新的语言特性，请确保你的编译器支持 c++17。如果遇到如下错误：</p>
 
 ```
 ./unordered_map.cc:13:35: warning: variable declaration in a constexpr function is a C++14 extension [-Wc++14-extensions]
@@ -657,7 +657,7 @@ D:/msys64/clang64/include/c++/v1/array:268:65: note: declared here
 2 errors generated.
 ```
 
-请确保在编译时加上 `-std=c++17` 选项。
+<p>请确保在编译时加上 `-std=c++17` 选项。</p>
 
 </details>
 
@@ -1055,3 +1055,6 @@ File unordered_map_clang average run time: 3298.75 ± 1400.99 ms (42.47%).
 
 - 原生的 `std::unordered_map` 常数巨大，随便手写一个都能快一倍。
 - 卡哈希对算法性能影响巨大。为了避免被卡哈希，可以用其他密码学安全的哈希或者利用时间引入随机性。
+
+## `std::unordered_map`和手写哈希对比`std::map`
+
