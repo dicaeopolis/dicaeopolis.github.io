@@ -129,7 +129,7 @@ int main()
 }
 ```
 
-一个更简单的版本：
+一个更简单的版本，支持任意模数：
 
 ```cpp
 #include<limits>
@@ -140,7 +140,7 @@ int main()
 /* Notes:
  *  0. Use C++ 20 or newer. (for operator <=>)
  *  1. Modulus `mod` must be less than Sqrt(MAX_OF_NUMTYPE), or it will overflow in multiplication.
- *  3. Use -O2 or higher optimization level.
+ *  2. Use -O2 or higher optimization level.
  */
 template<typename NumType, uint64_t MOD>
 class Ring
