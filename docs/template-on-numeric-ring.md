@@ -1,7 +1,7 @@
 # 整数环取模模板
 适合各种算法竞赛的全局取模场景使用。
 
-代码：
+一个复杂一点的版本，只支持素数模数但是功能和优化会更多：
 
 ```cpp
 #include<limits>
@@ -10,7 +10,7 @@
 
 /* A Modulo-safe Template Designed for Competitive Programming. */
 /* Notes:
- *  0. Use C++ 20 or newer.
+ *  0. Use C++ 20 or newer. (for operator <=>)
  *  1. Modulus `mod` must be less than Sqrt(MAX_OF_NUMTYPE), or it will overflow in multiplication.
  *  2. Modulus must be a prime.
  *  3. Use -O2 or higher optimization level.
@@ -90,6 +90,75 @@ class Ring
             if(num < b.num) num = num + MOD - b.num;
             else num -= b.num;
         }
+        auto operator<=>(const Ring& b) const { return num <=> b.num; }
+        template<typename T, uint64_t M>
+        friend std::istream& operator>>(std::istream& in, Ring<T, M>& a);
+        template<typename T, uint64_t M>
+        friend std::ostream& operator<<(std::ostream& out, const Ring<T, M>& a);
+};
+template<typename NumType, uint64_t MOD>
+std::istream& operator>>(std::istream& in, Ring<NumType, MOD>& a)
+{
+    NumType tmp;
+    in >> tmp;
+    a.num = tmp % MOD;
+    return in;
+}
+template<typename NumType, uint64_t MOD>
+std::ostream& operator<<(std::ostream& out, const Ring<NumType, MOD>& a)
+{
+    out << a.num;
+    return out;
+}
+using u64 = unsigned long long;
+using Z = Ring<u64, 998244353>;
+
+int main()
+{
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    std::cout.tie(nullptr);
+    Z x, y;
+    std::cin >> x >> y;
+    std::cout << "x + y : " << x+y << '\n';
+    std::cout << "x - y : " << x-y << '\n';
+    std::cout << "x * y : " << x*y << '\n';
+    std::cout << "x * inv y : " << x/y << '\n';
+    std::cout << "x ^ y : " << (x^y) << '\n';
+    return 0;
+}
+```
+
+一个更简单的版本：
+
+```cpp
+#include<limits>
+#include<cstdint>
+#include<iostream>
+
+/* A Modulo-safe Template Designed for Competitive Programming. ~Short Ver.~*/
+/* Notes:
+ *  0. Use C++ 20 or newer. (for operator <=>)
+ *  1. Modulus `mod` must be less than Sqrt(MAX_OF_NUMTYPE), or it will overflow in multiplication.
+ *  3. Use -O2 or higher optimization level.
+ */
+template<typename NumType, uint64_t MOD>
+class Ring
+{
+    static_assert(MOD <= std::numeric_limits<NumType>::max() / MOD, "MOD is too large (MOD^2 exceeds NumType max)");
+    NumType num;
+    private:
+    public:
+        Ring() { num = 0; }
+        Ring(NumType x) : num(x % MOD) { }
+        Ring operator+(const Ring<NumType, MOD>& b) const { return Ring((num + b.num) % MOD); }
+        Ring operator-(const Ring& b) const { return Ring((num + MOD - b.num) % MOD); }
+        Ring operator*(const Ring& b) const { return Ring((1ULL * num * b.num) % MOD); }
+        Ring operator/(const Ring& b) const { return Ring(num / b.num); }
+        Ring operator%(const Ring& b) const { return Ring(num % b.num); } // b.num < MOD is ensured. This operator only cuts down size.
+        Ring operator^(const Ring& exp) const { return Ring(pow_mod(num, exp.num)); }
+        void operator+=(const Ring& b) { num = (num + b.num) % MOD; }
+        void operator-=(const Ring& b) { num = (num + MOD - b.num) % MOD; }
         auto operator<=>(const Ring& b) const { return num <=> b.num; }
         template<typename T, uint64_t M>
         friend std::istream& operator>>(std::istream& in, Ring<T, M>& a);
