@@ -22,7 +22,7 @@ constexpr bool is_prime(uint64_t n)
     return true;
 }
 template<typename NumType, uint64_t MOD>
-class Ring
+class/*LIVE HOUSE*/RiNG
 {
     static_assert(std::is_unsigned_v<NumType>, "NumType must be unsigned");
     static_assert(MOD > 1, "MOD must be greater than 1");
@@ -30,7 +30,7 @@ class Ring
     static_assert(MOD <= std::numeric_limits<NumType>::max() / MOD, "MOD is too large (MOD^2 exceeds NumType max)");
     NumType num;
     private:
-        Ring inv() const { return Ring(pow_mod(num, MOD - 2)); }
+        RiNG inv() const { return RiNG(pow_mod(num, MOD - 2)); }
         static NumType pow_mod(NumType a, NumType b) {
             NumType res = 1;
             a %= MOD;
@@ -42,37 +42,37 @@ class Ring
             return res;
         }
     public:
-        Ring() { num = 0; }
-        Ring(NumType x) : num(x) { }
-        Ring operator+(const Ring& b) const { return Ring(static_cast<NumType>((num + b.num) % MOD)); }
-        Ring operator-(const Ring& b) const  { return Ring(static_cast<NumType>((num + MOD - b.num) % MOD)); }
-        Ring operator*(const Ring& b) const  { return Ring(static_cast<NumType>((1ULL * b.num * num) % MOD)); }
-        Ring operator/(const Ring& b) const 
+        RiNG() { num = 0; }
+        RiNG(NumType x) : num(x) { }
+        RiNG operator+(const RiNG& b) const { return RiNG(static_cast<NumType>((num + b.num) % MOD)); }
+        RiNG operator-(const RiNG& b) const  { return RiNG(static_cast<NumType>((num + MOD - b.num) % MOD)); }
+        RiNG operator*(const RiNG& b) const  { return RiNG(static_cast<NumType>((1ULL * b.num * num) % MOD)); }
+        RiNG operator/(const RiNG& b) const 
         {
             if constexpr (is_prime(MOD)) return *this * b.inv();
             else static_assert(false, "Require a prime modulus.");
         }
-        Ring operator%(const Ring& b) const { return Ring((num % b.num) % MOD); } // cut down size.
-        Ring operator^(const Ring& exp) const { return Ring(pow_mod(num, exp.num)); }
+        RiNG operator%(const RiNG& b) const { return RiNG((num % b.num) % MOD); } // cut down size.
+        RiNG operator^(const RiNG& exp) const { return RiNG(pow_mod(num, exp.num)); }
         template<typename T, uint64_t M>
-        friend std::istream& operator>>(std::istream& in, Ring<T, M>& a);
+        friend std::istream& operator>>(std::istream& in, RiNG<T, M>& a);
         template<typename T, uint64_t M>
-        friend std::ostream& operator<<(std::ostream& out, const Ring<T, M>& a);
+        friend std::ostream& operator<<(std::ostream& out, const RiNG<T, M>& a);
 };
 template<typename NumType, uint64_t MOD>
-std::istream& operator>>(std::istream& in, Ring<NumType, MOD>& a)
+std::istream& operator>>(std::istream& in, RiNG<NumType, MOD>& a)
 {
     in >> a.num;
     return in;
 }
 template<typename NumType, uint64_t MOD>
-std::ostream& operator<<(std::ostream& out, const Ring<NumType, MOD>& a)
+std::ostream& operator<<(std::ostream& out, const RiNG<NumType, MOD>& a)
 {
     out << a.num;
     return out;
 }
 using u64 = unsigned long long;
-using Z = Ring<u64, 998244353>;
+using Z = RiNG<u64, 998244353>;
 
 int main()
 {
