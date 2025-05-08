@@ -52,13 +52,13 @@ class Ring
             if(res >= MOD) return Ring(res - MOD);
             else return Ring(res);
         }
-        Ring operator-(const Ring& b) const  
+        Ring operator-(const Ring<NumType, MOD>& b) const  
         {
             //Assert num and b.num are in [0, MOD)
             if(num < b.num) return Ring(num + MOD - b.num);
             else return Ring(num - b.num);
         }
-        Ring operator*(const Ring& b) const
+        Ring operator*(const Ring<NumType, MOD>& b) const
         {
             if constexpr (MOD >= std::numeric_limits<uint32_t>::max())
                 return Ring(static_cast<NumType>((static_cast<__uint128_t>(num) * b.num) % MOD));
@@ -72,25 +72,25 @@ class Ring
                 return Ring(res);
             }
         }
-        Ring operator/(const Ring& b) const 
+        Ring operator/(const Ring<NumType, MOD>& b) const 
         {
             if constexpr (is_prime(MOD)) return *this * b.inv();
             else static_assert(!(sizeof(NumType)), "Require a prime modulus.");
         }
-        Ring operator%(const Ring& b) const { return Ring(num % b.num); } // b.num < MOD is ensured. This operator only cuts down size.
-        Ring operator^(const Ring& exp) const { return Ring(pow_mod(num, exp.num)); }
-        void operator+=(const Ring& b)
+        Ring operator%(const Ring<NumType, MOD>& b) const { return Ring(num % b.num); } // b.num < MOD is ensured. This operator only cuts down size.
+        Ring operator^(const Ring<NumType, MOD>& exp) const { return Ring(pow_mod(num, exp.num)); }
+        void operator+=(const Ring<NumType, MOD>& b)
         {
             NumType res = num + b.num;
             if(res >= MOD) num = res - MOD;
             else num = res;
         }
-        void operator-=(const Ring& b)
+        void operator-=(const Ring<NumType, MOD>& b)
         {
             if(num < b.num) num = num + MOD - b.num;
             else num -= b.num;
         }
-        auto operator<=>(const Ring& b) const { return num <=> b.num; }
+        auto operator<=>(const Ring<NumType, MOD>& b) const { return num <=> b.num; }
         template<typename T, uint64_t M>
         friend std::istream& operator>>(std::istream& in, Ring<T, M>& a);
         template<typename T, uint64_t M>
@@ -152,18 +152,18 @@ class Ring
         Ring() { num = 0; }
         Ring(NumType x) : num(x % MOD) { }
         Ring operator+(const Ring<NumType, MOD>& b) const { return Ring((num + b.num) % MOD); }
-        Ring operator-(const Ring& b) const { return Ring((num + MOD - b.num) % MOD); }
-        Ring operator*(const Ring& b) const { return Ring((1ULL * num * b.num) % MOD); }
-        Ring operator/(const Ring& b) const { return Ring(num / b.num); } // inverts are not assured.
-        Ring operator%(const Ring& b) const { return Ring(num % b.num); } // b.num < MOD is ensured. This operator only cuts down size.
-        void operator+=(const Ring& b) { num = (num + b.num) % MOD; }
-        void operator-=(const Ring& b) { num = (num + MOD - b.num) % MOD; }
-        bool operator<(const Ring& b) const { return num < b.num; }
-        bool operator>(const Ring& b) const { return num > b.num; }
-        bool operator==(const Ring& b) const { return num == b.num; }
-        bool operator<=(const Ring& b) const { return num <= b.num; }
-        bool operator>=(const Ring& b) const { return num >= b.num; }
-        bool operator!=(const Ring& b) const { return num != b.num; }        
+        Ring operator-(const Ring<NumType, MOD>& b) const { return Ring((num + MOD - b.num) % MOD); }
+        Ring operator*(const Ring<NumType, MOD>& b) const { return Ring((1ULL * num * b.num) % MOD); }
+        Ring operator/(const Ring<NumType, MOD>& b) const { return Ring(num / b.num); } // inverts are not assured.
+        Ring operator%(const Ring<NumType, MOD>& b) const { return Ring(num % b.num); } // b.num < MOD is ensured. This operator only cuts down size.
+        void operator+=(const Ring<NumType, MOD>& b) { num = (num + b.num) % MOD; }
+        void operator-=(const Ring<NumType, MOD>& b) { num = (num + MOD - b.num) % MOD; }
+        bool operator<(const Ring<NumType, MOD>& b) const { return num < b.num; }
+        bool operator>(const Ring<NumType, MOD>& b) const { return num > b.num; }
+        bool operator==(const Ring<NumType, MOD>& b) const { return num == b.num; }
+        bool operator<=(const Ring<NumType, MOD>& b) const { return num <= b.num; }
+        bool operator>=(const Ring<NumType, MOD>& b) const { return num >= b.num; }
+        bool operator!=(const Ring<NumType, MOD>& b) const { return num != b.num; }        
         template<typename T, uint64_t M>
         friend std::istream& operator>>(std::istream& in, Ring<T, M>& a);
         template<typename T, uint64_t M>
