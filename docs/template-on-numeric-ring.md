@@ -129,7 +129,7 @@ int main()
 }
 ```
 
-一个更简单的版本，支持任意模数：
+一个更简单的版本，支持任意模数，但不支持逆元除法：
 
 ```cpp
 #include<limits>
@@ -138,9 +138,9 @@ int main()
 
 /* A Modulo-safe Template Designed for Competitive Programming. ~Short Ver.~*/
 /* Notes:
- *  0. Use C++ 20 or newer. (for operator <=>)
+ *  0. Use C++ 11 or newer.
  *  1. Modulus `mod` must be less than Sqrt(MAX_OF_NUMTYPE), or it will overflow in multiplication.
- *  2. Use -O2 or higher optimization level.
+ *  3. Use -O2 or higher optimization level.
  */
 template<typename NumType, uint64_t MOD>
 class Ring
@@ -154,12 +154,16 @@ class Ring
         Ring operator+(const Ring<NumType, MOD>& b) const { return Ring((num + b.num) % MOD); }
         Ring operator-(const Ring& b) const { return Ring((num + MOD - b.num) % MOD); }
         Ring operator*(const Ring& b) const { return Ring((1ULL * num * b.num) % MOD); }
-        Ring operator/(const Ring& b) const { return Ring(num / b.num); }
+        Ring operator/(const Ring& b) const { return Ring(num / b.num); } // inverts are not assured.
         Ring operator%(const Ring& b) const { return Ring(num % b.num); } // b.num < MOD is ensured. This operator only cuts down size.
-        Ring operator^(const Ring& exp) const { return Ring(pow_mod(num, exp.num)); }
         void operator+=(const Ring& b) { num = (num + b.num) % MOD; }
         void operator-=(const Ring& b) { num = (num + MOD - b.num) % MOD; }
-        auto operator<=>(const Ring& b) const { return num <=> b.num; }
+        bool operator<(const Ring& b) const { return num < b.num; }
+        bool operator>(const Ring& b) const { return num > b.num; }
+        bool operator==(const Ring& b) const { return num == b.num; }
+        bool operator<=(const Ring& b) const { return num <= b.num; }
+        bool operator>=(const Ring& b) const { return num >= b.num; }
+        bool operator!=(const Ring& b) const { return num != b.num; }        
         template<typename T, uint64_t M>
         friend std::istream& operator>>(std::istream& in, Ring<T, M>& a);
         template<typename T, uint64_t M>
@@ -193,7 +197,6 @@ int main()
     std::cout << "x - y : " << x-y << '\n';
     std::cout << "x * y : " << x*y << '\n';
     std::cout << "x * inv y : " << x/y << '\n';
-    std::cout << "x ^ y : " << (x^y) << '\n';
     return 0;
 }
 ```
