@@ -1,10 +1,12 @@
 # 嗯造轮子
 
-某数据结构课程不允许用stl，但我又挺喜欢用stl的，咋办？
+某数据结构课程不允许用STL，但我又挺喜欢用STL的，咋办？
 
 🧐……🤓💡
 
 反正我也用不上太多操作，不妨直接封装常用的：
+
+（别想了，没有手撕红黑树）
 
 ## `std::vector`
 ```cpp
@@ -121,7 +123,9 @@ class _deque
 };
 ```
 
-### `deque`实现：
+注意这里我尽量使得双向链表操作局限在三个节点的窗口里面。删除节点的操作需要有一个头节点来顶住，不然节点一删，就找不着北了。
+
+### `deque`实现
 
 ```cpp
 template<typename T>
@@ -169,7 +173,8 @@ class deque
         }
 };
 ```
-### `queue`实现：
+
+### `queue`实现
 
 ```cpp
 template<typename T>
@@ -202,7 +207,7 @@ class stack
         T top() { return _data.back(); }
 };
 ```
-### `list`实现：
+### `list`实现
 
 ```cpp
 template<typename T>
@@ -261,10 +266,13 @@ class list
         }
 };
 ```
+
+这里自定义了迭代器类，供顺序访问使用。
+
 ## 哈希表
 
 利用CRC64进行哈希并在编译期计算了系数表。
-依赖前面的`list`和`vector`
+依赖前面的`list`和`vector`，当然也可以使用现成的STL。
 
 ```cpp
 #include <array>
