@@ -6,7 +6,7 @@
 
 反正我也用不上太多操作，不妨直接封装常用的：
 
-## `std::vector`的手搓
+## `std::vector`
 ```cpp
 #include <cstdlib>
 template <typename T>
@@ -51,7 +51,7 @@ class vector
 };
 ```
 
-# 利用双向链表实现的`std::deque`、`std::queue`、`std::stack`和`std::list`：
+## 利用双向链表实现的`std::deque`、`std::queue`、`std::stack`和`std::list`
 
 双向链表结点基础模板：
 ```cpp
@@ -261,7 +261,7 @@ class list
         }
 };
 ```
-# 哈希表
+## 哈希表
 
 利用CRC64进行哈希并在编译期计算了系数表。
 依赖前面的`list`和`vector`
