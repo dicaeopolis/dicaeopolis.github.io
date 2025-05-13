@@ -191,7 +191,7 @@ class queue
 };
 ```
 
-### `stack`实现：
+### `stack`实现
 
 ```cpp
 template<typename T>
@@ -272,6 +272,7 @@ class list
 ## 哈希表
 
 利用CRC64进行哈希并在编译期计算了系数表。
+
 依赖前面的`list`和`vector`，当然也可以使用现成的STL。
 
 ```cpp
