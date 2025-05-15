@@ -80,13 +80,15 @@ $$
    C. $\text{top}--;\ s[\text{top}] = x;$  
    D. $s[\text{top}] = x;\ \text{top}--;$  
 
-**答案：**
+**答案：C。** 其实本题考虑到ABD选项都会造成数组下标越界访问就可以解出。但这个题本意是说从这个数组的尾端向前装数据，也能构成一个栈。这么做可以和一个从前往后装数据的栈组合成一个对顶栈。
 
 5. **设环形队列中数组的下标为$0\sim N-1$，其队头、队尾指针分别为$\text{front}$和$\text{rear}$（$\text{front}$指向队列中队头元素的前一个位置，$\text{rear}$指向队尾元素的位置），则其元素个数为**______。  
    A. $\text{rear} - \text{front}$  
    B. $\text{rear} - \text{front} - 1$  
    C. $(\text{rear} - \text{front})\%N + 1$  
    D. $(\text{rear} - \text{front} + N)\%N$  
+
+**答案：D。** 
 
 6. **若用一个大小为6的数组来实现环形队列，队头指针$\text{front}$指向队列中队头元素的前一个位置，队尾指针$\text{rear}$指向队尾元素的位置。若当前$\text{rear}$和$\text{front}$的值分别为0和3，当从队列中删除一个元素，再加入两个元素后，$\text{rear}$和$\text{front}$的值分别为**______。  
    A. 1和5  
