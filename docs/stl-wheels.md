@@ -19,7 +19,7 @@ class vector
         size_t _size;
         size_t _capacity;
 
-        constexpr static double phi = 1.618;
+        constexpr static double phi = 1.5;
         constexpr static int initial_data_cnt = 16;
         void memory_expand()
         {
