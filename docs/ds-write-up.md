@@ -408,7 +408,7 @@ $$
 <summary> 答案 </summary>
 
 <p></p>
-思路是从根节点开始深搜，如果当前节点的子节点值为 x，那么该节点就是所求的节点 p。
+思路是从根节点开始深搜，如果当前节点的子节点值为 x，那么该节点就是所求的节点 p。而且如果已经求得 p，那么剩下的搜索都可以剪枝跳过了。
 <p></p>
 
 ```cpp
@@ -439,6 +439,9 @@ void findparent(BTNode *b, ElemType x, BTNode *&p)
 
 <summary> 答案 </summary>
 
+
+<p></p>
+任意使用一种搜索算法，如果从 i 出发能够搜索到 j，并且从 j 出发能够搜索到 i，那么就说明两者连通。为方便实现我这里使用深度优先搜索。
 <p></p>
 
 ```cpp
@@ -457,6 +460,19 @@ void dfs(int curr, const int& j, bool& tag)
       if(!vis[adj])
          dfs(adj, j, tag);
 }
+bool is_connected(const int& i, const int& j)
+{
+   std::fill(vis.begin(), vis.end(), 0);
+   bool tag_i2j = false, tag_j2i = false;
+   dfs(i, j, tag_i2j);
+   if(tag_i2j)
+   {
+      std::fill(vis.begin(), vis.end(), 0);
+      dfs(j, i, tag_j2i);
+      if(tag_j2i) return true;
+   }
+   return false;
+}
 ```
 <p></p>
 </details>
@@ -471,6 +487,7 @@ void dfs(int curr, const int& j, bool& tag)
 <summary> 答案 </summary>
 
 <p></p>
-
+本题可以在洛谷上面做：https://www.luogu.com.cn/problem/P1923
 <p></p>
+
 </details>
