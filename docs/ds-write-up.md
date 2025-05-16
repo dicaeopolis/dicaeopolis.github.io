@@ -394,9 +394,29 @@ $$
 
 <summary> 答案 </summary>
 
-<p></p>
 
 <p></p>
+注意先序遍历是 ULR 的顺序，所以第一个节点一定是根节点，又因为 BST 的左子树都是小于根节点，右子树大于根节点，因此找到第一个大于根节点的数据就可以区分开左右子树了，如图：
+<p></p>
+<a href="https://imgse.com/i/pEvVDQe"><img src="https://s21.ax1x.com/2025/05/16/pEvVDQe.png" alt="pEvVDQe.png" border="0" /></a>
+<p></p>
+对于查找成功而言，找到每个节点的查找长度就是到根节点的路径长度加一（因为要算上根节点本身的查找）：
+
+$$
+L = \dfrac{1}{10}(1+2\times 2+3\times 4+4\times 3)=1.9
+$$
+
+对于查找不成功，考虑上图加上外部节点表示查找失败访问到的节点，如图：
+<a href="https://imgse.com/i/pEvVWJf"><img src="https://s21.ax1x.com/2025/05/16/pEvVWJf.png" alt="pEvVWJf.png" border="0" /></a>
+
+则长度等于：
+
+$$
+L = \dfrac{1}{11}(4\times 5+5\times 6)=\dfrac{30}{11}
+$$
+
+<p></p>
+
 </details>
 
 
@@ -414,12 +434,13 @@ $$
 ```cpp
 void findparent(BTNode *b, ElemType x, BTNode *&p)
 {
-   if(b == NULL || b->data == x)// 利用了或运算的短路性质，只有 b != NULL 才会访问 data。
+   if(b == NULL || b->data == x)// 利用了或运算的短路性质，只有 b != NULL 才会访问 data，防止对空地址的解引用。
    {
       p = NULL;
       return ;
    }
-   if( (b->lchild != NULL && b->lchild->data == x) || (b->rchild != NULL && b->rchild->data == x)) p = b;
+   if( (b->lchild != NULL && b->lchild->data == x) || (b->rchild != NULL && b->rchild->data == x))
+      p = b;
    else
    {
       findparent(b->lchild, x, p);
@@ -482,12 +503,64 @@ bool is_connected(const int& i, const int& j)
 （1）设计一个尽可能高效的算法，输出该序列中第 \( k \)（\( 1 \leq k \leq n \)）小的元素，算法中给出适当的注释信息。提示：利用快速排序的思路。  
 （2）分析你所设计的求解算法的平均时间复杂度，并给出求解过程。
 
+**本题可以在洛谷上面做：https://www.luogu.com.cn/problem/P1923**
+
 <details>
 
 <summary> 答案 </summary>
 
 <p></p>
-本题可以在洛谷上面做：https://www.luogu.com.cn/problem/P1923
+我们考虑快速排序里面的划分操作，即：选取一个元素 e，然后把所有小于它的元素放在它的前边，大于它的元素放在它的后边，这样一个操作。那么此时，e 前面的数都小于 e，也就是说假设现在 e 的下标为 idx，则 e 就是第 (idx + 1) 小的数。如果 (idx + 1) < k，那么意味着第 k 小的数在 e 的后面，如果大于就是在前面，如果等于，直接返回 e 的值即可。这样每一次我们都排除一部分区间，就能递归求出 e 来。
+<p></p>
+代码:
+<p></p>
+
+```cpp
+int partition(int pivot_index, int *data, int left, int right)
+{
+   int pivot = data[pivot_index], i = left, j = right;
+   while(i < j)
+   {
+      while(i < j && data[j] >= pivot) --j;
+      data[i] = data[j];
+      while(i < j && data[i] <= pivot) ++i;
+      data[j] = data[i];
+   }
+   data[i] = pivot;
+   return i;
+}
+int kth(int *data, int left, int right, int k)
+{
+   if(left < right)
+   {
+      int pivot_index = partition(left, data, left, right);
+      int n = pivot_index;
+      if(n > k) return kth(data, left, pivot_index, k);
+      if(n < k) return kth(data, pivot_index + 1, right, k);
+      if(n == k) return data[pivot_index];
+   }
+   return data[left];
+}
+int solve_kth(int *data, int length, int k)
+{
+   return kth(data, 0, length - 1, k - 1);
+}
+```
+
+<p></p>
+对于长度为 m 的序列，进行一次划分需要的时间复杂度为 O(m)，同时问题规模变成 m / 2。
+
+$$
+\begin{equation*}
+  \begin{aligned}
+    T(n) &= O(n) + T(n / 2) \\
+         &= O(n) + O(n / 2) + T(n / 4) \\
+         &= O(n) + O(n / 2) + O(n / 4) + ... \\
+         &= 2*O(n)\\
+         &= O(n)
+  \end{aligned}
+\end{equation*}
+$$
 <p></p>
 
 </details>
