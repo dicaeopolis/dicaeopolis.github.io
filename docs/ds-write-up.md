@@ -156,8 +156,7 @@ $$
 
 <b>答案：B。</b> 看图：
 <p>
-<img src = "ds-t6.png"></img>
-</p>
+<a href="https://imgse.com/i/pEvSHCd"><img src="https://s21.ax1x.com/2025/05/16/pEvSHCd.png" alt="pEvSHCd.png" border="0" /></a></p>
 
 <p></p>
 </details>
