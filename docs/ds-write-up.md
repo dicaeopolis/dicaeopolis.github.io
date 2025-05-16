@@ -579,13 +579,13 @@ $$
 <summary> 答案 </summary>
 
 <p></p>
-
+<b>答案：D。</b>树不是线性结构。
 <p></p>
 
 </details>
 
 
-2. 以下算法的时间复杂度为______。  
+2.以下算法的时间复杂度为______。  
 ```c
 void func(int n)
 { 
@@ -607,16 +607,32 @@ D. \( O(\log_2 n) \)
 <summary> 答案 </summary>
 
 <p></p>
-
+<b>答案：B。</b>参考第一套题的第二道单选题。
 <p></p>
 
 </details>
 
-3. 在一个双链表中，删除 \( p \) 所指结点（非首、尾结点）的操作是______。  
-A. \( p->prior->next = p->next; \ p->next->prior = p->prior \)  
-B. \( p->prior = p->prior->prior; \ p->prior->prior = p \)  
-C. \( p->next->prior = p; \ p->next = p->next->next \)  
-D. \( p->next = p->prior->prior; \ p->prior = p->prior->prior \)  
+3.在一个双链表中，删除 \( p \) 所指结点（非首、尾结点）的操作是______。  
+A. 
+```
+p->prior->next = p->next; 
+p->next->prior = p->prior
+```
+B.
+```
+p->prior = p->prior->prior;
+p->prior->prior = p
+``` 
+C.
+```
+p->next->prior = p;
+p->next = p->next->next
+``` 
+D.
+```
+p->next = p->prior->prior;
+p->prior = p->prior->prior
+```
 
 
 <details>
@@ -624,12 +640,12 @@ D. \( p->next = p->prior->prior; \ p->prior = p->prior->prior \)
 <summary> 答案 </summary>
 
 <p></p>
-
+<b>答案：A。</b>我们要做的就是让前后节点“绕过” p，也就是让 p 的前驱的后继设置成 p 的后继，同时 p 的后继的前驱设置成 p 的前驱。把这个操作翻译成代码就得到了 A 选项。
 <p></p>
 
 </details>
 
-4. 设 \( n \) 个元素的进栈序列是 \( 1、2、3、…、n \)，其输出序列是 \( p_1、p_2、…、p_n \)，若 \( p_1=3 \)，则 \( p_2 \) 的值为______。  
+4.设 \( n \) 个元素的进栈序列是 \( 1、2、3、…、n \)，其输出序列是 \( p_1、p_2、…、p_n \)，若 \( p_1=3 \)，则 \( p_2 \) 的值为______。  
 A. 一定是2  
 B. 一定是1  
 C. 不可能是1  
