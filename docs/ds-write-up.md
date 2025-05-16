@@ -351,8 +351,20 @@ $$
 <details>
 
 <summary> 答案 </summary>
-
+<p>(3)</p>
 <p></p>
+其实题目想让我们实现的数据结构叫做<b>双端队列</b>。因为插入和删除操作都集中在头尾，我们来分析一下这四个数据结构的时间复杂度：
+<p></p>
+(1) : 如果这个循环单链表只有尾节点，那么在进行插入和删除最后一个元素的时候，都要去寻找尾节点的前驱节点，但这又是一个单链表，没有前向信息，所以会浪费循环一次即 O(n) 的时间去找前驱。
+<p></p>
+(2) : 由于这个非循环的双链表没有头节点，在插入和删除第一个元素的时候都要横跨整个链表，也要花 O(n) 的时间。
+<p></p>
+(3) : 由于这是一个循环双链表，这时候相比于 (1) 和 (2) 而言，插入和删除都能够很方便（也就是 O(1) 时间）获取到头尾附近节点的地址，以进行修改。
+<p></p>
+(4) : 问题其实和 (1) 一样，即使有头节点也很难去找到尾节点的前驱节点。
+<p></p>
+
+我自己用带头尾指针的循环双链表实现了一个简单的双端队列，参考：https://dicaeopolis.github.io/stl-wheels/#deque
 
 <p></p>
 </details>
@@ -364,8 +376,13 @@ $$
 <summary> 答案 </summary>
 
 <p></p>
-
+本题考察的是<b>最小（代价）生成树</b>和<b>最短路径树</b>的区别。
 <p></p>
+我们注意 Prim 算法在加边的时候优先选择<b>长度最短</b>的相邻边，但是 Dijkstra 算法的松弛操作选取的是<b>到源点距离最短</b>的相邻边。这很不一样。
+<p></p>
+构造反例时可以考虑构造一个树，然后将一个叶子节点和根节点相连，这条新边的权值小于原来根到这个叶子节点的路径长度即可，比如下面这个简单的反例：
+<p></p>
+<a href="https://imgse.com/i/pEvEBbn"><img src="https://s21.ax1x.com/2025/05/16/pEvEBbn.png" alt="pEvEBbn.png" border="0" /></a>
 </details>
 
 3.有一棵二叉排序树按先序遍历得到的序列为 \( (12, 5, 2, 8, 6, 10, 16, 15, 18, 20) \)。回答以下问题：
@@ -391,6 +408,26 @@ $$
 <summary> 答案 </summary>
 
 <p></p>
+思路是从根节点开始深搜，如果当前节点的子节点值为 x，那么该节点就是所求的节点 p。
+<p></p>
+
+```cpp
+void findparent(BTNode *b, ElemType x, BTNode *&p)
+{
+   if(b == NULL || b->data == x)// 利用了或运算的短路性质，只有 b != NULL 才会访问 data。
+   {
+      p = NULL;
+      return ;
+   }
+   if( (b->lchild != NULL && b->lchild->data == x) || (b->rchild != NULL && b->rchild->data == x)) p = b;
+   else
+   {
+      findparent(b->lchild, x, p);
+      if(p == NULL)
+         findparent(b->rchild, x, p);
+   }
+}
+```
 
 <p></p>
 </details>
@@ -404,6 +441,23 @@ $$
 
 <p></p>
 
+```cpp
+bool vis[N];
+std::array<std::vector<int>, N> G;
+void dfs(int curr, const int& j, bool& tag)
+{
+   if(tag) return ;
+   if(curr == j)
+   {
+      tag = true;
+      return ;
+   }
+   vis[curr] = true;
+   for(auto adj : G[curr])
+      if(!vis[adj])
+         dfs(adj, j, tag);
+}
+```
 <p></p>
 </details>
 
