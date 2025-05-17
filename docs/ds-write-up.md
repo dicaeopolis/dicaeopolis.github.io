@@ -750,7 +750,7 @@ D. \( j(j−1)/2 + i \)
 <summary> 答案 </summary>
 
 <p></p>
-<b>答案：B</b>。按列存储，也就是每一列都摊平到一维上面，是对列坐标求和之后再加上行坐标，然后再把题目给的(1,1)特殊值带进去就得到 B 选项了。
+<b>答案：D</b>。按列存储，也就是每一列都摊平到一维上面，是对列坐标求和之后再加上行坐标，然后再把题目给的(1,1)特殊值带进去就得到 D 选项了。
 <p></p>
 
 </details>
@@ -883,6 +883,11 @@ D. 条件不足，无法确定
 <summary> 答案 </summary>
 
 <p></p>
+<b>答案：D</b>。平衡因子是左子树高度减去右子树高度，由于平衡因子是0，意味着这是一颗满二叉树。因此节点个数：
+
+$$
+N=\sum_{i = 0}^{h - 1}2^i = 2^{h}-1
+$$
 
 <p></p>
 
@@ -934,7 +939,7 @@ D. 条件不足，无法确定
 <summary> 答案 </summary>
 
 <p></p>
-<b>答案：C</b>。
+<b>答案：C</b>。插入排序的有序区域并不是全局的有序区域，比如某一趟选出来恰好是最小值，则有序区都要往后挪一个位置。堆排序的有序区是全局的，冒泡排序冒泡一趟，冒上来的元素也不会变了，快排选取的 pivot 在一次划分之后也不会变。
 <p></p>
 
 </details>
@@ -951,7 +956,7 @@ D. 条件不足，无法确定
 <summary> 答案 </summary>
 
 <p></p>
-<b>答案：C</b>。
+<b>答案：C</b>。基数排序的特点就是不依赖关键字比较。已经证明依赖比较的排序算法时间复杂度不可能优于 O(n log n)。
 <p></p>
 
 </details>
@@ -967,6 +972,12 @@ D. 条件不足，无法确定
 
 <p></p>
 
+$$
+\sum_{i = 1}^m (i - 1)n_i
+$$
+
+<p></p>
+我们考虑最朴素的构造：所有结点从根节点开始串成一条链，然后对于度为 k 的结点，补充 k - 1 个叶子结点，就得到了上式。接下来调整树的结构，可以发现无论怎么调整，只要满足题目条件，都不会改变叶子节点个数。
 <p></p>
 
 </details>
@@ -998,6 +1009,41 @@ D. 条件不足，无法确定
 <summary> 答案 </summary>
 
 <p></p>
+思路很简单，由于 A，B 都是有序的，因此失配一次，整个匹配都会失败。据此可以写出下面的代码：
+
+```cpp
+bool match(ListNode* a, ListNode* b)
+{
+   while(a != NULL)
+   {
+      if(a->data == b->data)
+      {
+         while(b != NULL)
+         {
+            if(a == NULL || a->data != b->data)
+               return false;
+            a = a->next;
+            b = b->next;
+         }
+         return true;
+      }
+      a = a->next;
+   }
+   return false;
+}
+```
+
+<p></p>
+
+<details>
+
+<summary> 变式：如果 A 和 B 并不有序，存在线性时间的算法吗？ </summary>
+
+<p></p>
+存在。使用 KMP 算法即可。
+<p></p>
+
+</details>
 
 <p></p>
 
@@ -1011,6 +1057,43 @@ D. 条件不足，无法确定
 <summary> 答案 </summary>
 
 <p></p>
+本题是树形 dp 入门题，同时代码稍作修改，就可以做树的长链剖分。
+
+```cpp
+enum class path { left, right };
+struct BTNode {
+   BTNode* lchild;
+   BTNode* rchild;
+   path p;
+}
+
+int dfs(BTNode* root, int depth)
+{
+   if(root == NULL) return depth;
+   int ldepth = dfs(root->lchild, depth + 1);
+   int rdepth = dfs(root->rchild, depth + 1);
+   if(ldepth >= rdepth)
+   {
+      root->p = path::left;
+      return ldepth;
+   }
+   root->p = path::right;
+   return rdepth;
+}
+
+void output(BTNode* root)
+{
+   int dep = dfs(root, 1);
+   while(root != NULL)
+   {
+      std::cout << root->data << std::endl;
+      if(root->p == path::right)
+         root = root->rchild;
+      else
+         root = root->lchild;
+   }
+}
+```
 
 <p></p>
 
