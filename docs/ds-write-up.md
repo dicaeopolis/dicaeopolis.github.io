@@ -1491,6 +1491,16 @@ $$
 
 <p></p>
 
+\[
+   384
+\]
+
+见图：
+
+<p></p>
+
+<a href="https://imgse.com/i/pExhoV0"><img src="https://s21.ax1x.com/2025/05/21/pExhoV0.png" alt="pExhoV0.png" border="0" /></a>
+
 <p></p>
 
 </details>
@@ -1504,6 +1514,10 @@ $$
 <summary> 答案 </summary>
 
 <p></p>
+
+\[
+   4
+\]
 
 <p></p>
 
