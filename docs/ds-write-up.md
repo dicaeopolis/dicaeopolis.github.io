@@ -298,7 +298,7 @@ $$
 
 <b>答案 C。</b>
 
-根据上面那个题，\(O(\log_2 n)\)的算法的比较次数上界是7次，而这个算法比 \(O(\log_2 n)\) 的比较次数还要少，也就意味着时间复杂度更优，而 AD 的时间复杂度都是 \(O(\log_2 n))，B 是 \(O(n)\)，只有 C 的时间复杂度是常数级 \(O(1)\)。
+根据上面那个题，\(O(\log_2 n)\)的算法的比较次数上界是7次，而这个算法比 \(O(\log_2 n)\) 的比较次数还要少，也就意味着时间复杂度更优，而 AD 的时间复杂度都是 \(O(\log_2 n)\)，B 是 \(O(n)\)，只有 C 的时间复杂度是常数级 \(O(1)\)。
 
 <p></p>
 </details>
@@ -322,7 +322,7 @@ $$
 <p></p>
 2. 平均时间复杂度接近最好的情况：排除快速排序，因为它的最坏时间复杂度是 \(O(n^2)\)。
 <p></p>
-3. 空间复杂度 O(1): 排除二路归并排序，因为它的空间复杂度是 \(O(n \log_2 n)\)。
+3. 空间复杂度 \(O(1)\): 排除二路归并排序，因为它的空间复杂度是 \(O(n \log_2 n)\)。
 <p></p>
 因此使用的是堆排序，堆排序是基于比较的原地算法，且最好、最坏和平均时间复杂度都是\(O(n \log_2 n)\)。
 <p></p>
@@ -412,7 +412,7 @@ $$
 
 对于查找不成功，考虑上图加上外部结点表示查找失败访问到的结点，如图：
 <a href="https://imgse.com/i/pEvVWJf"><img src="https://s21.ax1x.com/2025/05/16/pEvVWJf.png" alt="pEvVWJf.png" border="0" /></a>
-
+<p></p>
 则长度等于：
 
 $$
@@ -1502,9 +1502,8 @@ $$
 见图：
 
 
-<a href="https://imgse.com/i/pEzlDO0"><img src="https://s21.ax1x.com/2025/05/22/pEzlDO0.png" alt="pEzlDO0.png" border="0" /></a>
+<a href="https://imgse.com/i/pEzlDO0"><img src="https://cdn.luogu.com.cn/upload/image_hosting/ywitjpcz.png" alt="pEzlDO0.png" border="0" /></a>
 
-[![pEzlDO0.png](https://s21.ax1x.com/2025/05/22/pEzlDO0.png)](https://imgse.com/i/pEzlDO0)
 
 </details>
 
@@ -1928,7 +1927,7 @@ C---D
 
 <p></p>
 
-<a href="https://imgse.com/i/pEzl2Y4"><img src="https://s21.ax1x.com/2025/05/22/pEzl2Y4.png" alt="pEzl2Y4.png" border="0" /></a>
+<a href="https://imgse.com/i/pEzl2Y4"><img src="https://cdn.luogu.com.cn/upload/image_hosting/lq7hvmpb.png" alt="pEzl2Y4.png" border="0" /></a>
 
 <p></p>
 
@@ -1949,7 +1948,7 @@ C---D
 
 <p></p>
 
-<a href="https://imgse.com/i/pEzlfp9"><img src="https://s21.ax1x.com/2025/05/22/pEzlfp9.png" alt="pEzlfp9.png" border="0" /></a>
+<a href="https://imgse.com/i/pEzlfp9"><img src="https://cdn.luogu.com.cn/upload/image_hosting/2rd51091.png" alt="pEzlfp9.png" border="0" /></a>
 
 <p></p>
 
@@ -1966,7 +1965,8 @@ C---D
 
 <p></p>
 
-<a href="https://imgse.com/i/pEzlhlR"><img src="https://s21.ax1x.com/2025/05/22/pEzlhlR.png" alt="pEzlhlR.png" border="0" /></a>
+<a href="https://imgse.com/i/pEzlhlR"><img src="https://cdn.luogu.com.cn/upload/image_hosting/81hfzunz.png" alt="pEzlhlR.png" border="0" /></a>
+
 
 <p></p>
 
@@ -1987,7 +1987,8 @@ C---D
 
 <p></p>
 
-<a href="https://imgse.com/i/pEzl461"><img src="https://s21.ax1x.com/2025/05/22/pEzl461.png" alt="pEzl461.png" border="0" /></a>
+<a href="https://imgse.com/i/pEzl461"><img src="https://cdn.luogu.com.cn/upload/image_hosting/qdjyjexw.png" alt="pEzl461.png" border="0" /></a>
+
 
 <p></p>
 
@@ -2046,7 +2047,7 @@ bool is_symmetric(BTNode* root)
 
 <p></p>
 
-假设数组长为 n，我们把问题抽象成图中的最短路问题：对位置 \(i\)，抽象成结点 \(i\)，则它可以访问的结点有：结点 \(0~i-1\)，以及结点 \(i+A[i]\)。由于可能出现 \( i+A[i] > n\)，我们定义结点 \(n\) 为汇点，也就是跳出数组的状态。然后跑一遍从结点 \(0\) 到结点 \(n\) 的 BFS 即可。当然，这个问题不必真的建图，只需要 BFS 遍历的时候选择合适的结点即可。同时另外开一个 fa 数组记录路径转移来源，从汇点往前回溯到 BFS 生成树的根节点，再把这个顺序倒序输出即可获得路径。
+假设数组长为 n，我们把问题抽象成图中的最短路问题：对位置 \(i\)，抽象成结点 \(i\)，则它可以访问的结点有：结点 \(0\) 到 \(i-1\)，以及结点 \(i+A[i]\)。由于可能出现 \( i+A[i] > n\)，我们定义结点 \(n\) 为汇点，也就是跳出数组的状态。然后跑一遍从结点 \(0\) 到结点 \(n\) 的 BFS 即可。当然，这个问题不必真的建图，只需要 BFS 遍历的时候选择合适的结点即可。同时另外开一个 fa 数组记录路径转移来源，从汇点往前回溯到 BFS 生成树的根节点，再把这个顺序倒序输出即可获得路径。
 
 ```cpp
 int A[N], fa[N], vis[N], path[N];
