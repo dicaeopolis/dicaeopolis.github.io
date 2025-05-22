@@ -1501,11 +1501,10 @@ $$
 
 见图：
 
-<p></p>
 
-<a href="https://imgse.com/i/pExhoV0"><img src="https://s21.ax1x.com/2025/05/21/pExhoV0.png" alt="pExhoV0.png" border="0" /></a>
+<a href="https://imgse.com/i/pEzlDO0"><img src="https://s21.ax1x.com/2025/05/22/pEzlDO0.png" alt="pEzlDO0.png" border="0" /></a>
 
-<p></p>
+[![pEzlDO0.png](https://s21.ax1x.com/2025/05/22/pEzlDO0.png)](https://imgse.com/i/pEzlDO0)
 
 </details>
 
