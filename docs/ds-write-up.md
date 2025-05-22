@@ -2005,15 +2005,39 @@ C---D
 <summary> 答案 </summary>
 
 <p></p>
+对称的意思就是，左半边的结点轴对称过来就变成了右半边。也就是外侧互相相等，内侧也互相相等。
 
+题目没有给出结点的数据，因此代码实现只判定树的结构是否对称。
+
+```cpp
+
+bool compare(BTNode* left, BTNode* right)
+{
+   if( (!left) ^ (!right)) return false;
+   if( !(left || right) ) return true;
+   return compare(left->lchild, right->rchild) && compare(left->rchild, right->lchild);
+}
+
+bool is_symmetric(BTNode* root)
+{
+   return compare(root->lchild, root->rchild);
+}
+```
 <p></p>
 
 </details>
 
 
 
-2. 给定正整数数组A，设计算法求从下标0出发走出数组范围的最小步数及每一步下标。输入示例：A = [2,5,1,1,1]，输出示例：3，0->2->1->6。要求非递归实现，且时间和空间复杂度最小。
+2. 给定一个正整数数组 A，数组中的每一个元素 A[i]表明从当前位置可以向右跨越的距离（即可以到达下标 i+A[i]）。再给定一个条件，一个人从元素 A[i]可以一步回到任意的 A[j](j<i,j>=0)。假定一个人从下标 0 出发，请设计一个算法求出该人走出数组范围.（到达数组最大下标的右边）所需要的最小步数，并输出每一步所在的下标。例如：
 
+输入：A = [2,5,1,1,1,1]
+
+输出：3，0->2->1->6
+
+解释：最少要走 3 步，就可以跳离数组范围。依次到达的顺序为 0->2->1->6，6 已经脱离了最大下标 5。
+
+要求：用非递归方式实现算法，且有最小的时间复杂度和空间复杂度。
 
 
 <details>
@@ -2021,6 +2045,55 @@ C---D
 <summary> 答案 </summary>
 
 <p></p>
+
+假设数组长为 n，我们把问题抽象成图中的最短路问题：对位置 \(i\)，抽象成结点 \(i\)，则它可以访问的结点有：结点 \(0~i-1\)，以及结点 \(i+A[i]\)。由于可能出现 \( i+A[i] > n\)，我们定义结点 \(n\) 为汇点，也就是跳出数组的状态。然后跑一遍从结点 \(0\) 到结点 \(n\) 的 BFS 即可。当然，这个问题不必真的建图，只需要 BFS 遍历的时候选择合适的结点即可。同时另外开一个 fa 数组记录路径转移来源，从汇点往前回溯到 BFS 生成树的根节点，再把这个顺序倒序输出即可获得路径。
+
+```cpp
+int A[N], fa[N], vis[N], path[N];
+void bfs(int n)
+{
+   std::queue<int> q;
+   std::fill(vis, vis + N, 0);
+   q.push(0);
+   while(!q.empty())
+   {
+      int curr = q.top();
+      if(vis[curr]) continue;
+      vis[curr] = 1;
+      if(curr + A[curr] > n)
+      {
+         fa[n] = curr;
+         break;
+      }
+      else
+      {
+         q.push(curr + A[curr]);
+         fa[curr + A[curr]] = curr;
+      }
+      for(int i = 0; i < curr; ++i)
+         if(!vis[curr])
+         {
+            q.push(i);
+            fa[i] = curr;
+         }
+   }
+}
+
+void solve(int n)
+{
+   bfs(n);
+   int cnt = 0, inx = n;
+   while(!pa[idx])
+   {
+      path[cnt++] = idx;
+      idx = pa[idx];
+   }
+   std::cout << cnt << '\n';
+   for(int i = cnt - 1; i >= 0; --i)
+      std::cout << path[i] << ' ';
+}
+```
+
 
 <p></p>
 
