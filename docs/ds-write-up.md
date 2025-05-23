@@ -1,5 +1,5 @@
 ---
-password: your_page_password
+password: d4757939c10b9c6fff3cf04aa34d6c73
 ---
 # 《数据结构》期末复习题题解
 
