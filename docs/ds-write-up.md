@@ -1,7 +1,6 @@
 ---
-encrypted: true
+password: your_page_password
 ---
-
 # 《数据结构》期末复习题题解
 
 ## 第五版第一套题目

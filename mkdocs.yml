@@ -51,9 +51,13 @@ markdown_extensions:
   - pymdownx.superfences
 
 plugins:
-  - search: {}
+  - search
   - encryptcontent:
-      password: p@55wd
+      title_prefix: '[LOCK]'
+      summary: '此内容受密码保护。'
+      placeholder: '请输入密码'
+      decryption_failure_message: '密码错误，请重试。'
+      encryption_info_message: '您无权访问此内容。'
 
 extra_css:
 - themes/css/custom.css
