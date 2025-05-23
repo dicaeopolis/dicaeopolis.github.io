@@ -50,6 +50,11 @@ markdown_extensions:
   - pymdownx.snippets
   - pymdownx.superfences
 
+plugins:
+  - search
+  - encryptcontent:
+      password: data-structure
+
 extra_css:
 - themes/css/custom.css
 - themes/css/simpleLightbox.min.css

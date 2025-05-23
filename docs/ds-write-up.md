@@ -1,3 +1,7 @@
+---
+encrypted: true
+---
+
 # 《数据结构》期末复习题题解
 
 ## 第五版第一套题目
@@ -2058,9 +2062,10 @@ void bfs(int n)
    q.push(0);
    while(!q.empty())
    {
-      int curr = q.top();
+      int curr = q.front();
       if(vis[curr]) continue;
       vis[curr] = 1;
+      q.pop();
       if(curr + A[curr] > n)
       {
          fa[n] = curr;
@@ -2072,7 +2077,7 @@ void bfs(int n)
          fa[curr + A[curr]] = curr;
       }
       for(int i = 0; i < curr; ++i)
-         if(!vis[curr])
+         if(!vis[i])
          {
             q.push(i);
             fa[i] = curr;
@@ -2084,10 +2089,10 @@ void solve(int n)
 {
    bfs(n);
    int cnt = 0, inx = n;
-   while(!pa[idx])
+   while(fa[idx])
    {
       path[cnt++] = idx;
-      idx = pa[idx];
+      idx = fa[idx];
    }
    std::cout << cnt << '\n';
    for(int i = cnt - 1; i >= 0; --i)
