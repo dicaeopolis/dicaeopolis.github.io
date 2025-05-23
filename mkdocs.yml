@@ -51,9 +51,8 @@ markdown_extensions:
   - pymdownx.superfences
 
 plugins:
-  - search
-  - encryptcontent:
-      password: data-structure
+    - search: {}
+    - encryptcontent: {}
 
 extra_css:
 - themes/css/custom.css
