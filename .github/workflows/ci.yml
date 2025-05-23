@@ -1,20 +1,26 @@
 name: Publish docs via GitHub Pages
+
 on:
   push:
     branches:
       - main
+
 jobs:
   build:
     name: Deploy docs
     runs-on: ubuntu-latest
     steps:
-      - run: pip install mkdocs-encryptcontent-plugin
       - name: Checkout main
         uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          pip install mkdocs mkdocs-material mkdocs-encryptcontent-plugin pymdown-extensions
+
       - name: Deploy docs
-        uses: mhausenblas/mkdocs-deploy-gh-pages@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CONFIG_FILE: mkdocs.yml
-          EXTRA_PACKAGES: build-base
-      - run: pip install pymdown-extensions mkdocs-encryptcontent-plugin
+        run: mkdocs gh-deploy --force
