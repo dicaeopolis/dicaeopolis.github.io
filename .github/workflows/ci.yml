@@ -10,6 +10,7 @@ jobs:
     steps:
       - name: Checkout main
         uses: actions/checkout@v2
+      - run: pip install pymdown-extensions mkdocs-encryptcontent-plugin
       - name: Deploy docs
         uses: mhausenblas/mkdocs-deploy-gh-pages@master
         env:
