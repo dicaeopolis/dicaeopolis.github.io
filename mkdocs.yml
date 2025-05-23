@@ -51,9 +51,9 @@ markdown_extensions:
   - pymdownx.superfences
 
 plugins:
-    - search: {}
-    - encryptcontent:
-      - password: ds_writeup
+  - search: {}
+  - encryptcontent:
+      password: p@55wd
 
 extra_css:
 - themes/css/custom.css
