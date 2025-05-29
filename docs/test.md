@@ -9,5 +9,5 @@ auto index = static_cast<int>(std::distance(vec.begin(), std::lower_bound(vec.be
 公式：
 
 $$
-\sum^n_{i = 1}\dfrac{1}{i^2} = \dfrac{\pi^2}{6}
+\lim_{n\rightarrow \infty}\sum^n_{i = 1}\dfrac{1}{i^2} = \dfrac{\pi^2}{6}
 $$
