@@ -1,6 +1,16 @@
 # 自动签到脚本
 
-放在你的git仓库下面。使用前，先Ctrl-F把所有带"Replace"注释的行，根据提示内容换成你自己的账号、仓库、密码等。
+放在你的git仓库下面。
+
+使用前，先Ctrl-F找到**所有**带"Replace"注释的行，然后根据提示内容换成你自己的账号、仓库、口令等。
+
+如果不想每一次push都鉴权，使用下面的命令存储用户名和口令：
+
+```bash
+git config --global credential.helper store
+```
+
+大家小学期签到愉快！
 
 ```python
 import datetime
