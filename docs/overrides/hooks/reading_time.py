@@ -208,7 +208,7 @@ def calculate_reading_stats(markdown):
     # 统计代码行数
     code_lines = count_code_lines(markdown)
     
-    # 计算阅读时间（中文：400字/分钟）
+    # 计算阅读时间（中文：200字/分钟）
     reading_time = max(1, round(chinese_chars / 200))
     
     return reading_time, chinese_chars, code_lines
