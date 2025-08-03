@@ -41,7 +41,6 @@ $$
     \Delta \theta &= -\dfrac{\eta}{|\mathcal{B}|}\sum^{|\mathcal{B}|}_{i=1}\nabla\mathcal{L}(x_i;\theta_{n-1})\\
     \theta_n &= \theta_{n-1}+\Delta \theta
 \end{align*}
-
 $$
 
 这里加负号意思是“下降”。
@@ -63,7 +62,7 @@ $$
 让我们对这块石头进行建模。考虑一个单位物体在势场 $U$ 中做带阻尼的自由运动。（带阻尼是为了让物体的动能耗散，以停止在最小值）那么它所受梯度力 $F=-\nabla U$，即 $ma = -\nabla U$。取时间微元 $\beta_3$，则速度更新为 $-v_{n+1} = -\beta_1v_n - \beta_3 a = -\beta_1v_n - \beta_3\dfrac{\nabla U}{m}$，其中 $\beta_1<1$ 表征阻尼损耗，位置更新为 $\theta_{n+1} = \theta_n - \beta_3v_n$。事实上这里 $m$ 表征惯性的大小，惯性大，不易受力移动；惯性小，容易往下移动。这也体现出学习率的一点性质。在更新权重的时候我们可以把时间步长和质量两个参量统一考虑成学习率 $\eta$。现在我们可以把质量乘上去，也就是考虑**动量**：
 $$
 \begin{align*}
-    g_n&=\nabla\mathcal{L(\boldsymbol{x};\theta_{n-1})}\\
+    g_n&=\nabla\mathcal{L({x};\theta_{n-1})}\\
     M_{n}&=\beta_1M_{n-1}+\beta_3g_n\\
     \theta_n&=\theta_{n-1}-\eta M_n
 \end{align*}
@@ -203,6 +202,7 @@ SGDW 能够具有更快的收敛速率，尤其对于梯度不对称场景下，
 ### 正则化优化
 
 我们考虑一般的 $L_2$ 正则化用以对权重大小进行惩罚限制。在 SGD 场景下：
+
 $$
 \begin{align*}
     g_{n} &= -\eta\nabla\left(\mathcal{L}({x};\theta_{n-1})+\dfrac{\lambda}{2}|\theta_{n-1}|^2\right)\\
