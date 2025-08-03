@@ -105,11 +105,6 @@ plugins:
       placeholder: '口令输对了才能看哦'
       decryption_failure_message: '输错了哦~'
       encryption_info_message: '👇👇👇👇👇👇'
-  - blog:
-      blog_dir: docs  # 确保博客目录配置正确
-      post_date_format: full #时间
-      post_readtime: true
-      post_readtime_words_per_minute: 100  #计算帖子的阅读时间时读者每分钟预计阅读的字数
 
 extra_css:
   - themes/css/custom.css
