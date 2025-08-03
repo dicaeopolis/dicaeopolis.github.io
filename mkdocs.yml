@@ -2,7 +2,10 @@ site_name: Dicaeopolis' Wiki
 
 theme:
   name: material
-  custom_dir: overrides
+  custom_dir: docs/overrides
+  features:
+    - content.code.copy
+    - content.code.select
   palette: 
     # Palette toggle for automatic mode
     - media: "(prefers-color-scheme)"
@@ -25,6 +28,10 @@ theme:
         name: Switch to system preference
     
   language: zh
+
+# 在 mkdocs.yml 中添加
+hooks:
+  - docs/overrides/hooks/reading_time.py    # 阅读时间统计
 
 extra:
   analytics: 
@@ -60,19 +67,12 @@ plugins:
       placeholder: '口令输对了才能看哦'
       decryption_failure_message: '输错了哦~'
       encryption_info_message: '👇👇👇👇👇👇'
-  - readingtime:
-      # 配置中文阅读速度，单位：字/分钟
-      reading_speed: 250
-      # 自定义阅读时间的输出格式，{minutes} 是插件提供的变量
-      # 你也可以在这里设置，但我们在模板里自定义更灵活
-      # format: '{minutes} 分钟'
 
 extra_css:
 - themes/css/custom.css
 - themes/css/simpleLightbox.min.css
 - themes/css/pied_piper.css
 - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css
-- assets/stylesheets/extra.css
  
 extra_javascript:
 - themes/js/custom.js
