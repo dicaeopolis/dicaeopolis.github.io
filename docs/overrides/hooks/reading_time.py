@@ -209,7 +209,7 @@ def calculate_reading_stats(markdown):
     code_lines = count_code_lines(markdown)
     
     # 计算阅读时间（中文：400字/分钟）
-    reading_time = max(1, round(chinese_chars / 400))
+    reading_time = max(1, round(chinese_chars / 200))
     
     return reading_time, chinese_chars, code_lines
 
@@ -245,13 +245,20 @@ def on_page_markdown(markdown, **kwargs):
     # 生成阅读信息
     if code_lines > 0:
         reading_info = f"""!!! info "📖 阅读信息"
-    阅读时间：**{reading_time}** 分钟 | 中文字符：**{chinese_chars}** | 有效代码行数：**{code_lines}**
+    阅读时间约 **{reading_time}** 分钟 | 约**{chinese_chars}**字 | 包含**{code_lines}**行代码
 
 """
     else:
         reading_info = f"""!!! info "📖 阅读信息"
-    阅读时间：**{reading_time}** 分钟 | 中文字符：**{chinese_chars}**
+    阅读时间约 **{reading_time}** 分钟 | 约**{chinese_chars}**字
 
 """
-    
-    return reading_info + markdown
+
+    # 用正则找到第一个一级标题，并在其后插入阅读信息
+    pattern = r'(^# .*\n)'
+    if re.search(pattern, markdown, flags=re.MULTILINE):
+        markdown = re.sub(pattern, r'\1' + reading_info, markdown, count=1, flags=re.MULTILINE)
+        return markdown
+    else:
+        # 没有一级标题就插在最前面
+        return reading_info + markdown
