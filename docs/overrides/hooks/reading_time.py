@@ -245,12 +245,12 @@ def on_page_markdown(markdown, **kwargs):
     # 生成阅读信息
     if code_lines > 0:
         reading_info = f"""!!! info "📖 阅读信息"
-    阅读时间约 **{reading_time}** 分钟 | 约**{chinese_chars}**字 | 包含**{code_lines}**行代码
+    阅读时间约 **{reading_time}** 分钟  |  约 **{chinese_chars}** 字  |  包含 **{code_lines}** 行代码
 
 """
     else:
         reading_info = f"""!!! info "📖 阅读信息"
-    阅读时间约 **{reading_time}** 分钟 | 约**{chinese_chars}**字
+    阅读时间约 **{reading_time}** 分钟  |  约 **{chinese_chars}** 字
 
 """
 
