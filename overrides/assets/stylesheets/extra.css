@@ -1,0 +1,8 @@
+/* 文章元信息样式 */
+.md-meta {
+  color: var(--md-meta-color); /* 使用主题的元信息颜色变量，以适配深色/浅色模式 */
+  font-size: 0.8rem; /* 字体稍小一些 */
+  font-style: italic; /* 斜体 */
+  margin-top: -1em; /* 向上移动一点，离标题更近 */
+  margin-bottom: 2em; /* 与正文拉开一点距离 */
+}

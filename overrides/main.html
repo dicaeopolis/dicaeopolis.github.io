@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% if page.meta.title %}
+    <h1>{{ page.meta.title }}</h1>
+  {% else %}
+    <h1>{{ page.title }}</h1>
+  {% endif %}
+
+  {# 这是我们添加的元信息块 #}
+  <p class="md-meta">
+    {% if page.meta.author %}
+      <span class="md-meta-author">
+        作者：{{ page.meta.author }}
+      </span>
+    {% endif %}
+
+    {% if page.meta.word_count and page.meta.reading_time_minutes %}
+      {% if page.meta.author %} | {% endif %} {# 如果有作者，则添加分隔符 #}
+
+      {# 处理阅读时间为0的情况 #}
+      {% set read_time = page.meta.reading_time_minutes %}
+      {% if read_time < 1 %}
+        {% set display_time = "不到 1" %}
+      {% else %}
+        {% set display_time = read_time %}
+      {% endif %}
+
+      <span class="md-meta-text">
+        本篇文章约 {{ page.meta.word_count }} 字，阅读需要约 {{ display_time }} 分钟
+      </span>
+    {% endif %}
+  </p>
+
+  {{ super() }}
+{% endblock %}
