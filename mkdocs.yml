@@ -134,3 +134,7 @@ extra_javascript:
   - https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-svg-full.js
   - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js
   - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js
+  - https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css
+  - https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js
+  - https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js
+  

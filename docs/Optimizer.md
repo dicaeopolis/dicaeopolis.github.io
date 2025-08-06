@@ -6,11 +6,13 @@ comments: true
 
 ## 写在前面
 
-本文试图对 1951(SGD) 到 2024 (Muon) 的大部分主流优化器发展史做一个简单的概述。尽管“简单”，但也已经达到了上万字的规模。这是因为我并不满足于市面上大部分博客对优化器的介绍仅限于简单的罗列公式，相反，我更希望找出优化器进化的一两条贯穿整个历史长河的伏笔与线索，从而希望能够给列位看官一点启发。行笔仓促，错误在所难免，恳请大家批评指正。
+本文试图对 1951(SGD) 到 2024 (Muon) 的大部分主流优化器发展史做一个简单的概述。尽管“简单”，但也已经达到了上万字的规模。这是因为我并不满足于市面上大部分博客对优化器的介绍仅限于简单的罗列公式，相反，我更希望找出优化器进化的一两条贯穿整个历史长河的伏笔与线索（~~比如优化器里面有一堆 αβδη 什么的说明作者们都喜欢玩osu!mania还是段位吃~~），从而希望能够给列位看官一点启发。行笔仓促，错误在所难免，恳请大家批评指正。
+
+本文的可视化借助了 `pytorch-optimizer` 库的 `viz-optimizers.py`。
 
 ## 何以优化
 
-神经网络的目的是在训练数据集上实现**结构风险最小化**以获得良好的拟合和泛化能力。简单说，如果我们在训练集 $X$ 上有一个定义明确的损失函数 $\mathcal{L}(X;\theta)$（表示我们的结构风险），那么所有优化器的目的都是设计一个算法来寻找合适的 $\theta$ 以获得 $\text{argmin}_\theta\ \mathcal{L}(X;\theta)$。
+神经网络的目的是在训练数据集上实现**结构风险最小化**以获得良好的拟合和泛化能力。简单说，如果我们在训练集 $X$ 上有一个定义明确的损失函数 $\mathcal{L}(X;\theta)$（表示我们的结构风险），那么所有优化器的目的都是设计一个算法来寻找合适的 $\theta$ 以获得 $\mathrm{argmin}_\theta\ \mathcal{L}(X;\theta)$。
 
 ## 寻找最小值
 
@@ -221,7 +223,7 @@ $$
 \end{align*}
 $$
 
-这样我们就可以以数乘代替繁琐且耗时的梯度计算，这被叫做“解耦的权重衰减”（Decoupled Weight Decay）。在后面的优化器中（比如 AdamW），我们基本不会直接使用原教旨主义的 $L_2$ 正则化，而是采用这种权重衰减的方式，尽管在更复杂的优化器下，这两者数学上并不等效。
+这样我们就可以以数乘代替繁琐且耗时的梯度计算，这被叫做“解耦的权重衰减”（Decoupled Weight Decay）。如果还想解耦更彻底些，可以写成 $(1-\lambda)\theta_{n-1}-\eta\nabla\mathcal{L}(x;\theta_{n-1})$，也就是甚至把学习率和正则化参数解耦。在后面的优化器中（比如 AdamW），我们基本不会直接使用原教旨主义的 $L_2$ 正则化，而是采用这种权重衰减的方式，尽管在更复杂的优化器下，这两者数学上并不等效。
 
 ### SGDM 的代码实现
 
@@ -880,8 +882,8 @@ $$
     g_n&=\nabla\mathcal{L({x};\theta_{n-1})}\\
     M_n&=(1-\beta_1)g_n+\beta_1M_{n-1}\\
     G_{n}&=\beta_2 G_n + (1-\beta_2)g_n\odot g_n\\
-    \hat M_n&=\dfrac{M_n}{1-\beta_1^{n-1}}\\
-    \hat G_n&=\dfrac{G_n}{1-\beta_2^{n-1}}\\
+    \hat M_n&=\dfrac{M_n}{1-\beta_1^{n}}\\
+    \hat G_n&=\dfrac{G_n}{1-\beta_2^{n}}\\
     \theta_n&=\theta_{n-1}-\dfrac{\eta}{\sqrt{\epsilon+\hat G_n}} \hat M_n
 \end{align*}
 $$
@@ -915,7 +917,7 @@ $$
     G_{n}&=\beta_2 G_n + (1-\beta_2)g_n\odot g_n\\
     \hat M_n&=\dfrac{M_n}{1-\beta_1^n}\\
     \hat G_n&=\max\{\hat G_{n-1},G_n\}\\
-    \theta_n&=\theta_{n-1}-\dfrac{\eta}{\sqrt{\epsilon+\hat G_n}} M_n
+    \theta_n&=\theta_{n-1}-\dfrac{\eta}{\sqrt{\epsilon+\hat G_n}} \hat M_n
 \end{align*}
 $$
 
@@ -940,7 +942,7 @@ $$
 
 当时几乎所有的深度学习框架，在实现 Adam 的权重衰减时，都采用了将 $L_2$ 正则项的梯度加到 $\nabla\mathcal{L}$ 上的方式。这意味着，权重衰减项 $\lambda\theta_{n-1}$ 也会被 Adam 的自适应学习率 $\dfrac{\eta}{\sqrt{\epsilon+\hat G_n}}$ 所缩放。这会产生一个意想不到的后果：对于那些历史梯度很大（即 $G_n$ 很大）的权重，它们获得的权重衰减效果会变小；而对于那些不经常更新、历史梯度很小（即 $G_n$ 很小）的权重，它们的权重衰减效果反而更强。这与我们使用权重衰减的初衷——对所有的大权重进行同等惩罚——是相悖的。
 
-AdamW 的提出就是为了解决这个问题。它的核心思想是解耦权重衰减（Decoupled Weight Decay）。它不再将权重衰减伪装成 $L_2$ 正则化并加入梯度计算，而是将其从梯度更新中分离出来，直接在参数更新的最后一步实现，就像在 SGD 中那样。
+AdamW 的提出就是为了解决这个问题。它的核心思想是解耦权重衰减。它不再将权重衰减伪装成 $L_2$ 正则化并加入梯度计算，而是将其从梯度更新中分离出来，直接在参数更新的最后一步实现，就像在 SGD 中那样。
 
 这样我们就得到了 AdamW 即带有**解耦权重衰减**的 Adam 优化器：
 
@@ -951,7 +953,7 @@ $$
     G_{n}&=\beta_2 G_n + (1-\beta_2)g_n\odot g_n\\
     \hat M_n&=\dfrac{M_n}{1-\beta_1^n}\\
     \hat G_n&=\dfrac{G_n}{1-\beta_2^n}\\
-    \theta_n&=\theta_{n-1}-\dfrac{\eta}{\sqrt{\epsilon+\hat G_n}} M_n-\eta\lambda\theta_{n-1}
+    \theta_n&=\theta_{n-1}-\dfrac{\eta}{\sqrt{\epsilon+\hat G_n}} \hat M_n-\eta\lambda\theta_{n-1}
 \end{align*}
 $$
 
@@ -1198,7 +1200,115 @@ $$
 G_n = \max\{\beta_2G_{n-1}, |g_n|\}
 $$
 
-因此 Adamax 宣称自己相对 Adam，能够解决不收敛问题，还可以简省计算量。不过这样魔改，真的能对 Hessian 做更好的估计吗……
+因此 Adamax 宣称自己相对 Adam，能够解决不收敛问题，还可以简省计算量。不过这样魔改，真的能对 Hessian 做更好的估计吗……还是来看看代码实现吧：
+
+<details>
+
+<summary> Adamax 的实现</summary>
+
+```python
+def _single_tensor_adamax(
+    params: list[Tensor],
+    grads: list[Tensor],
+    exp_avgs: list[Tensor],
+    exp_infs: list[Tensor],
+    state_steps: list[Tensor],
+    *,
+    eps: float,
+    beta1: float,
+    beta2: float,
+    lr: float,
+    weight_decay: float,
+    maximize: bool,
+    differentiable: bool,
+    capturable: bool,
+    has_complex: bool,
+):
+    # 循环处理每个参数
+    for i, param in enumerate(params):
+        grad = grads[i]
+        grad = grad if not maximize else -grad
+        exp_avg = exp_avgs[i]  # 一阶矩 m_t
+        exp_inf = exp_infs[i]  # 无穷范数 u_t
+        step_t = state_steps[i]
+
+        # --- CUDA Graph 捕获检查 ---
+        if not torch.compiler.is_compiling() and capturable:
+            capturable_supported_devices = _get_capturable_supported_devices()
+            assert (
+                param.device.type == step_t.device.type
+                and param.device.type in capturable_supported_devices
+            ), f"If capturable=True, params and state_steps must be on supported devices: {capturable_supported_devices}."
+
+        # 步数加 1
+        step_t += 1
+
+        # --- 应用权重衰减 ---
+        if weight_decay != 0:
+            grad = grad.add(param, alpha=weight_decay)
+
+        # --- 处理复数 ---
+        if torch.is_complex(param):
+            param = torch.view_as_real(param)
+            grad = torch.view_as_real(grad)
+            exp_avg = torch.view_as_real(exp_avg)
+            exp_inf = torch.view_as_real(exp_inf)
+
+        # --- Adamax 算法核心步骤 ---
+
+        # 1. 更新有偏一阶矩估计 m_t (和 Adam 一样)
+        # 公式: m_t = beta1 * m_{t-1} + (1 - beta1) * g_t
+        exp_avg.lerp_(grad, 1 - beta1)
+
+        # 2. 更新指数加权无穷范数 u_t
+        # 公式: u_t = max(beta2 * u_{t-1}, |g_t|)
+        # 注意：PyTorch 的实现中，为了防止 u_t 在梯度为零时也为零，
+        # 实际比较的是 `beta2 * u_{t-1}` 和 `|g_t| + eps`。
+        if not differentiable:
+            # 对于非可微模式，使用 torch.maximum 更高效
+            torch.maximum(
+                exp_inf.mul_(beta2),      # 计算 beta2 * u_{t-1}
+                grad.abs().add_(eps),     # 计算 |g_t| + eps
+                out=exp_inf,              # 将结果原地写入 exp_inf
+            )
+        else:
+            # 对于可微模式，需要构建一个可微分的操作序列
+            # 将两个要比较的张量在新的维度上拼接起来
+            norm_buf = torch.cat(
+                [exp_inf.mul_(beta2).unsqueeze(0), grad.abs().add_(eps).unsqueeze_(0)],
+                0,
+            )
+            # 然后使用 amax（等价于 max）在那个新维度上求最大值
+            exp_inf.copy_(torch.amax(norm_buf, 0, keepdim=False))
+
+        # --- 步骤 3: 参数更新 ---
+        
+        # 针对 Capturable 模式的特殊处理路径
+        if capturable:
+            # 这里的数学变换是为了在 capturable 模式下避免某些操作的限制。
+            # 原始公式是: clr = lr / (1 - beta1^t), 更新量是 -clr * (m_t / u_t)
+            # 这里计算 neg_bias_correction = beta1^t - 1
+            neg_bias_correction = beta1**step_t - 1
+            # 然后除以 lr，得到 (beta1^t - 1) / lr
+            neg_bias_correction.div_(lr)
+            # 分母 denom = u_t * (beta1^t - 1) / lr
+            denom = exp_inf * neg_bias_correction
+            # 更新: param += m_t / denom = param - lr * m_t / ((1 - beta1^t) * u_t)
+            param.addcdiv_(exp_avg, denom)
+        else:
+            # 常规模式下的更新路径
+            # 计算偏差修正项
+            bias_correction = 1 - beta1 ** _get_value(step_t)
+            # 计算修正后的学习率
+            clr = lr / bias_correction
+            
+            # 执行参数更新
+            # 公式: θ_t = θ_{t-1} - (lr / (1 - beta1^t)) * (m_t / u_t)
+            # exp_inf 就是分母 u_t
+            param.addcdiv_(exp_avg, exp_inf, value=-clr)
+```
+
+</details>
 
 #### Nadam
 
@@ -1236,11 +1346,137 @@ $$
 \end{align*}
 $$
 
+于是，就有了下面的代码：
+
+<details>
+
+<summary> Nadam 的实现</summary>
+
+```python
+def _single_tensor_nadam(
+    params: list[Tensor],
+    grads: list[Tensor],
+    exp_avgs: list[Tensor],
+    exp_avg_sqs: list[Tensor],
+    mu_products: list[Tensor],
+    state_steps: list[Tensor],
+    *,
+    beta1: float,
+    beta2: float,
+    lr: float,
+    weight_decay: float,
+    momentum_decay: float,
+    eps: float,
+    decoupled_weight_decay: bool,
+    maximize: bool,
+    capturable: bool,
+    differentiable: bool,
+    has_complex: bool,
+):
+    # 循环处理每个参数
+    for i, param in enumerate(params):
+        grad = grads[i] if not maximize else -grads[i]
+        exp_avg = exp_avgs[i]
+        exp_avg_sq = exp_avg_sqs[i]
+        mu_product = mu_products[i]
+        step_t = state_steps[i]
+
+        # --- 处理复数 ---
+        if torch.is_complex(param):
+            param = torch.view_as_real(param)
+            grad = torch.view_as_real(grad)
+            exp_avg = torch.view_as_real(exp_avg)
+            exp_avg_sq = torch.view_as_real(exp_avg_sq)
+
+        # --- CUDA Graph 捕获检查 ---
+        if not torch.compiler.is_compiling() and capturable:
+            capturable_supported_devices = _get_capturable_supported_devices()
+            assert (
+                param.device.type == mu_product.device.type == step_t.device.type
+                and param.device.type in capturable_supported_devices
+            ), "如果 capturable=True, params, mu_products 和 state_steps 必须在支持的设备上。"
+
+        # 步数加 1
+        step_t += 1
+
+        # 根据模式获取步数值（Tensor 或 float）
+        if capturable:
+            step = step_t
+        else:
+            step = _get_value(step_t)
+
+        # 计算二阶矩的偏差修正项
+        bias_correction2 = 1 - beta2**step
+
+        # --- 应用权重衰减 ---
+        if weight_decay != 0:
+            if decoupled_weight_decay:
+                # NAdamW: 使用解耦权重衰减
+                param.mul_(1 - lr * weight_decay)
+            else:
+                # 标准 NAdam: 将权重衰减作为 L2 正则化加入梯度
+                grad = grad.add(param, alpha=weight_decay)
+
+        # --- NAdam 核心步骤 ---
+
+        # 1. 计算当前步(t)和下一步(t+1)的动量衰减调度因子 μ
+        # 这个调度使得动量衰减率在训练初期较小，后期接近 beta1
+        mu = beta1 * (1.0 - 0.5 * (0.96 ** (step * momentum_decay)))
+        mu_next = beta1 * (1.0 - 0.5 * (0.96 ** ((step + 1) * momentum_decay)))
+
+        # 2. 更新动量衰减因子的累积乘积
+        # 公式: mu_product_t = mu_product_{t-1} * mu_t
+        mu_product *= mu
+
+        # 3. 更新一阶矩 m_t 和二阶矩 v_t (和 Adam 相同)
+        # m_t = beta1 * m_{t-1} + (1 - beta1) * g_t
+        exp_avg.lerp_(grad, 1 - beta1)
+        # v_t = beta2 * v_{t-1} + (1 - beta2) * g_t^2
+        exp_avg_sq.mul_(beta2).addcmul_(grad, grad, value=1 - beta2)
+        
+        # 4. 计算归一化的分母
+        # denom = sqrt(v_t / bias_correction2)
+        denom = exp_avg_sq.div(bias_correction2).sqrt()
+
+        # --- 步骤 5: 参数更新 ---
+        # NAdam 的更新规则可以分解为两部分：一部分与当前梯度有关，一部分与动量有关。
+        # 更新公式: param_t = param_{t-1} - lr * ( (1-μ_t)*g_hat_t + μ_{t+1}*m_hat_t ) / (sqrt(v_hat_t) + eps)
+        # 其中 g_hat_t 和 m_hat_t 是经过偏差修正的梯度和动量。
+        # PyTorch 的实现将这个公式拆分成了两个 addcdiv 操作。
+
+        # 可微分或可捕获模式下的路径
+        if differentiable or capturable:
+            denom = denom.add(eps)
+            # 为了让 Autograd 跟踪操作，直接修改梯度和动量项，而不是作为 addcdiv 的标量值
+            mu_product_next = mu_product * mu_next
+            # 计算与梯度相关的更新部分
+            grad_update_part = grad * (-lr * (1.0 - mu) / (1.0 - mu_product))
+            # 计算与动量相关的更新部分
+            exp_avg_update_part = exp_avg * (-lr * mu_next / (1.0 - mu_product_next))
+            # 应用更新
+            param.addcdiv_(grad_update_part, denom)
+            param.addcdiv_(exp_avg_update_part, denom)
+        else:
+            # 常规模式下的路径 (更高效)
+            mu_product_next = _get_value(mu_product) * mu_next
+            denom.add_(eps)
+            # 应用与梯度相关的更新部分
+            param.addcdiv_(
+                grad, denom, value=(-lr * (1.0 - mu) / (1.0 - _get_value(mu_product)))
+            )
+            # 应用与动量相关的更新部分
+            param.addcdiv_(
+                exp_avg, denom, value=(-lr * mu_next) / (1.0 - mu_product_next)
+            )
+```
+
+</details>
+
 ### Shampoo
 
 让我们回顾那个在最优点附近的 Hessian 近似： $H\approx\dfrac{1}{\sigma^2} \sqrt{GG^\top}$，Shampoo 的思想是选取更精确的近似以逼进 $GG^\top$。
 
-提一嘴，这里的 $GG^\top$ 指的是将 $g$ 展平之后的外积，也就是 $\text{vec}(g)\text{vec}(g)^\top$，鉴于之前我们一直研究的都是 $g$ 的对角线乘积近似，由于简化很多所以没有特别明确这个维度问题，因此在这里明确一下。
+提一嘴，这里的 $GG^\top$ 指的是将 $g$ 展平之后的外积，也就是 $\mathrm{vec}(g)\mathrm{vec}(g)^\top$，鉴于之前我们一直研究的都是 $g$ 的对角线乘积近似，由于简化很多所以没有特别明确这个维度问题，因此在这里明确一下。
 
 Shampoo 优化器的第一步，是考虑现在的多层神经网络内，层之间是相互独立的。因此可以把大型的 $GG^\top$ 给分块对角化，每一个对角块对应某个层的梯度外积。
 
@@ -1254,9 +1490,9 @@ $$
 
 这样一拆开参数量暴降到 $L$ 的 $n^2$ 加上 $R$ 的 $m^2$。可以理解成 $L$ 捕获输入维的信息，$R$ 捕获输出为的信息（不过我觉得有点强行解释了哈哈，因为关键是节省计算量，看一路过来我们都是在寻求尽可能**高效**而不是最有道理的优化器）。
 
-下面推导 $L$ 和 $R$ 的更新式。先介绍 Kronecker 积的几个小性质：$\text{vec}(BXA^\top)=(A\otimes B)\text{vec}(X)$ 和 $(A\otimes B)^{-1}=(A^{-1}\otimes B^{-1})$ （转置亦然）。
+下面推导 $L$ 和 $R$ 的更新式。先介绍 Kronecker 积的几个小性质：$\mathrm{vec}(BXA^\top)=(A\otimes B)\mathrm{vec}(X)$ 和 $(A\otimes B)^{-1}=(A^{-1}\otimes B^{-1})$ （转置亦然）。
 
-取 $B=A=G$， $X = I$ 那么 $\text{vec}(GG^\top)=(G\otimes G)\text{vec}(I)$ 但这和我们期待的结构仍有距离，不过我们可以换成未展平的原矩阵也就是利用：
+取 $B=A=G$， $X = I$ 那么 $\mathrm{vec}(GG^\top)=(G\otimes G)\mathrm{vec}(I)$ 但这和我们期待的结构仍有距离，不过我们可以换成未展平的原矩阵也就是利用：
 
 $$
 (g\otimes g)(g\otimes g)^\top=(g\otimes g)(g^\top\otimes g^\top)=gg^\top \otimes g^\top g
@@ -1281,24 +1517,189 @@ $$
 
 其中 $\frac 14 + \frac 14 = \frac 12$，这样就得到了我们的对单层的更新。
 
-对于 $k$ 层的网络（张量），我们需要重复计算 $k$ 次再组合成大的 $H^{-\frac 12}$，那么每一次计算的量就应该是 $H^{-\frac 1{2k}}$。这就得到了优化器的参数更新式子：
+对于 $k-1$ 层的网络（即 $k$ 阶张量），我们需要重复计算 $k$ 次再组合成大的 $H^{-\frac 12}$，那么每一次计算的量就应该是 $H^{-\frac 1{2k}}$。
+
+这里要对张量的情况做一些说明：由于 $g_n$ 是一个张量，所以在这个遍历张量 $k$ 个阶的过程中，要执行展平操作，即 $\mathrm{Flatten}(i;g_n)$ 的意思是取第 $i$ 阶的维度作为矩阵的第一个维度，再把其他阶的维度乘起来作为矩阵的第二个维度，由此将 $k$ 阶张量展平到二维的矩阵。这样就能把二维情况推广到 $k$ 阶张量。
 
 $$
 \begin{align*}
-    g_n&=\nabla\mathcal{L({x};\theta_{n-1})}\\
-    \tilde G_n&:=g_n\\
-    \text{for}\ i &=1,\dots,k:\\
-    &L^{(i)}_n = \beta L^{(i)}_{n-1} + g^{(i)}_n (g^{(i)}_n)^\top\\
-    &R^{(i)}_n = \beta R^{(i)}_{n-1} + (g^{(i)}_n)^\top g^{(i)}_n\\
-    &P^{(i)}_{L,t}=(L^{(i)}_n)^{-\frac 1{4k}}\\
-    &P^{(i)}_{R,t}=(R^{(i)}_n)^{-\frac 1{4k}}\\
-    &\tilde{G}_n\ \ = \tilde{G}_n\times P^{(i)}_{L,t} g^{(i)}_n P^{(i)}_{R,t}\\
-    \theta_{n} &= \theta_{n-1} - \eta \tilde{G}_n
+g_n&=\nabla\mathcal{L({x};\theta_{n-1})}\\
+\tilde{G}_n&:=g_n\\
+\mathrm{for}\ i &=1,\dots,k:\\
+&L^{(i)}_n = \beta L^{(i)}_{n-1} + \mathrm{Flatten}(i;g_n) \mathrm{Flatten}(i;g_n)^\top\\
+&P^{(i)}_{t}=(L^{(i)}_n)^{-\frac 1{2k}}\\
+&\tilde{G}_n\ \ = P^{(i)}_{t} \times_i \tilde{G}_n\\
+\theta_{n} &= \theta_{n-1} - \eta \tilde{G}_n
 \end{align*}
 $$
 
-这里下标出现了 $t$ 是因为考虑到取逆 $4k
-$ 次根的复杂性，我们不必每一轮迭代都去计算这两个预条件子 $P_{L,t}$ 和 $P_{R,t}$，而是可以选择在多轮周期之后再更新。
+此外，$P^{(i)}_{t} \times_i \tilde{G}_n$ 的意思是 mode-i product，也就是沿着张量 $\tilde G_n$ 的第 $i$ 的维度取出向量分别和 $P^{(i)}_{t}$ 相乘然后放回，这个操作等价于对 $\tilde G_n$ 沿着第 $i$ 个维度展平之后再求乘积再折叠。所以也可以看到二维情况的 $R$ 在这里消失了，因为沿着第二个维度展开计算相当于第一个维度的转置，这样就可以统一记号。
+
+这里下标出现了 $t$ 是因为考虑到取逆 $2k
+$ 次根的复杂性，我们不必每一轮迭代都去计算这预条件子 $P_{t}$，而是可以选择在多轮周期之后再更新。
+
+这样，我们就看得懂 `torch-optimizer` 库的实现了：
+
+<details>
+
+<summary> Shampoo 的实现</summary>
+
+```python
+import torch
+from torch.optim.optimizer import Optimizer
+# 导入一些此实现的类型别名
+from typing import Any, Callable, Dict, Iterable, Optional, Tuple, Union
+Params = Union[Iterable[torch.Tensor], Iterable[Dict[str, Any]]]
+OptLossClosure = Callable[[], float]
+OptFloat = Optional[float]
+
+
+def _matrix_power(matrix: torch.Tensor, power: float) -> torch.Tensor:
+    """计算矩阵的幂。用于计算预条件矩阵的负根。"""
+    # 为了加速SVD计算，将矩阵移动到CPU上执行
+    device = matrix.device
+    matrix = matrix.cpu()
+    # 对矩阵进行奇异值分解 (SVD)
+    u, s, v = torch.svd(matrix)
+    # 计算 s 的 power 次幂，然后重构矩阵: u @ diag(s^power) @ v^T
+    # @ 是矩阵乘法, .t() 是转置
+    return (u @ s.pow_(power).diag() @ v.t()).to(device)
+
+
+class Shampoo(Optimizer):
+    r"""实现 Shampoo 优化器算法。
+
+    在论文 `Shampoo: Preconditioned Stochastic Tensor Optimization` 中被提出。
+
+    参数:
+        params: 需要优化的参数的迭代器或定义了参数组的字典。
+        lr: 学习率 (默认: 1e-1)
+        momentum: 动量因子 (默认: 0)
+        weight_decay: 权重衰减 (L2 惩罚) (默认: 0)
+        epsilon: 为保证数值稳定性加到对角线上的小值 (默认: 1e-4)
+        update_freq: 计算预条件矩阵逆的频率 (默认: 1)
+    """
+
+    def __init__(
+        self,
+        params: Params,
+        lr: float = 1e-1,
+        momentum: float = 0.0,
+        weight_decay: float = 0.0,
+        epsilon: float = 1e-4,
+        update_freq: int = 1,
+    ):
+        # --- 参数校验 ---
+        if lr <= 0.0:
+            raise ValueError("无效的学习率: {}".format(lr))
+        if momentum < 0.0:
+            raise ValueError("无效的动量值: {}".format(momentum))
+        if weight_decay < 0.0:
+            raise ValueError("无效的权重衰减值: {}".format(weight_decay))
+        if epsilon < 0.0:
+            raise ValueError("无效的 epsilon 值: {}".format(epsilon))
+        if update_freq < 1:
+            raise ValueError("无效的更新频率: {}".format(update_freq))
+
+        defaults = dict(
+            lr=lr,
+            momentum=momentum,
+            weight_decay=weight_decay,
+            epsilon=epsilon,
+            update_freq=update_freq,
+        )
+        super(Shampoo, self).__init__(params, defaults)
+
+    def step(self, closure: OptLossClosure = None) -> OptFloat:
+        """执行单步优化。"""
+        loss = None
+        if closure is not None:
+            loss = closure()
+
+        for group in self.param_groups:
+            for p in group["params"]:
+                if p.grad is None:
+                    continue
+                grad = p.grad.data
+                order = grad.ndimension()  # 获取梯度的阶数（维度数量）
+                original_size = grad.size()
+                state = self.state[p]
+                momentum = group["momentum"]
+                weight_decay = group["weight_decay"]
+
+                # --- 状态初始化 ---
+                if len(state) == 0:
+                    state["step"] = 0
+                    if momentum > 0:
+                        state["momentum_buffer"] = grad.clone()
+                    # 为每个维度初始化预条件矩阵和其逆矩阵
+                    for dim_id, dim in enumerate(grad.size()):
+                        # 预条件矩阵 state["precond_{dim_id}"] 初始化为单位矩阵乘以 epsilon
+                        state["precond_{}".format(dim_id)] = group[
+                            "epsilon"
+                        ] * torch.eye(dim, out=grad.new(dim, dim))
+                        # 逆预条件矩阵初始化为零矩阵
+                        state[
+                            "inv_precond_{}".format(dim_id)
+                        ] = grad.new(dim, dim).zero_()
+
+                # --- 应用动量和权重衰减 ---
+                if momentum > 0:
+                    # 这不是标准的动量，而是对梯度的平滑
+                    grad.mul_(1 - momentum).add_(
+                        state["momentum_buffer"], alpha=momentum
+                    )
+
+                if weight_decay > 0:
+                    grad.add_(p.data, alpha=group["weight_decay"])
+
+                # --- Shampoo 核心：计算和应用预条件矩阵 ---
+                # 详细过程见论文中的算法2
+                # 循环处理每个维度
+                for dim_id, dim in enumerate(grad.size()):
+                    precond = state["precond_{}".format(dim_id)]
+                    inv_precond = state["inv_precond_{}".format(dim_id)]
+
+                    # --- 1. 重塑梯度以隔离当前维度 ---
+                    # 将当前维度 dim_id 换到第0维
+                    grad = grad.transpose_(0, dim_id).contiguous()
+                    transposed_size = grad.size()
+                    # 将梯度重塑为 (dim, -1) 的二维矩阵
+                    grad = grad.view(dim, -1)
+
+                    # --- 2. 更新预条件矩阵 ---
+                    grad_t = grad.t()
+                    # 累加 g * g^T 到预条件矩阵中
+                    precond.add_(grad @ grad_t)
+                    
+                    # --- 3. (周期性地) 计算逆预条件矩阵 ---
+                    # 每隔 update_freq 步，计算一次预条件矩阵的 -1/order 次幂
+                    if state["step"] % group["update_freq"] == 0:
+                        inv_precond.copy_(_matrix_power(precond, -1.0 / order))
+
+                    # --- 4. 应用预条件 ---
+                    # 将梯度与逆预条件矩阵相乘
+                    if dim_id == order - 1:
+                        # 如果是最后一个维度，为了效率，梯度先转置再乘
+                        grad = grad_t @ inv_precond
+                        # 将预条件化后的梯度恢复到原始形状
+                        grad = grad.view(original_size)
+                    else:
+                        # 如果不是最后一个维度，直接左乘
+                        grad = inv_precond @ grad
+                        # 恢复到转置后的形状，准备处理下一个维度
+                        grad = grad.view(transposed_size)
+
+                state["step"] += 1
+                # 更新动量缓冲（用的是预条件化后的梯度）
+                state["momentum_buffer"] = grad
+                # --- 更新参数 ---
+                p.data.add_(grad, alpha=-group["lr"])
+
+        return loss
+```
+
+</details>
 
 ## 符号梯度下降
 
@@ -1312,7 +1713,7 @@ Rprop 的出现早于 RMSprop，从命名风格就可以看出它们的一脉相
 
 回忆一下 RMSprop 的计算，它提供了一个梯度缩放系数 $\sqrt{G_n}$，其中 $G$ 是对 $g^2$ 的平均。
 
-那么最后的参数更新就变成了 $-\eta\dfrac{g}{\sqrt{\bar g^2}}$，如果我们考虑全量（Full batch）更新，也就是让 $\mathcal{|B|}=n$ 即 Batch size 等于样本数量，那么我们甚至可以把这个“平均梯度”的平均去掉。这样实际的更新量就是梯度的**符号函数** $\text{sign}(g)$ 了！
+那么最后的参数更新就变成了 $-\eta\dfrac{g}{\sqrt{\bar g^2}}$，如果我们考虑全量（Full batch）更新，也就是让 $\mathcal{|B|}=n$ 即 Batch size 等于样本数量，那么我们甚至可以把这个“平均梯度”的平均去掉。这样实际的更新量就是梯度的**符号函数** $\mathrm{sign}(g)$ 了！
 
 这就是 Rprop 的更新原理。也就是所有符号梯度下降优化器的理论核心：梯度的**方向**相比其在不同方向的**大小**更重要！
 
@@ -1322,11 +1723,110 @@ Rprop 的出现早于 RMSprop，从命名风格就可以看出它们的一脉相
 
 $$
 \begin{align*}
-    g_n&=\nabla\mathcal{L({x_{\text{full}}};\theta_{n-1})}\\
-    \hat g_n&=\text{sign}(g_n)\\
+    g_n&=\nabla\mathcal{L({x_{\mathrm{full}}};\theta_{n-1})}\\
+    \hat g_n&=\mathrm{sign}(g_n)\\
     \theta_n&=\theta_{n-1}-\eta\hat g_n
 \end{align*}
 $$
+
+由此，就能写出代码了：
+
+<details>
+
+<summary> Rprop 的实现</summary>
+
+```python
+def _single_tensor_rprop(
+    params: list[Tensor],
+    grads: list[Tensor],
+    prevs: list[Tensor],
+    step_sizes: list[Tensor],
+    state_steps: list[Tensor],
+    *,
+    step_size_min: float,
+    step_size_max: float,
+    etaminus: float,
+    etaplus: float,
+    maximize: bool,
+    capturable: bool,
+    differentiable: bool,
+    has_complex: bool,
+):
+    # 循环处理每个参数
+    for i, param in enumerate(params):
+        grad = grads[i]
+        grad = grad if not maximize else -grad
+        prev = prevs[i]
+        step_size = step_sizes[i]
+        step = state_steps[i]
+
+        # --- CUDA Graph 捕获检查 ---
+        if not torch.compiler.is_compiling() and capturable:
+            capturable_supported_devices = _get_capturable_supported_devices()
+            assert (
+                param.device.type == step.device.type
+                and param.device.type in capturable_supported_devices
+            ), "如果 capturable=True, params 和 state_steps 必须在支持的设备上。"
+
+        step += 1
+
+        # --- 处理复数 ---
+        if torch.is_complex(param):
+            grad = torch.view_as_real(grad)
+            prev = torch.view_as_real(prev)
+            param = torch.view_as_real(param)
+            step_size = torch.view_as_real(step_size)
+        
+        # --- Rprop 核心逻辑 ---
+
+        # 1. 计算当前梯度与上一步梯度的乘积的符号
+        # sign > 0: 梯度符号相同
+        # sign < 0: 梯度符号相反
+        # sign = 0: 其中一个梯度为零
+        if differentiable:
+            # 在可微分模式下，需要克隆 prev 以防原地操作破坏计算图
+            sign = grad.mul(prev.clone()).sign()
+        else:
+            sign = grad.mul(prev).sign()
+
+        # 2. 根据符号 sign 的值，确定步长的更新因子
+        # 这里用 sign 张量来存储更新因子 (etaplus, etaminus, 1)
+        if capturable:
+            # Capturable 模式下使用 torch.where
+            sign.copy_(torch.where(sign.gt(0), etaplus, sign))   # 符号相同，更新因子为 etaplus
+            sign.copy_(torch.where(sign.lt(0), etaminus, sign))  # 符号相反，更新因子为 etaminus
+            sign.copy_(torch.where(sign.eq(0), 1, sign))         # 符号为0，更新因子为 1 (步长不变)
+        else:
+            # 常规模式下使用索引赋值，通常更高效
+            sign[sign.gt(0)] = etaplus
+            sign[sign.lt(0)] = etaminus
+            sign[sign.eq(0)] = 1
+
+        # 3. 更新步长
+        # 用更新因子乘以当前步长，并将其限制在 [step_size_min, step_size_max] 范围内
+        step_size.mul_(sign).clamp_(step_size_min, step_size_max)
+
+        # 4. 根据 Rprop 规则修改当前梯度
+        # 这是一个 Rprop 的变体规则：如果梯度符号反转 (sign.eq(etaminus))，
+        # 则本次更新的梯度设为0，意味着参数在这一步不移动。
+        grad = grad.clone(memory_format=torch.preserve_format)
+        if capturable:
+            grad.copy_(torch.where(sign.eq(etaminus), 0, grad))
+        else:
+            grad[sign.eq(etaminus)] = 0
+
+        # 5. 更新参数
+        # 参数的更新量只取决于当前梯度的符号和更新后的步长
+        # 公式: param_t = param_{t-1} - sign(grad_t) * step_size_t
+        param.addcmul_(grad.sign(), step_size, value=-1)
+
+        # 6. 保存当前梯度，作为下一步的 "prev"
+        prev.copy_(grad)
+```
+
+</details>
+
+代码相对刚刚的讲解多了亿点点细节，因为它实现的是名叫 Rprop with weight-backtracking 的算法。这个改进的作用体现在我们之前提过无数次的椭圆抛物面上面，加入 `sign` 项之后，就可以检测到梯度在“反复横跳”，这个时候就不应该放任它跳，而是减少步长才更有希望落到下面。
 
 ### Lion
 
@@ -1337,7 +1837,7 @@ Lion 优化器是 Google 团队搜出来的优化器，尽管不是从某个理�
 $$
 \begin{align*}
     g_n&=\nabla\mathcal{L(x;\theta_{n-1})}\\
-    G_n&=\text{sign}(\beta_1 M_{n-1}+(1-\beta_1)g_n)\\
+    G_n&=\mathrm{sign}(\beta_1 M_{n-1}+(1-\beta_1)g_n)\\
     \theta_n&=\theta_{n-1}+\eta(G_n+\lambda \theta_{n-1})\\
     M_n &= \beta_2 M_{n-1}+(1-\beta_2)g_n
 \end{align*}
