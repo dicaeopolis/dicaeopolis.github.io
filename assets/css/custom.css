@@ -1,0 +1,65 @@
+/* GIF 播放器容器 */
+.gif-player {
+  position: relative; /* 关键：为子元素的绝对定位提供参考 */
+  display: inline-block; /* 使容器大小适应图片 */
+  cursor: pointer;
+}
+
+/* 播放按钮样式 */
+.gif-player-button {
+  position: absolute; /* 绝对定位，覆盖在图片上 */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); /* 精确居中 */
+  width: 60px;
+  height: 60px;
+  background-color: rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
+  border: 2px solid white;
+  transition: all 0.2s ease;
+}
+
+/* 用伪元素创建播放三角形 */
+.gif-player-button::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 54%;
+  transform: translate(-50%, -50%);
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 12px 0 12px 20px;
+  border-color: transparent transparent transparent white;
+}
+
+/* 鼠标悬停时，按钮变亮 */
+.gif-player:hover .gif-player-button {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+/* 当 GIF 正在播放时，隐藏按钮 */
+.gif-player.is-playing .gif-player-button {
+  display: none;
+}
+
+/* --- 在 custom.css 文件末尾添加以下内容 --- */
+
+/* 重播按钮的图标（循环箭头） */
+.gif-player-button[data-state="replay"]::after {
+  content: '\21BB'; /* 这是 Unicode 的循环箭头字符 ↺ */
+  font-size: 30px;
+  font-weight: bold;
+  color: white;
+  /* 覆盖掉原来的播放三角形 */
+  border-style: none; 
+  /* 微调位置使其居中 */
+  left: 50%;
+  line-height: 1;
+}
+
+/* 当 GIF 正在播放时，隐藏按钮 */
+.gif-player.is-playing .gif-player-button {
+  opacity: 0;
+  pointer-events: none; /* 按钮透明时不可点击 */
+}

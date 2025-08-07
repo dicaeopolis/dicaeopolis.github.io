@@ -112,8 +112,10 @@ extra_css:
   - themes/css/pied_piper.css
   - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css
   - stylesheets/customize.css  #按钮圆角化
+  - assets/css/custom.css
  
 extra_javascript:
+  - assets/js/custom.js
   - themes/js/custom.js
   - themes/js/simpleLightbox.min.js
   - themes/js/optionalConfig.js
