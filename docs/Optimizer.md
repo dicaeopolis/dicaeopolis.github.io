@@ -2359,9 +2359,273 @@ class Lion(Optimizer):
 
 ### Muon
 
-最后让我们祭出 Muon 优化器，也就是 Kimi-K2 模型训练使用的优化器。这一节的撰写，在很大程度上参考了苏剑林的这几篇博客：
+最后让我们祭出 Muon 优化器，也就是 Kimi-K2 模型训练使用的优化器。这一节的撰写，在很大程度上参考了苏剑林的博客：
 
 我们计划从两条路线“包抄”推导 Muon 优化器。
+
+第一条思路是 Lion 优化器的思路，或者说是 Rprop 的思路。最开始对 Rprop 的分析建立在参数更新量是 $-\eta\dfrac{g}{\sqrt{\bar g^2}}$ 的基础上，然后非常武断地认为对于**矩阵**而言 $\dfrac{g}{\sqrt{\bar g^2}}=\mathrm{sign}(g)$，但是如果我们**从表达式本身出发**呢？
+
+让我们回到梦开始的地方，AdaGrad 优化器的初衷是计算 $\dfrac{g}{\sqrt{gg^\top}}$。考虑单个 fc layer（正如我们在 Shampoo 优化器中做的那样），则 $g$ 是一个 $n\times m$ 的矩阵。这启发我们设计这样一个**矩阵符号函数**：$\mathrm{msign}(M)=(MM^\top)^{-\frac 12}M$。
+
+依旧是和 Shampoo 优化器一样，矩阵的逆 $p$ 次方根是通过 SVD 计算（得到推广）的。也就是考虑 $M=U\Sigma V^\top$ 则 $M^{-\frac 1p}=U\Sigma^{-\frac 1p}V^\top$。
+
+对 $M$ 做 SVD 也就是 $M=U\Sigma V^\top$，那么：
+$$
+\begin{align*}
+    \mathrm{msign}(M)&=(U\Sigma V^\top V\Sigma U^\top)^{-\frac 12}(U\Sigma V^\top)\\
+    &=(U\Sigma^2U^\top)^{-\frac 12}(U\Sigma V^\top)\\
+    &=U\Sigma^{-1}U^\top U\Sigma V^\top\\
+    &=U_{[:r]}V_{[:r]}^\top
+\end{align*}
+$$
+
+其中 $r$ 为 $M$ 的奇异值个数。
+
+利用这个**矩阵符号函数**代替 Rprop 的符号函数，并引入动量（但是，不像 Lion 一样把动量的更新放在最后），就得到 Muon 优化器的更新公式了：
+
+$$
+\begin{align*}
+    g_n&=\nabla \mathcal{L}(x;\theta_{n-1})\\
+    M_n&=\beta M_{n-1}+g_n\\
+    \theta_n&=\theta_{n-1}-\eta\mathrm{msign}(M_n+\lambda \theta_{n-1})
+\end{align*}
+$$
+
+这里和 Lion 不一样的是把正则化解耦到了符号函数里面。
+
+第二条路，如果我们重新审视 Shampoo 优化器在一个 fc layer 的情况：
+
+$$
+\begin{align*}
+    L_n &= \beta L_{n-1} + g_n g_n^\top\\
+R_n &= \beta R_{n-1} + g_n^\top g_n\\
+H^{-\frac 12}g&=L^{- \frac 14}g_nR^{- \frac 14}
+\end{align*}
+$$
+
+在 $\beta=0$ 的时候，我们有：
+
+$$
+\begin{align*}
+    L^{- \frac 14}gR^{- \frac 14}=(g_n g_n^\top)^{- \frac 14}g_n(g_n^\top g_n)^{- \frac 14}
+\end{align*}
+$$
+
+对 $g_n$ 做 SVD 即 $g_n=U\Sigma V^\top$，接着推式子：
+
+$$
+\begin{align*}
+    L^{- \frac 14}gR^{- \frac 14}&=(g_n g_n^\top)^{- \frac 14}g_n(g_n^\top g_n)^{- \frac 14}\\
+    &=(U\Sigma V^\top V\Sigma U^\top)^{- \frac 14}(U\Sigma V^\top)(V\Sigma U^\top U\Sigma V^\top)\\
+    &=(U\Sigma^2 U^\top)^{- \frac 14}(U\Sigma V^\top)(V\Sigma^2 V^\top)^{- \frac 14}\\
+    &=U\Sigma^{- \frac 12}\Sigma \Sigma^{- \frac 12} V^\top\\
+    &=\mathrm{msign}(g_n)
+\end{align*}
+$$
+
+这意味着 Shampoo 也冥冥中使用了 $\mathrm{msign}$ 函数！
+
+反观 Muon 的显存占用和 SGDM 一样，但是理论上打包算出了 $gg^\top$，效果应该会相当赞啊！
+
+我们知道 Shampoo 优化器的目标是使用 Kronecker 积高效优化 Hessian 计算，最终近似 $gg^\top$；而 Muon 一个打包处理，就非常高效地计算出来了……吗？
+
+我们只是得到了参数更新时，如果每一次都要计算 SVD 的话，那代价仍然是不可承担的。这，便是 Muon 最后一个字 N (for Newton-Schulz) 的含义！
+
+我们不使用 SVD，而是采用 $\mathrm{msign}(M)=(MM^\top)^{-\frac 12}M$ 来计算。具体而言，我们要计算 $(MM^\top)^{-\frac 12}$。
+
+Muon 的作者使用 Newton-Schulz 迭代来计算这个矩阵。Newton-Schulz 迭代是一种迭代法矩阵求逆算法，从 $AX=I$ 开始用 Newton 法类似的迭代式子逐步求解 $X=A^{-1}$。
+
+在这里，我们其实是从 $MM^\top=I$ 开始进行迭代。也就是将 $(MM^\top)^{-\frac 12}$ 近似成 $MM^\top-I$ 的多项式。嘿，我知道你在想泰勒展开的事情，但是想想我们最小/大化的是什么？（比如，如果我们想最大化正弦和三次函数的相似度，我们应该使用基于勒让德多项式的傅里叶级数来展开而不是使用泰勒展开……）
+
+所以别急。我们考虑展开到三项，也就是
+
+$$
+\mathrm{msign}(M)\approx aM+b(MM^\top)M+c(MM^\top)^2M
+$$
+
+我们的优化目标是：尽可能对于所有的 $M$ 都具有最快的收敛速度。
+
+我们对 $M$ 做一下 SVD，也就是
+
+$$
+\begin{align*}
+    \mathrm{msign}(M)&=aU\Sigma V^\top+b(U\Sigma V^\top V\Sigma U^\top)(U\Sigma V^\top)+c(U\Sigma V^\top V\Sigma U^\top)^2(U\Sigma V^\top)\\
+    &=aU\Sigma V^\top+bU\Sigma^3V^\top+cU\Sigma^5V^\top\\
+    &=U(a\Sigma+b\Sigma^3+c\Sigma^5)V^\top
+\end{align*}
+$$
+
+对于奇异值的每一项 $\sigma\in(0,1]$ 而言，我们其实希望 $a\sigma+b\sigma^3+c\sigma^5$ 能够在 $k$ 次迭代中尽量逼近 $1$。
+
+现在我们就可以设计问题了：固定迭代次数 $k$，令 $f(x)=ax+bx^3+cx^5(x\in(0,1])$，然后损失函数使用 MSE：$\mathcal{L}([1-f^{(k)}(x)]^2;a,b,c)$，寻找 $a,b,c$ 使得 $\mathcal{L}$ 最小。我们采用 Adam 来跑一跑。
+
+<details>
+
+<summary> 优化使用的代码</summary>
+
+```python
+import torch
+import torch.optim as optim
+import matplotlib.pyplot as plt
+import numpy as np
+
+# --- 1. 设置超参数和固定值 ---
+k = 5                # 固定迭代次数
+learning_rate = 5e-5 # Adam 优化器的学习率
+num_steps = 100000     # 优化步数
+batch_size = 2048    # 每步优化中采样的 x 的数量
+
+a = torch.tensor([1.0], requires_grad=True)
+b = torch.tensor([-1.0], requires_grad=True)
+c = torch.tensor([1.0], requires_grad=True)
+
+# --- 3. 设置优化器 ---
+# 使用 Adam 优化器来更新 a, b, c
+optimizer = optim.Adam([a, b, c], lr=learning_rate)
+
+# 存储历史记录以供可视化
+loss_history = []
+a_history, b_history, c_history = [], [], []
+
+print(f"开始优化... k={k}, 初始值 a={a.item():.2f}, b={b.item():.2f}, c={c.item():.2f}")
+
+# --- 4. 优化循环 ---
+for step in range(num_steps):
+    # 将梯度清零
+    optimizer.zero_grad()
+
+    # 定义 f(x)
+    def f(x_in):
+        return a * x_in + b * x_in**3 + c * x_in**5
+
+    # 在 (0, 1] 区间随机采样一个 mini-batch 的 x
+    # torch.rand 生成 [0, 1) 的值，对于我们的目的来说足够了
+    x = torch.rand(batch_size, 1)
+
+    # 计算 f^(k)(x)
+    y = x
+    for _ in range(k):
+        y = f(y)
+    
+    # 最终的输出
+    f_k_x = y
+
+    # 定义目标值 (全为 1 的张量)
+    target = torch.ones_like(f_k_x)
+
+    # 计算损失函数 (MSE)
+    loss = torch.mean((target - f_k_x)**2)
+
+    # 反向传播计算梯度
+    loss.backward()
+
+    # 使用优化器更新参数 a, b, c
+    optimizer.step()
+
+    # 记录历史数据
+    loss_history.append(loss.item())
+    a_history.append(a.item())
+    b_history.append(b.item())
+    c_history.append(c.item())
+
+    # 每 1000 步打印一次进度
+    if step % 1000 == 0 or step == num_steps - 1:
+        print(f"Step {step:>{len(str(num_steps))}}: Loss = {loss.item():.8f}, "
+              f"a = {a.item():.4f}, b = {b.item():.4f}, c = {c.item():.4f}")
+
+# --- 5. 结果展示 ---
+print("\n--- 优化完成 ---")
+print(f"固定迭代次数 k = {k}")
+print(f"最终损失: {loss.item():.8f}")
+print(f"优化后的参数: a = {a.item():.4f}, b = {b.item():.4f}, c = {c.item():.4f}")
+print(f"参数和 a+b+c = {(a+b+c).item():.4f} (理论上应趋近于 1)")
+
+
+# --- 6. 可视化 ---
+
+# 绘制损失和参数值的变化过程
+plt.style.use('seaborn-v0_8-whitegrid')
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10), sharex=True)
+
+# 绘制损失函数
+ax1.plot(loss_history, label='Loss (MSE)', color='red')
+ax1.set_ylabel('Loss')
+ax1.set_title(f'Loss and Parameter Evolution (k={k})')
+ax1.set_yscale('log') # 使用对数坐标轴以便观察
+ax1.legend()
+
+# 绘制参数 a, b, c
+ax2.plot(a_history, label='a', linestyle='-')
+ax2.plot(b_history, label='b', linestyle='--')
+ax2.plot(c_history, label='c', linestyle=':')
+ax2.set_xlabel('Optimization Step')
+ax2.set_ylabel('Parameter Value')
+ax2.legend()
+plt.tight_layout()
+plt.show()
+
+# 绘制优化前后的函数 f(x) 和 f^(k)(x)
+x_plot = torch.linspace(0.01, 1, 200).unsqueeze(1)
+
+# 优化后的函数
+def f_final(x_in):
+    return a.detach() * x_in + b.detach() * x_in**3 + c.detach() * x_in**5
+
+# 初始函数
+def f_initial(x_in):
+    return 1.0 * x_in + (-1.0) * x_in**3 + 1.0 * x_in**5
+
+# 计算 k 次迭代
+y_final_k = x_plot
+y_initial_k = x_plot
+for _ in range(k):
+    y_final_k = f_final(y_final_k)
+    y_initial_k = f_initial(y_initial_k)
+
+plt.figure(figsize=(12, 8))
+plt.plot(x_plot.numpy(), f_initial(x_plot).numpy(), 'b--', label='Initial $f(x) = x-x^3+x^5$')
+plt.plot(x_plot.numpy(), f_final(x_plot).numpy(), 'g-', label=f'Optimized $f(x)$ (k={k})')
+plt.plot(x_plot.numpy(), y_final_k.numpy(), 'r-', lw=2, label=f'Optimized $f^{{({k})}}(x)$')
+plt.plot(x_plot.numpy(), x_plot.numpy(), 'k:', label='$y=x$ (identity)')
+plt.axhline(y=1.0, color='gray', linestyle='--', label='Target y=1')
+plt.title(f'Comparison of Functions (k={k})')
+plt.xlabel('x')
+plt.ylabel('f(x) or $f^{(k)}(x)$')
+plt.legend()
+plt.ylim(-0.1, 1.5)
+plt.xlim(0, 1)
+plt.show()
+```
+
+</details>
+
+这里我选择的初始值是随机的 $a=1,b=-1,c=1$ 满足 $a+b+c=1$，下面是（截断的）日志输出：
+
+```text
+开始优化... k=5, 初始值 a=1.00, b=-1.00, c=1.00
+Step      0: Loss = 0.58154202, a = 1.0000, b = -0.9999, c = 1.0000
+Step   1000: Loss = 0.52524936, a = 1.0461, b = -1.0118, c = 0.9704
+Step   2000: Loss = 0.46161765, a = 1.0933, b = -1.0257, c = 0.9381
+......
+Step  99000: Loss = 0.00160778, a = 3.1010, b = -3.4233, c = 1.3183
+Step  99999: Loss = 0.00136968, a = 3.1010, b = -3.4236, c = 1.3181
+
+--- 优化完成 ---
+固定迭代次数 k = 5
+最终损失: 0.00136968
+优化后的参数: a = 3.1010, b = -3.4236, c = 1.3181
+参数和 a+b+c = 0.9954 (理论上应趋近于 1)
+```
+
+MSE 干到了 1e-3 量级。下面是训练过程的损失曲线、参数变化曲线和最终函数的拟合图线：
+
+![loss](./optimizer_pics/loss.png)
+
+![curve](./optimizer_pics/curve.png)
+
+相比之下，这是 Muon 作者提出的参数配置：$a=3.4445,b=−4.7750,c=2.0315$
+
+![curve_2](./optimizer_pics/curve_2.png)
 
 ## 非梯度参数优化
 
