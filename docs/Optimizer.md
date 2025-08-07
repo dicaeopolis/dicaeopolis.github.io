@@ -2370,6 +2370,7 @@ class Lion(Optimizer):
 依旧是和 Shampoo 优化器一样，矩阵的逆 $p$ 次方根是通过 SVD 计算（得到推广）的。也就是考虑 $M=U\Sigma V^\top$ 则 $M^{-\frac 1p}=U\Sigma^{-\frac 1p}V^\top$。
 
 对 $M$ 做 SVD 也就是 $M=U\Sigma V^\top$，那么：
+
 $$
 \begin{align*}
     \mathrm{msign}(M)&=(U\Sigma V^\top V\Sigma U^\top)^{-\frac 12}(U\Sigma V^\top)\\
