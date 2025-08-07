@@ -321,24 +321,15 @@ $$
 
 它体现为一个鸡蛋托地形，具有很多局部极小值和鞍点。
 
-这是 SGD 在 rosenbrock 函数下的表现（单击图片播放）：
+这是 SGD 在 rosenbrock 函数下的表现：
 
-<div class="gif-player" 
-     data-static-src="../assets/images/optimizer_pics/rosenbrock_SGD.png" 
-     data-animated-src="../assets/images/optimizer_pics/rosenbrock_SGD.gif">
-     
-  <!-- 初始显示静态图 -->
-  <img src="../assets/images/optimizer_pics/rosenbrock_SGD.png" alt="动画预览">
-  
-  <!-- 播放/重播按钮 -->
-  <div class="gif-player-button" data-state="play"></div>
-</div>
+![rosenbrock_SGD](../assets/images/optimizer_pics/rosenbrock_SGD.gif)
 
 可以看到确实出现了这种“反复横跳”。
 
 这是 SGD 在 rastrigin 函数下的表现：
 
-![rastrigin_SGD](./optimizer_pics/rastrigin_SGD.gif)
+![rastrigin_SGD](../assets/images/optimizer_pics/rastrigin_SGD.gif)
 
 可以看到它确实变得很“懒”，陷入离初始点最近的局部最小值了。
 
@@ -361,6 +352,14 @@ $$
 （若不做特殊说明，$\nabla\mathcal{L({x};\theta_{n-1})}$ 一概指一个 mini-batch 的平均梯度即 $\dfrac{1}{|\mathcal{B}|}\sum^{|\mathcal{B}|}_{i=1}\nabla\mathcal{L}(x_i;\theta_{n-1})$）
 
 这样就得到了**动量法随机梯度下降**即 SGD with Momentum 或 SGDM 算法了。式子里面的 $\beta_1$ 指的是动量衰减因子，可以理解成某种摩擦阻力，要不然就会一直在极小值周围做（近似）的椭圆天体运动不收敛， $\beta_3$ 是梯度的参考系数，而 $\eta$ 就是学习率了。
+
+这是动量法随机梯度下降在之前两个函数的运动轨迹：
+
+![rastrigin_SGD_Momentum](../assets/images/optimizer_pics/rastrigin_SGD_Momentum.gif)
+
+![rosenbrock_SGD_Momentum](../assets/images/optimizer_pics/rosenbrock_SGD_Momentum.gif)
+
+可以看见在算法初期，SGDM 的步长较长（因为累积的动量较大），这有利于增大搜索空间，直到进入一个平缓的谷底之后，动量开始衰减并且向最小值靠近。
 
 #### Nesterov 加速
 
@@ -487,7 +486,13 @@ $$
 
 #### 评述
 
-SGDM 能够具有更快的收敛速率，尤其对于梯度不对称场景下，能够实现均衡的梯度累积，即减缓前后横跳，加速向下滚动。动量居功至伟。
+让我们看看 NAG 的轨迹：
+
+![](../assets/images/optimizer_pics/rastrigin_NAG.gif)
+
+![](../assets/images/optimizer_pics/rosenbrock_NAG.gif)
+
+SGDM 能够具有更快的收敛速率，尤其对于梯度不对称场景下，能够实现均衡的梯度累积，即减缓前后横跳，加速向下滚动。动量居功至伟。尤其是引入 Nesterov 加速后，动量的针对性更强，收敛速率也更快了。
 
 ### 正则化优化
 
@@ -747,6 +752,14 @@ $$
 
 为了防止除零错误，$\epsilon$ 是一个小正数。在实践上也会有把 $\epsilon$ 提到根号外的情况，都是等价的。
 
+下面是 AdaGrad 的轨迹演示：
+
+![rastrigin_Adagrad](../assets/images/optimizer_pics/rastrigin_Adagrad.gif)
+
+![rosenbrock_Adagrad](../assets/images/optimizer_pics/rosenbrock_Adagrad.gif)
+
+可见 AdaGrad 对于大梯度有更大的步长，并且随着进入平缓的部分逐渐衰减。但是这仅仅类似于 SGD 加上一个自适应，并没有对 rosenbrock 这种地形做很好的适应，尤其在后期一直在梯度方向横跳。
+
 #### AdaGrad 的代码实现
 
 同样让我们看看 `PyTorch` 对这个算法的实现。
@@ -857,7 +870,7 @@ def _single_tensor_adagrad(
 
 AdaGrad 通过累积的 $G$ 来实现对 Hessian 的近似，**按理说**应该具有更加优秀的学习率调度。毕竟，AdaGrad 就是 Adaptive Gradient 的省略嘛！
 
-但是事实上我们可以发现，如果在一个并不好的，梯度很大的初始位置开始进行优化，那累积在 $G_n$ 里面的梯度将会是“一辈子都抹不去的东西”，$G_n$ 的值只会越来越大，即使走出这样的地方，仍然会因为这个“历史包袱”而寸步难行。尤其是刚刚的近似只是对靠近最优点能够很有效，有没有办法从梯度能够获得对 Hessian 矩阵的更好估计呢？这就要祭出 RMSprop 了。
+但是事实上我们可以发现，如果在一个并不好的，梯度很大的初始位置开始进行优化，那累积在 $G_n$ 里面的梯度将会是“一辈子都抹不去的东西”，$G_n$ 的值只会越来越大，即使走出这样的地方，仍然会因为这个“历史包袱”而寸步难行（也就是初始梯度对全局影响过大）。尤其是刚刚的近似只是对靠近最优点能够很有效，有没有办法从梯度能够获得对 Hessian 矩阵的更好估计呢？这就要祭出 RMSprop 了。
 
 ### RMSprop
 
@@ -896,6 +909,15 @@ $$
 RMS 指的就是 $\sqrt{\epsilon+G_n}$，既有滑动窗口的平方平均 (Mean Square)，又在最后开了根(Root)。
 
 prop的意思就是反向传播了。毕竟我们是对神经网络做的优化。
+
+
+让我们来看看 RMSprop 的轨迹演示：
+
+![rastrigin_RMSprop](../assets/images/optimizer_pics/rastrigin_RMSprop.gif)
+
+![rosenbrock_RMSprop](../assets/images/optimizer_pics/rosenbrock_RMSprop.gif)
+
+RMSprop 相比于 AdaGrad 其实只是更改了学习率自适应程度，还是没有逃脱在 rosenbrock 下反复横跳的宿命。这已经不是一般的损失地形了，必须要~~出重拳~~引入动量来调整参数更新方向！——不过这都是后话了，有关讨论敬请参阅 Adam 一节。
 
 #### RMSprop 的代码实现
 
@@ -1046,6 +1068,14 @@ $$
 
 可以看到 AdaDelta 已经完全实现了自适应调节，连学习率的估计都实现了自动化调整。
 
+让我们看看轨迹：
+
+![rastrigin_Adadelta](../assets/images/optimizer_pics/rastrigin_Adadelta.gif)
+
+![rosenbrock_Adadelta](../assets/images/optimizer_pics/rosenbrock_Adadelta.gif)
+
+可以看到相比于之前的几个 Ada（Adaptive 的省写）优化器，尽管 AdaDelta 的学习率大了好几倍，在参数更新量上面还是偏保守。
+
 下面是 AdaDelta 的代码实现：
 
 <details>
@@ -1148,7 +1178,7 @@ def _single_tensor_adadelta(
 
 </details>
 
-我们已经在动量加速和自适应学习率两条道路上走了很远了，那么，有没有一种方法，能够无缝融合，真正集这两家武功之大成呢？有的，这就是接下来要讨论的 Adam 优化器，也就是目前最广泛使用的一个优化器。
+回到我们刚刚在 RMSprop 的讨论上，其实我们已经在动量加速和自适应学习率两条道路上走了很远了，那么，有没有一种方法，能够无缝融合，真正集这两家武功之大成呢？有的，这就是接下来要讨论的 Adam 优化器，也就是目前最广泛使用的一个优化器。
 
 ### Adam
 
@@ -1168,6 +1198,14 @@ $$
 $$
 
 可以看到，$M_n$ 和 $G_n$ 的计算与先前的优化器并无二致，自适应学习率调整也和 RMSprop 一样。但是 Adam 还额外做了一个**随步数衰减**的缩放，这是因为迭代初期时没有填满滑动窗口导致 $M_n$ 和 $G_n$ 事实上偏小，所以需要这个 $\dfrac{1}{1-\beta^n}$ 来补偿。
+
+现在来看看两个函数下 Adam 优化器的轨迹：
+
+![rastrigin_Adam](../assets/images/optimizer_pics/rastrigin_Adam.gif)
+
+![rosenbrock_Adam](../assets/images/optimizer_pics/rosenbrock_Adam.gif)
+
+在自适应学习率的基础上引入动量之后，Adam 的性能相比 RMSprop 可以说是突飞猛进！在 rastrigin 地形下通过初始的大学习率找到正确的谷地然后慢慢衰减学习率下降到精确解；在 rosenbrock 地形下不仅不再反复横跳，还能沿着谷底有效前进。
 
 等着看代码吗？别急，Adam 优化器在提出之后，也是经历了如过山车一般起伏的波折，现在的 Adam 实现早就不是原来那个 Adam 了。
 
@@ -1479,7 +1517,15 @@ $$
 G_n = \max\{\beta_2G_{n-1}, |g_n|\}
 $$
 
-因此 Adamax 宣称自己相对 Adam，能够解决不收敛问题，还可以简省计算量。不过这样魔改，真的能对 Hessian 做更好的估计吗……还是来看看代码实现吧：
+因此 Adamax 宣称自己相对 Adam，能够解决不收敛问题，还可以简省计算量。不过这样魔改，真的能对 Hessian 做更好的估计吗……
+
+看它在这两个损失地形上的表现，其实还不错：
+
+![rastrigin_Adamax](../assets/images/optimizer_pics/rastrigin_Adamax.gif)
+
+![rosenbrock_Adamax](../assets/images/optimizer_pics/rosenbrock_Adamax.gif)
+
+还是来看看代码实现吧：
 
 <details>
 
@@ -1625,7 +1671,15 @@ $$
 \end{align*}
 $$
 
-于是，就有了下面的代码：
+这是优化器的轨迹动图：
+
+![rastrigin_NAdam](../assets/images/optimizer_pics/rastrigin_NAdam.gif)
+
+![rosenbrock_NAdam](../assets/images/optimizer_pics/rosenbrock_NAdam.gif)
+
+看来 Nadam 和 Adam 差不太多，并没有像 SGD 引入 NAG 那样惊艳。
+
+下面是代码：
 
 <details>
 
@@ -1817,7 +1871,15 @@ $$
 这里下标出现了 $t$ 是因为考虑到取逆 $2k
 $ 次根的复杂性，我们不必每一轮迭代都去计算这预条件子 $P_{t}$，而是可以选择在多轮周期之后再更新。
 
-这样，我们就看得懂 `torch-optimizer` 库的实现了：
+下面是 Shampoo 优化器的轨迹：
+
+![rastrigin_Shampoo](../assets/images/optimizer_pics/rastrigin_Shampoo.gif)
+
+![rosenbrock_Shampoo](../assets/images/optimizer_pics/rosenbrock_Shampoo.gif)
+
+可以看到，有了对二阶信息更精确的估计，Shampoo 的效果甚至比 Adam 更加惊艳。在谷底处 Shampoo 基本上没有了横跳现象。不过，我们能不能把参数更新方向再优化一下？欲知如何优化，且看后文“符号梯度下降”。
+
+有了之前的讨论，我们就看得懂 `torch-optimizer` 库的实现了：
 
 <details>
 
@@ -1998,7 +2060,15 @@ Rprop 的出现早于 RMSprop，从命名风格就可以看出它们的一脉相
 
 回到我们之前讨论的那个椭圆抛物面，如果我们过于依赖梯度大小，就会造成“反复横跳”的问题，因为梯度在我们预期的优化方向的**垂直**方向上，有相当大的大小，这就影响了优化器在 Hessian 矩阵条件数相当大的时候，逃离鞍点的能力。
 
-让我们来看看 Rprop 的更新公式：
+在看公式之前，先看看 Rprop 的效果吧：
+
+![rastrigin_Rprop](../assets/images/optimizer_pics/rastrigin_Rprop.gif)
+
+![rosenbrock_Rprop](../assets/images/optimizer_pics/rosenbrock_Rprop.gif)
+
+可以看到，如果忽略全量梯度计算这个（大）问题，Rprop 在这两个地形的收敛能力完全可以媲美 Adam！尤其是在 rosenbrock 地形下 Rprop 沿着谷底移动的速度是相当快的。
+
+现在让我们来看看 Rprop 的更新公式：
 
 $$
 \begin{align*}
@@ -2122,7 +2192,170 @@ $$
 \end{align*}
 $$
 
-可以看到，Lion 类似于引入动量的 Rprop，不过只是把动量的更新放到了最后。这里没有使用全量计算，而是使用平均梯度来规避全量计算的复杂度。考虑到符号函数对梯度大小的裁剪，一般这种优化器的学习率相对 AdamW 要大几倍。
+可以看到，Lion 类似于引入动量的 Rprop，不过只是把动量的更新放到了最后。这里没有使用全量计算，而是使用平均梯度来规避全量计算的复杂度。由于动量的引入，Lion 需要更小的学习率。
+
+让我们看看 Lion 的效果：
+
+![rastrigin_Lion](../assets/images/optimizer_pics/rastrigin_Lion.gif)
+
+![rastrigin_Lion_2](../assets/images/optimizer_pics/rastrigin_Lion_2.gif)
+
+![rosenbrock_Lion](../assets/images/optimizer_pics/rosenbrock_Lion.gif)
+
+可以看见 Lion 也在这两个地形获得了不错的表现。虽然在 rastrigin 地形下面 hyperopt 并没有搜出一个特别好的参数，但是对于 rosenbrock 地形，Lion 取得了我们目前所见最快的谷底行进速度。
+
+让我们看看 `torch-optimizer` 库的实现：
+
+<details>
+
+<summary> Lion 优化器的实现 </summary>
+
+```python
+# 导入 PyTorch 核心库
+import torch
+# 从 PyTorch 优化器基类中导入 Optimizer，所有自定义优化器都应继承它
+from torch.optim.optimizer import Optimizer
+
+# 从本地类型定义文件中导入类型提示，增强代码可读性
+# Betas2: 一个包含两个浮点数的元组，如 (0.9, 0.99)
+# OptFloat: 可选的浮点数，即 float 或 None
+# OptLossClosure: 可选的损失闭包函数
+# Params: 可迭代的参数或定义了参数组的字典
+from torch_optimizer.types import Betas2, OptFloat, OptLossClosure, Params
+
+# 定义当 `from module import *` 时，哪些对象会被导出
+__all__ = ("Lion",)
+
+
+# 定义 Lion 优化器类，它继承自 PyTorch 的 Optimizer 基类
+class Lion(Optimizer):
+    r"""实现了 Lion 算法。
+
+    代码改编自 Google 的官方实现: https://github.com/google/automl/tree/master/lion
+
+    Lion - EvoLved SIgn MOmeNtum (演进的符号动量) 算法在
+    论文 https://arxiv.org/pdf/2302.06675.pdf 中被提出。
+    Lion 的目标是通过只跟踪动量来比 Adam 算法更节省内存。
+
+    注意事项:
+    - 如论文中所述，Lion 需要一个更小的学习率 (lr)。
+    - 为了维持有效的权重衰减强度，需要一个更大的解耦权重衰减 (decoupled weight decay) 值。
+    - Lion 的性能增益会随着批处理大小 (batch size) 的增加而变大。
+    - 此外，在一些大型语言模型和文本/图像数据集上，Lion 并未被发现能超越 AdamW。
+
+    参数:
+        params: 需要优化的、可迭代的参数，或定义了参数组的字典。
+        lr: 学习率 (learning rate)，默认为 1e-4 (注意，论文建议比 Adam 小 3-10 倍)。
+        betas: 用于计算梯度及其平方的运行平均值的系数 (默认: (0.9, 0.99))。
+               在 Lion 中，beta1 用于插值，beta2 用于动量更新。
+        weight_decay: 权重衰减 (L2 惩罚项) (默认: 0)。
+
+    示例:
+        >>> import torch_optimizer as optim
+        >>> optimizer = optim.Lion(model.parameters(), lr=0.001)
+        >>> optimizer.zero_grad()
+        >>> loss_fn(model(input), target).backward()
+        >>> optimizer.step()
+    """
+
+    # 类的构造函数
+    def __init__(
+        self,
+        params: Params,
+        lr: float = 1e-4,          # 学习率
+        betas: Betas2 = (0.9, 0.99), # beta 参数
+        weight_decay: float = 0.0, # 权重衰减系数
+    ):
+        # --- 输入参数合法性检查 ---
+        if lr <= 0.0:
+            raise ValueError("无效的学习率: {}".format(lr))
+        if not 0.0 <= betas[0] < 1.0:
+            raise ValueError(
+                "无效的 beta 参数 (索引 0): {}".format(betas[0])
+            )
+        if not 0.0 <= betas[1] < 1.0:
+            raise ValueError(
+                "无效的 beta 参数 (索引 1): {}".format(betas[1])
+            )
+        if weight_decay < 0:
+            raise ValueError(
+                "无效的 weight_decay 值: {}".format(weight_decay)
+            )
+        
+        # 将超参数打包成一个字典，作为默认配置
+        defaults = dict(lr=lr, betas=betas, weight_decay=weight_decay)
+        # 调用父类 (Optimizer) 的构造函数，完成初始化
+        super().__init__(params, defaults)
+
+    # `@torch.no_grad()` 是一个装饰器，它会禁用此函数内的梯度计算。
+    # 这对于优化器是至关重要的，因为我们是在修改参数值，而不是在计算关于这些修改的梯度。
+    @torch.no_grad()
+    def step(self, closure: OptLossClosure = None) -> OptFloat:
+        r"""执行单步优化。
+
+        参数:
+            closure: 一个可以重新评估模型并返回损失的闭包函数 (可选)。
+        """
+        loss = None
+        # 如果提供了闭包函数 (closure)，则执行它来计算损失。
+        # 这在某些优化算法（如 L-BFGS）中很常见，可以多次评估模型。
+        if closure is not None:
+            with torch.enable_grad(): # 在闭包内需要确保梯度是开启的
+                loss = closure()
+
+        # 遍历所有的参数组 (param_groups)，例如可以为模型的不同部分设置不同的学习率
+        for group in self.param_groups:
+            # 遍历当前参数组中的每一个参数 (p)
+            for p in group["params"]:
+                # 如果参数没有梯度 (例如，在冻结层中)，则跳过
+                if p.grad is None:
+                    continue
+
+                # --- 核心算法开始 ---
+
+                # 1. 执行解耦权重衰减 (Decoupled Weight Decay)
+                # 这是一种 L2 正则化的形式，它直接从参数中减去一个与其自身大小成正比的值。
+                # 注意这里的衰减量是 `lr * weight_decay`，与 AdamW 不同 (AdamW 是 `weight_decay`)。
+                p.data.mul_(1 - group["lr"] * group["weight_decay"])
+
+                grad = p.grad
+                state = self.state[p] # 获取该参数的状态字典，用于存储动量等信息
+
+                # 2. 状态初始化 (State Initialization)
+                # 如果一个参数第一次被优化，其状态字典 `state` 是空的
+                if len(state) == 0:
+                    # 初始化动量 (momentum)，命名为 `exp_avg` 以与 Adam 保持一致
+                    # 创建一个与参数 p 形状相同、值全为 0 的张量
+                    state["exp_avg"] = torch.zeros_like(p)
+
+                # 获取动量和 beta 系数
+                exp_avg = state["exp_avg"]
+                beta1, beta2 = group["betas"]
+
+                # 3. 计算用于更新的插值 (Interpolation for update)
+                # 这一步是 Lion 算法的核心之一。它使用 beta1 来混合（插值）旧的动量和当前的梯度。
+                # 公式: c_t = β₁ * m_t + (1 - β₁) * g_t
+                update = exp_avg.mul(beta1).add(grad, alpha=1 - beta1)
+
+                # 4. 参数更新 (Parameter Update)
+                # 使用 `update` 的符号 (sign) 来更新参数。
+                # `torch.sign(update)` 会得到一个由 -1, 0, 1 组成的张量。
+                # `p.add_(..., alpha=-lr)` 等价于 `p.data = p.data - lr * torch.sign(update)`。
+                # 这是 "Sign Momentum" 名称的由来。
+                p.add_(torch.sign(update), alpha=-group["lr"])
+                
+                # 5. 更新动量 (Momentum Update)
+                # 这一步使用 beta2 来更新动量，为下一次迭代做准备。
+                # 公式: m_{t+1} = β₂ * m_t + (1 - β₂) * g_t
+                # `exp_avg.mul_(beta2)`: 先将旧动量乘以 beta2
+                # `.add_(grad, alpha=1 - beta2)`: 再加上 `(1 - beta2) * grad`
+                exp_avg.mul_(beta2).add_(grad, alpha=1 - beta2)
+
+        # 返回本次 step 计算的损失值（如果提供了闭包）
+        return loss
+```
+
+</details>
 
 ### Muon
 
