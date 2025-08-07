@@ -324,16 +324,15 @@ $$
 这是 SGD 在 rosenbrock 函数下的表现（单击图片播放）：
 
 <div class="gif-player" 
-     data-static-src="./optimizer_pics/rosenbrock_SGD.png" 
-     data-animated-src="./optimizer_pics/rosenbrock_SGD.gif">
+     data-static-src="../assets/images/optimizer_pics/rosenbrock_SGD.png" 
+     data-animated-src="../assets/images/optimizer_pics/rosenbrock_SGD.gif">
      
   <!-- 初始显示静态图 -->
-  <img src="./optimizer_pics/rosenbrock_SGD.png" alt="动画预览">
+  <img src="../assets/images/optimizer_pics/rosenbrock_SGD.png" alt="动画预览">
   
   <!-- 播放/重播按钮 -->
   <div class="gif-player-button" data-state="play"></div>
 </div>
-
 
 可以看到确实出现了这种“反复横跳”。
 
