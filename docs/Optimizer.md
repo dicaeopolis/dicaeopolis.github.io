@@ -323,13 +323,13 @@ $$
 
 这是 SGD 在 rosenbrock 函数下的表现：
 
-![rosenbrock_SGD](../assets/images/optimizer_pics/rosenbrock_SGD.gif)
+![rosenbrock_SGD](./optimizer_pics/rosenbrock_SGD.gif)
 
 可以看到确实出现了这种“反复横跳”。
 
 这是 SGD 在 rastrigin 函数下的表现：
 
-![rastrigin_SGD](../assets/images/optimizer_pics/rastrigin_SGD.gif)
+![rastrigin_SGD](./optimizer_pics/rastrigin_SGD.gif)
 
 可以看到它确实变得很“懒”，陷入离初始点最近的局部最小值了。
 
@@ -355,9 +355,9 @@ $$
 
 这是动量法随机梯度下降在之前两个函数的运动轨迹：
 
-![rastrigin_SGD_Momentum](../assets/images/optimizer_pics/rastrigin_SGD_Momentum.gif)
+![rastrigin_SGD_Momentum](./optimizer_pics/rastrigin_SGD_Momentum.gif)
 
-![rosenbrock_SGD_Momentum](../assets/images/optimizer_pics/rosenbrock_SGD_Momentum.gif)
+![rosenbrock_SGD_Momentum](./optimizer_pics/rosenbrock_SGD_Momentum.gif)
 
 可以看见在算法初期，SGDM 的步长较长（因为累积的动量较大），这有利于增大搜索空间，直到进入一个平缓的谷底之后，动量开始衰减并且向最小值靠近。
 
@@ -488,9 +488,9 @@ $$
 
 让我们看看 NAG 的轨迹：
 
-![](../assets/images/optimizer_pics/rastrigin_NAG.gif)
+![](./optimizer_pics/rastrigin_NAG.gif)
 
-![](../assets/images/optimizer_pics/rosenbrock_NAG.gif)
+![](./optimizer_pics/rosenbrock_NAG.gif)
 
 SGDM 能够具有更快的收敛速率，尤其对于梯度不对称场景下，能够实现均衡的梯度累积，即减缓前后横跳，加速向下滚动。动量居功至伟。尤其是引入 Nesterov 加速后，动量的针对性更强，收敛速率也更快了。
 
@@ -754,9 +754,9 @@ $$
 
 下面是 AdaGrad 的轨迹演示：
 
-![rastrigin_Adagrad](../assets/images/optimizer_pics/rastrigin_Adagrad.gif)
+![rastrigin_Adagrad](./optimizer_pics/rastrigin_Adagrad.gif)
 
-![rosenbrock_Adagrad](../assets/images/optimizer_pics/rosenbrock_Adagrad.gif)
+![rosenbrock_Adagrad](./optimizer_pics/rosenbrock_Adagrad.gif)
 
 可见 AdaGrad 对于大梯度有更大的步长，并且随着进入平缓的部分逐渐衰减。但是这仅仅类似于 SGD 加上一个自适应，并没有对 rosenbrock 这种地形做很好的适应，尤其在后期一直在梯度方向横跳。
 
@@ -913,9 +913,9 @@ prop的意思就是反向传播了。毕竟我们是对神经网络做的优化�
 
 让我们来看看 RMSprop 的轨迹演示：
 
-![rastrigin_RMSprop](../assets/images/optimizer_pics/rastrigin_RMSprop.gif)
+![rastrigin_RMSprop](./optimizer_pics/rastrigin_RMSprop.gif)
 
-![rosenbrock_RMSprop](../assets/images/optimizer_pics/rosenbrock_RMSprop.gif)
+![rosenbrock_RMSprop](./optimizer_pics/rosenbrock_RMSprop.gif)
 
 RMSprop 相比于 AdaGrad 其实只是更改了学习率自适应程度，还是没有逃脱在 rosenbrock 下反复横跳的宿命。这已经不是一般的损失地形了，必须要~~出重拳~~引入动量来调整参数更新方向！——不过这都是后话了，有关讨论敬请参阅 Adam 一节。
 
@@ -1070,9 +1070,9 @@ $$
 
 让我们看看轨迹：
 
-![rastrigin_Adadelta](../assets/images/optimizer_pics/rastrigin_Adadelta.gif)
+![rastrigin_Adadelta](./optimizer_pics/rastrigin_Adadelta.gif)
 
-![rosenbrock_Adadelta](../assets/images/optimizer_pics/rosenbrock_Adadelta.gif)
+![rosenbrock_Adadelta](./optimizer_pics/rosenbrock_Adadelta.gif)
 
 可以看到相比于之前的几个 Ada（Adaptive 的省写）优化器，尽管 AdaDelta 的学习率大了好几倍，在参数更新量上面还是偏保守。
 
@@ -1201,9 +1201,9 @@ $$
 
 现在来看看两个函数下 Adam 优化器的轨迹：
 
-![rastrigin_Adam](../assets/images/optimizer_pics/rastrigin_Adam.gif)
+![rastrigin_Adam](./optimizer_pics/rastrigin_Adam.gif)
 
-![rosenbrock_Adam](../assets/images/optimizer_pics/rosenbrock_Adam.gif)
+![rosenbrock_Adam](./optimizer_pics/rosenbrock_Adam.gif)
 
 在自适应学习率的基础上引入动量之后，Adam 的性能相比 RMSprop 可以说是突飞猛进！在 rastrigin 地形下通过初始的大学习率找到正确的谷地然后慢慢衰减学习率下降到精确解；在 rosenbrock 地形下不仅不再反复横跳，还能沿着谷底有效前进。
 
@@ -1521,9 +1521,9 @@ $$
 
 看它在这两个损失地形上的表现，其实还不错：
 
-![rastrigin_Adamax](../assets/images/optimizer_pics/rastrigin_Adamax.gif)
+![rastrigin_Adamax](./optimizer_pics/rastrigin_Adamax.gif)
 
-![rosenbrock_Adamax](../assets/images/optimizer_pics/rosenbrock_Adamax.gif)
+![rosenbrock_Adamax](./optimizer_pics/rosenbrock_Adamax.gif)
 
 还是来看看代码实现吧：
 
@@ -1673,9 +1673,9 @@ $$
 
 这是优化器的轨迹动图：
 
-![rastrigin_NAdam](../assets/images/optimizer_pics/rastrigin_NAdam.gif)
+![rastrigin_NAdam](./optimizer_pics/rastrigin_NAdam.gif)
 
-![rosenbrock_NAdam](../assets/images/optimizer_pics/rosenbrock_NAdam.gif)
+![rosenbrock_NAdam](./optimizer_pics/rosenbrock_NAdam.gif)
 
 看来 Nadam 和 Adam 差不太多，并没有像 SGD 引入 NAG 那样惊艳。
 
@@ -1873,9 +1873,9 @@ $ 次根的复杂性，我们不必每一轮迭代都去计算这预条件子 $P
 
 下面是 Shampoo 优化器的轨迹：
 
-![rastrigin_Shampoo](../assets/images/optimizer_pics/rastrigin_Shampoo.gif)
+![rastrigin_Shampoo](./optimizer_pics/rastrigin_Shampoo.gif)
 
-![rosenbrock_Shampoo](../assets/images/optimizer_pics/rosenbrock_Shampoo.gif)
+![rosenbrock_Shampoo](./optimizer_pics/rosenbrock_Shampoo.gif)
 
 可以看到，有了对二阶信息更精确的估计，Shampoo 的效果甚至比 Adam 更加惊艳。在谷底处 Shampoo 基本上没有了横跳现象。不过，我们能不能把参数更新方向再优化一下？欲知如何优化，且看后文“符号梯度下降”。
 
@@ -2062,9 +2062,9 @@ Rprop 的出现早于 RMSprop，从命名风格就可以看出它们的一脉相
 
 在看公式之前，先看看 Rprop 的效果吧：
 
-![rastrigin_Rprop](../assets/images/optimizer_pics/rastrigin_Rprop.gif)
+![rastrigin_Rprop](./optimizer_pics/rastrigin_Rprop.gif)
 
-![rosenbrock_Rprop](../assets/images/optimizer_pics/rosenbrock_Rprop.gif)
+![rosenbrock_Rprop](./optimizer_pics/rosenbrock_Rprop.gif)
 
 可以看到，如果忽略全量梯度计算这个（大）问题，Rprop 在这两个地形的收敛能力完全可以媲美 Adam！尤其是在 rosenbrock 地形下 Rprop 沿着谷底移动的速度是相当快的。
 
@@ -2196,13 +2196,13 @@ $$
 
 让我们看看 Lion 的效果：
 
-![rastrigin_Lion](../assets/images/optimizer_pics/rastrigin_Lion.gif)
+![rastrigin_Lion](./optimizer_pics/rastrigin_Lion.gif)
 
-![rastrigin_Lion_2](../assets/images/optimizer_pics/rastrigin_Lion_2.gif)
+![rastrigin_Lion_2](./optimizer_pics/rastrigin_Lion_2.gif)
 
-![rosenbrock_Lion](../assets/images/optimizer_pics/rosenbrock_Lion.gif)
+![rosenbrock_Lion](./optimizer_pics/rosenbrock_Lion.gif)
 
-可以看见 Lion 也在这两个地形获得了不错的表现。虽然在 rastrigin 地形下面 hyperopt 并没有搜出一个特别好的参数，但是对于 rosenbrock 地形，Lion 取得了我们目前所见最快的谷底行进速度。
+可以看见 Lion 也在这两个地形获得了不错的表现。虽然在 rastrigin 地形下面 hyperopt 并没有搜出一个特别好的参数（第一张图太小第二张图太大），但是对于 rosenbrock 地形，Lion 取得了我们目前所见最快的谷底行进速度。
 
 让我们看看 `torch-optimizer` 库的实现：
 
