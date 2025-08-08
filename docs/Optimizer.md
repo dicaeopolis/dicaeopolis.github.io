@@ -2602,7 +2602,7 @@ plt.show()
 
 </details>
 
-这里我选择的初始值是随机的 $a=1,b=-1,c=1$ 满足 $a+b+c=1$，下面是（截断的）日志输出：
+这里我选择的初始值是任意选取的 $a=1,b=-1,c=1$ 满足 $a+b+c=1$，下面是（截断的）日志输出：
 
 ```text
 开始优化... k=5, 初始值 a=1.00, b=-1.00, c=1.00
@@ -2639,6 +2639,24 @@ MSE 干到了 1e-3 量级。下面是训练过程的损失曲线、参数变化�
 ![rosenbrock_Muon](./optimizer_pics/rosenbrock_SingleDeviceMuon.gif)
 
 但是，由于层数和维度比较低，这个地形没有发挥出 Muon 的 Newton-Schulz 迭代真正的潜力！
+
+我们来看看 Muon 在 Fashion-MNIST 上面的性能：
+
+下面是官方参数 $a,b,c=(3.4445,−4.7750,2.0315)$ 的损失曲线、准确率和最优附近的损失地形。
+
+![SingleDeviceMuonWithAuxAdam_performance_curves](./optimizer_pics/SingleDeviceMuonWithAuxAdam_performance_curves.png)
+
+![SingleDeviceMuonWithAuxAdam_landscape_pca](./optimizer_pics/SingleDeviceMuonWithAuxAdam_landscape_pca.png)
+
+下面是我自己跑出来的参数 $a,b,c=(3.1010, -3.4236, 1.3181)$ 的损失曲线、准确率和最优附近的损失地形。（甚至 Hyperopt 搜出来的学习率都一样）
+
+![SingleDeviceMuonWithAuxAdam_performance_curves](./optimizer_pics/SingleDeviceMuonWithAuxAdam_performance_curves_my.png)
+
+![SingleDeviceMuonWithAuxAdam_landscape_pca](./optimizer_pics/SingleDeviceMuonWithAuxAdam_landscape_pca_my.png)
+
+真的不是同一张图哈，可以自行放大对比一下。
+
+可以看到 Newton-Shculz 迭代需要的这个参数容差还比较大，只要不是特别离谱，有理有据搜索出来的参数基本上效果都差不多。
 
 下面，让我们看看 Muon 的代码（为展示原理这里只给出单设备的）：
 
