@@ -249,6 +249,8 @@ if __name__ == "__main__":
 
 </details>
 
+同时，我也在 Fashion-MNIST 上面利用文中提到的各个优化器训练了一个简单的 CNN 模型，并可视化了随 batch 的损失曲线，验证集准确率曲线等，还可视化了损失地形。代码放在[这个 Kaggle notebook](https://www.kaggle.com/code/liyanfromwhu/notebook3901731912) 上面了。
+
 ## 何以优化
 
 神经网络的目的是在训练数据集上实现**结构风险最小化**以获得良好的拟合和泛化能力。简单说，如果我们在训练集 $X$ 上有一个定义明确的损失函数 $\mathcal{L}(X;\theta)$（表示我们的结构风险），那么所有优化器的目的都是设计一个算法来寻找合适的 $\theta$ 以获得 $\mathrm{argmin}_\theta\ \mathcal{L}(X;\theta)$。
@@ -2624,9 +2626,213 @@ MSE 干到了 1e-3 量级。下面是训练过程的损失曲线、参数变化�
 
 ![curve](./optimizer_pics/curve.png)
 
+当然也可以拿牛顿法训，毕竟就三个参数，但是我自己实测训练不大稳定，时不时就训炸了。
+
 相比之下，这是 Muon 作者提出的参数配置：$a=3.4445,b=−4.7750,c=2.0315$
 
 ![curve_2](./optimizer_pics/curve_2.png)
+
+这是 Muon 优化器在这两个损失地形下面的表现：
+
+![rastrigin_Muon](./optimizer_pics/rastrigin_SingleDeviceMuon.gif)
+
+![rosenbrock_Muon](./optimizer_pics/rosenbrock_SingleDeviceMuon.gif)
+
+但是，由于层数和维度比较低，这个地形没有发挥出 Muon 的 Newton-Schulz 迭代真正的潜力！
+
+下面，让我们看看 Muon 的代码（为展示原理这里只给出单设备的）：
+
+<details>
+
+<summary> Muon 优化器的实现 </summary>
+
+```python
+import torch
+# 导入 PyTorch 分布式训练库
+import torch.distributed as dist
+
+# --- 核心数学函数 ---
+def zeropower_via_newtonschulz5(G, steps: int):
+    """
+    使用牛顿-舒尔茨迭代计算矩阵 G 的零次幂，即对 G 进行正交化。
+    我们选择使用一个五次迭代，其系数经过精心选择，以最大化在零点处的斜率。
+    为了最小化迭代步数，经验表明，即使迭代在区间上不再完全收敛到1，持续增加零点处的斜率也是有效的。
+    因此，这个迭代不会精确地产生 UV^T (其中 U 和 V 是正交矩阵)，而是产生类似 US'V^T 的东西，
+    其中 S' 是对角矩阵，其对角线元素 S'_{ii} 大约在 Uniform(0.5, 1.5) 分布。
+    事实证明，相对于精确的 UV^T，这种近似完全不会损害模型性能。(其中 USV^T = G 是 G 的奇异值分解)。
+    """
+    # G 的维度必须至少为 2 (即一个矩阵)。支持批处理矩阵。
+    assert G.ndim >= 2 
+    # 五次迭代的预计算系数
+    a, b, c = (3.4445, -4.7750,  2.0315)
+    # 为了计算效率和稳定性，将输入矩阵转换为 bfloat16 类型
+    X = G.bfloat16()
+    
+    # 如果矩阵是“高瘦”的 (行数 > 列数)，则进行转置。
+    # 矩阵乘法通常在“矮胖”矩阵上更高效。
+    if G.size(-2) > G.size(-1):
+        X = X.mT
+
+    # 关键步骤：确保谱范数 (spectral norm) 最多为 1。
+    # 牛顿-舒尔茨迭代的收敛性要求输入矩阵的谱范数 <= 1。
+    # 这里通过除以其谱范数（矩阵的最大奇异值）来进行归一化。
+    X = X / (X.norm(dim=(-2, -1), keepdim=True) + 1e-7)
+
+    # 执行指定步数的牛顿-舒尔茨迭代
+    for _ in range(steps):
+        A = X @ X.mT  # 计算 X * X^T
+        # 使用优化的策略计算五次多项式，避免高次幂的直接计算
+        B = b * A + c * A @ A 
+        # 更新 X，形式为 X_{k+1} = p(X_k @ X_k^T) @ X_k
+        X = a * X + B @ X
+    
+    # 如果之前转置了，现在转置回来
+    if G.size(-2) > G.size(-1):
+        X = X.mT
+    
+    # 返回近似正交化的矩阵
+    return X
+
+
+# --- Muon 更新规则 ---
+def muon_update(grad, momentum, beta=0.95, ns_steps=5, nesterov=True):
+    """计算单步的 Muon 更新量"""
+    # 1. 标准的动量更新：momentum = beta * momentum + (1 - beta) * grad
+    momentum.lerp_(grad, 1 - beta)
+    
+    # 2. 计算更新方向：如果使用 Nesterov 动量，则为 grad + beta * momentum；否则就是更新后的动量。
+    update = grad.lerp_(momentum, beta) if nesterov else momentum
+    
+    # 3. 处理卷积核：如果更新对象是4D的卷积核 (out, in, h, w)，
+    #    则将其展平为2D矩阵 (out, in*h*w)，以便进行正交化。
+    if update.ndim == 4: 
+        update = update.view(len(update), -1)
+        
+    # 4. 核心步骤：将计算出的更新方向进行正交化。
+    update = zeropower_via_newtonschulz5(update, steps=ns_steps)
+    
+    # 5. 尺寸缩放：根据矩阵的形状进行缩放，以保持更新的谱范数单位一致。
+    update *= max(1, grad.size(-2) / grad.size(-1))**0.5
+    return update
+
+# --- Muon 优化器 (单设备版本) ---
+class SingleDeviceMuon(torch.optim.Optimizer):
+    """
+    用于非分布式设置的 Muon 变体。
+    """
+        """
+    Muon - 通过牛顿-舒尔茨正交化的动量优化器
+    
+    Muon 内部运行标准的 SGD-momentum, 然后执行一个正交化后处理步骤，
+    其中每个 2D 参数的更新被替换为最近的正交矩阵。
+    我们使用牛顿-舒尔茨迭代来高效地进行正交化，其优点是可以在 GPU 上稳定地以 bfloat16 运行。
+
+    Muon 只应用于隐藏层的权重。输入嵌入、最终输出层以及任何内部的增益或偏置项
+    应使用标准方法（如 AdamW）进行优化。
+    隐藏的卷积权重可以通过将其视为 2D 并折叠其最后3个维度来使用 Muon 进行训练。
+
+    参数:
+        lr: 学习率，单位是每次更新的谱范数。
+        weight_decay: AdamW 风格的权重衰减。
+        momentum: 动量系数，通常 0.95 效果不错。
+    """
+    def __init__(self, params, lr=0.02, weight_decay=0, momentum=0.95):
+        defaults = dict(lr=lr, weight_decay=weight_decay, momentum=momentum)
+        super().__init__(params, defaults)
+
+    @torch.no_grad()
+    def step(self, closure=None):
+        loss = None
+        if closure is not None:
+            with torch.enable_grad():
+                loss = closure()
+
+        for group in self.param_groups:
+            # 逻辑与分布式版本相同，但没有了复杂的分布式通信代码
+            for p in group["params"]:
+                if p.grad is None:
+                    p.grad = torch.zeros_like(p)
+                state = self.state[p]
+                if len(state) == 0:
+                    state["momentum_buffer"] = torch.zeros_like(p)
+                update = muon_update(p.grad, state["momentum_buffer"], beta=group["momentum"])
+                p.mul_(1 - group["lr"] * group["weight_decay"])
+                p.add_(update.reshape(p.shape), alpha=-group["lr"])
+
+        return loss
+
+# --- Adam 更新规则 (辅助函数) ---
+def adam_update(grad, buf1, buf2, step, betas, eps):
+    """标准的 Adam 更新规则"""
+    # 更新一阶矩 (动量)
+    buf1.lerp_(grad, 1 - betas[0])
+    # 更新二阶矩 (RMSProp 部分)
+    buf2.lerp_(grad.square(), 1 - betas[1])
+    # 偏差修正
+    buf1c = buf1 / (1 - betas[0]**step)
+    buf2c = buf2 / (1 - betas[1]**step)
+    # 计算更新量
+    return buf1c / (buf2c.sqrt() + eps)
+
+# --- 混合优化器 (单设备版本) ---
+class SingleDeviceMuonWithAuxAdam(torch.optim.Optimizer):
+    """
+    MuonWithAuxAdam 的非分布式版本。
+    """
+    def __init__(self, param_groups):
+        # 初始化逻辑与分布式版本相同
+        for group in param_groups:
+            assert "use_muon" in group
+            if group["use_muon"]:
+                group["lr"] = group.get("lr", 0.02)
+                group["momentum"] = group.get("momentum", 0.95)
+                group["weight_decay"] = group.get("weight_decay", 0)
+            else:
+                group["lr"] = group.get("lr", 3e-4)
+                group["betas"] = group.get("betas", (0.9, 0.95))
+                group["eps"] = group.get("eps", 1e-10)
+                group["weight_decay"] = group.get("weight_decay", 0)
+        super().__init__(param_groups, dict())
+
+    @torch.no_grad()
+    def step(self, closure=None):
+        loss = None
+        if closure is not None:
+            with torch.enable_grad():
+                loss = closure()
+
+        for group in self.param_groups:
+            if group["use_muon"]:
+                # 单设备 Muon 更新逻辑
+                for p in group["params"]:
+                    if p.grad is None:
+                        p.grad = torch.zeros_like(p)
+                    state = self.state[p]
+                    if len(state) == 0:
+                        state["momentum_buffer"] = torch.zeros_like(p)
+                    update = muon_update(p.grad, state["momentum_buffer"], beta=group["momentum"])
+                    p.mul_(1 - group["lr"] * group["weight_decay"])
+                    p.add_(update.reshape(p.shape), alpha=-group["lr"])
+            else:
+                # 单设备 AdamW 更新逻辑
+                for p in group["params"]:
+                    if p.grad is None:
+                        p.grad = torch.zeros_like(p)
+                    state = self.state[p]
+                    if len(state) == 0:
+                        state["exp_avg"] = torch.zeros_like(p)
+                        state["exp_avg_sq"] = torch.zeros_like(p)
+                        state["step"] = 0
+                    state["step"] += 1
+                    update = adam_update(p.grad, state["exp_avg"], state["exp_avg_sq"],
+                                         state["step"], group["betas"], group["eps"])
+                    p.mul_(1 - group["lr"] * group["weight_decay"])
+                    p.add_(update, alpha=-group["lr"])
+
+        return loss
+```
+
+</details>
 
 ## 非梯度参数优化
 
