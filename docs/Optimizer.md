@@ -1878,7 +1878,7 @@ def _single_tensor_nadam(
 
 Researchers 的奇怪的命名品味啊……后面我们还能看到 Lion 优化器，不知道是不是专门吃 LAMB 的……无论如何让我们来看看吧。
 
-LAMB 在 Adam 上面的改进点在于对“何时应该多更新参数”的一个先验估计：如果本来参数大，并且算出来的更新量小，那就意味着本来应该优化的参数没有得到有效优化，也就是，如果我们取 $r=\dfrac{|\theta_{n-1}|}{|\Delta\theta|}$ 再乘以原来的参数更新量，就可以实现有效优化。具体而言，LAMB 优化器的更新公式是：
+LAMB 在 Adam 上面的改进点在于对“何时应该多更新参数”的一个先验估计：如果本来参数大，并且算出来的更新量小，那就意味着本来应该优化的参数没有得到有效优化，也就是，如果反过来我们取 $r=\dfrac{|\theta_{n-1}|}{|\Delta\theta|}$ （被称作信任比率）再乘以原来的参数更新量，就可以实现有效优化。具体而言，LAMB 优化器的更新公式是：
 
 $$
 \begin{align*}
@@ -1894,7 +1894,7 @@ $$
 
 这里的 $\Phi(x)$ 可以取 $x$ 也可以做裁剪取 $\max{(\min{(x,\gamma_a)},\gamma_b)}$ 来把参数控制在这样一个范围内。
 
-LAMB 的初衷就是解决 Adam 在大批量训练的时候梯度方差过小导致训不动或者训炸的问题。这样做看来确实比较有用，让我们来看看表现吧：
+LAMB 的初衷就是解决 Adam 在大批量训练的时候梯度方差过小（就是前面提到的那种情况）导致训不动或者训炸的问题。这样做看来确实比较有用，让我们来看看表现吧：
 
 ![rastrigin_Lamb](./optimizer_pics/rastrigin_Lamb.gif)
 
@@ -1907,6 +1907,203 @@ LAMB 的初衷就是解决 Adam 在大批量训练的时候梯度方差过小导
 ![Lamb_landscape_pca](./optimizer_pics/Lamb_landscape_pca.png)
 
 可以看到 LAMB 取得了和 Adam 差不多的水平。在约 4000 个 Batch 后 train_loss 降到了 0.1 附近；约 1000 个 Batch 后 acc 稳定在 0.9 以上。
+
+下面是 `torch_optimizer` 库对 LAMB 的实现：
+
+<details>
+
+<summary> LAMB 优化器的实现 </summary>
+
+```python
+import math
+
+import torch
+# 从 PyTorch 优化器基类中导入 Optimizer
+from torch.optim.optimizer import Optimizer
+
+# 从本地类型定义文件中导入类型提示
+from .types import Betas2, OptFloat, OptLossClosure, Params
+
+# 定义当 `from module import *` 时，哪些对象会被导出
+__all__ = ('Lamb',)
+
+
+# 定义 Lamb 优化器类，继承自 Optimizer
+class Lamb(Optimizer):
+    r"""实现了 Lamb 算法。
+
+    该算法在论文 `Large Batch Optimization for Deep Learning:
+    Training BERT in 76 minutes`__ 中被提出。
+
+    参数:
+        params: 需要优化的、可迭代的参数，或定义了参数组的字典。
+        lr: 学习率 (默认: 1e-3)。
+        betas: 用于计算梯度的一阶和二阶矩的运行平均值的系数 (默认: (0.9, 0.999))。
+        eps: 为了提高数值稳定性而加到分母上的一项 (默认: 1e-6)。
+        weight_decay: 权重衰减 (L2 惩罚项) (默认: 0)。
+        clamp_value: 将 weight_norm 裁剪（clamp）在 (0, clamp_value) 范围内 (默认: 10)。
+                     可以将其设置为一个很大的值 (例如 10e3) 来避免裁剪。
+        adam: 如果为 True，则总是使用 trust_ratio = 1，这会使算法退化为 AdamW。
+              这对于进行性能比较很有用。(默认: False)。
+        debias: 通过 (1 - beta**step) 来对 Adam 的矩估计进行偏差修正 (默认: False)。
+                论文的最终版本没有使用此项。
+
+    示例:
+        >>> import torch_optimizer as optim
+        >>> optimizer = optim.Lamb(model.parameters(), lr=0.1)
+        >>> optimizer.zero_grad()
+        >>> loss_fn(model(input), target).backward()
+        >>> optimizer.step()
+
+    __ https://arxiv.org/abs/1904.00962
+
+    注意:
+        参考代码: https://github.com/cybertronai/pytorch-lamb
+    """
+
+    # 类的构造函数
+    def __init__(
+        self,
+        params: Params,
+        lr: float = 1e-3,
+        betas: Betas2 = (0.9, 0.999),
+        eps: float = 1e-6,
+        weight_decay: float = 0,
+        clamp_value: float = 10,
+        adam: bool = False,
+        debias: bool = False,
+    ) -> None:
+        # --- 输入参数合法性检查 ---
+        if lr <= 0.0:
+            raise ValueError('无效的学习率: {}'.format(lr))
+        if eps < 0.0:
+            raise ValueError('无效的 epsilon 值: {}'.format(eps))
+        if not 0.0 <= betas[0] < 1.0:
+            raise ValueError(
+                '无效的 beta 参数 (索引 0): {}'.format(betas[0])
+            )
+        if not 0.0 <= betas[1] < 1.0:
+            raise ValueError(
+                '无效的 beta 参数 (索引 1): {}'.format(betas[1])
+            )
+        if weight_decay < 0:
+            raise ValueError(
+                '无效的 weight_decay 值: {}'.format(weight_decay)
+            )
+        if clamp_value < 0.0:
+            raise ValueError('无效的 clamp 值: {}'.format(clamp_value))
+
+        # 将超参数打包成一个字典，作为默认配置
+        defaults = dict(lr=lr, betas=betas, eps=eps, weight_decay=weight_decay)
+        # 将 Lamb 特有的参数保存为类的属性
+        self.clamp_value = clamp_value
+        self.adam = adam
+        self.debias = debias
+
+        # 调用父类 (Optimizer) 的构造函数
+        super(Lamb, self).__init__(params, defaults)
+
+    # `step` 方法是优化器的核心，`@torch.no_grad()` 装饰器禁用梯度计算
+    def step(self, closure: OptLossClosure = None) -> OptFloat:
+        r"""执行单步优化。
+
+        参数:
+            closure: 一个可以重新评估模型并返回损失的闭包函数 (可选)。
+        """
+        loss = None
+        if closure is not None:
+            loss = closure()
+
+        # 遍历所有参数组
+        for group in self.param_groups:
+            # 遍历当前参数组中的每一个参数 (p)
+            for p in group['params']:
+                # 如果参数没有梯度，则跳过
+                if p.grad is None:
+                    continue
+                grad = p.grad.data
+                # Lamb 算法不支持稀疏梯度
+                if grad.is_sparse:
+                    msg = (
+                        'Lamb 不支持稀疏梯度, '
+                        '请考虑使用 SparseAdam'
+                    )
+                    raise RuntimeError(msg)
+
+                state = self.state[p] # 获取该参数的状态字典
+
+                # --- 状态初始化 (State Initialization) ---
+                if len(state) == 0:
+                    state['step'] = 0
+                    # 梯度的一阶矩（动量）
+                    state['exp_avg'] = torch.zeros_like(
+                        p, memory_format=torch.preserve_format
+                    )
+                    # 梯度的二阶矩（未开方的方差）
+                    state['exp_avg_sq'] = torch.zeros_like(
+                        p, memory_format=torch.preserve_format
+                    )
+
+                exp_avg, exp_avg_sq = state['exp_avg'], state['exp_avg_sq']
+                beta1, beta2 = group['betas']
+
+                state['step'] += 1
+
+                # --- Adam 核心计算部分 ---
+                # 1. 更新梯度的一阶和二阶矩估计
+                # 更新一阶矩 (动量): m_t = beta1 * m_{t-1} + (1 - beta1) * g_t
+                exp_avg.mul_(beta1).add_(grad, alpha=1 - beta1)
+                # 更新二阶矩: v_t = beta2 * v_{t-1} + (1 - beta2) * g_t^2
+                exp_avg_sq.mul_(beta2).addcmul_(grad, grad, value=1 - beta2)
+
+                # 2. 偏差修正 (可选)
+                # 论文的 v3 版本（最终版）并未使用偏差修正。
+                if self.debias:
+                    bias_correction = math.sqrt(1 - beta2 ** state['step'])
+                    bias_correction /= 1 - beta1 ** state['step']
+                else:
+                    bias_correction = 1
+
+                # 将偏差修正项和学习率合并，避免后续的广播操作
+                step_size = group['lr'] * bias_correction
+
+                # --- LAMB 核心计算部分 ---
+                # 3. 计算权重的范数，并进行裁剪
+                weight_norm = torch.norm(p.data).clamp(0, self.clamp_value)
+
+                # 4. 计算 Adam 的更新步长 (Adam Step)，并加入解耦权重衰减 (AdamW)
+                adam_step = exp_avg / exp_avg_sq.sqrt().add(group['eps'])
+                if group['weight_decay'] != 0:
+                    adam_step.add_(p.data, alpha=group['weight_decay'])
+
+                # 5. 计算 Adam 更新步长的范数
+                adam_norm = torch.norm(adam_step)
+                
+                # 6. 计算信任比率 (Trust Ratio)
+                # 这是 LAMB 算法的精髓：trust_ratio = ||w|| / ||g_update||
+                if weight_norm == 0 or adam_norm == 0:
+                    trust_ratio = 1  # 避免除以零
+                else:
+                    trust_ratio = weight_norm / adam_norm
+                
+                # (可选) 将中间变量存入 state，便于调试
+                state['weight_norm'] = weight_norm
+                state['adam_norm'] = adam_norm
+                state['trust_ratio'] = trust_ratio
+                
+                # 如果 adam 标志为 True，则强制 trust_ratio=1，使算法退化为 AdamW
+                if self.adam:
+                    trust_ratio = 1
+
+                # 7. 应用最终更新
+                # 更新公式: p_new = p_old - (step_size * trust_ratio) * adam_step
+                # 这里的 `trust_ratio` 动态地缩放了每个参数（或每层）的学习率。
+                p.data.add_(adam_step, alpha=-step_size * trust_ratio)
+
+        return loss
+```
+
+</details>
 
 ### Shampoo
 
