@@ -249,7 +249,7 @@ if __name__ == "__main__":
 
 </details>
 
-同时，我也在 Fashion-MNIST 上面利用文中提到的各个优化器训练了一个简单的 CNN 模型，并可视化了随 batch 的损失曲线，验证集准确率曲线等，还可视化了损失地形。代码放在[这个 Kaggle notebook](https://www.kaggle.com/code/liyanfromwhu/notebook3901731912) 上面了。
+同时，我也在 Fashion-MNIST 上面利用文中提到的各个优化器训练了一个简单的 CNN 模型，并画出了随 batch 的损失曲线，验证集准确率曲线等，还可视化了损失地形。代码放在[这个 Kaggle notebook](https://www.kaggle.com/code/liyanfromwhu/notebook3901731912) 上面了。
 
 ## 何以优化
 
@@ -335,6 +335,14 @@ $$
 
 可以看到它确实变得很“懒”，陷入离初始点最近的局部最小值了。
 
+我也在 Fashion-MNIST 上面利用 SGD 优化了一个 CNN，这是其损失曲线和损失地形下的优化轨迹：
+
+![SGD_performance_curves](./optimizer_pics/SGD_performance_curves.png)
+
+![SGD_landscape_pca](./optimizer_pics/SGD_landscape_pca.png)
+
+收敛速度上，大概在第 4500 个 batch 下的 train_loss 能够降到 0.1 的量级，并在第 1000 个 batch 下面 acc 能基本上稳定收敛到 0.9 以上。最终得到的最优解附近的损失地形类似一个具有一定条件数的海森矩阵（后面会讲到），并且相对平坦。
+
 ### 动量法随机梯度下降 SGDM
 
 #### 动量的引入
@@ -363,7 +371,15 @@ $$
 
 可以看见在算法初期，SGDM 的步长较长（因为累积的动量较大），这有利于增大搜索空间，直到进入一个平缓的谷底之后，动量开始衰减并且向最小值靠近。
 
-#### Nesterov 加速
+下面看看 SGDM 在 Fashion-MNIST 下面的表现：
+
+![SGD_Momentum_performance_curves](./optimizer_pics/SGD_Momentum_performance_curves.png)
+
+![SGD_Momentum_landscape_pca](./optimizer_pics/SGD_Momentum_landscape_pca.png)
+
+SGDM 在约 4000 个 Batch 后 train_loss 收敛到 0.1 量级，约 1000 个 Batch 后 acc 收敛到 0.9 以上。损失地形平缓。相比于 SGD 可见有更高的收敛速度。
+
+#### Nesterov 加速梯度（NAG）
 
 如果把刚刚 SGDM 的式子展开：
 
@@ -490,9 +506,17 @@ $$
 
 让我们看看 NAG 的轨迹：
 
-![](./optimizer_pics/rastrigin_NAG.gif)
+![rastrigin_NAG](./optimizer_pics/rastrigin_NAG.gif)
 
-![](./optimizer_pics/rosenbrock_NAG.gif)
+![rosenbrock_NAG](./optimizer_pics/rosenbrock_NAG.gif)
+
+下面是 NAG 在 Fashion-MNIST 下面的表现：
+
+![NAG_performance_curves](./optimizer_pics/NAG_performance_curves.png)
+
+![NAG_landscape_pca](./optimizer_pics/NAG_landscape_pca.png)
+
+对比一下可以发现 NAG 和朴素的 SGDW 效果有提升，但是提升不大。
 
 SGDM 能够具有更快的收敛速率，尤其对于梯度不对称场景下，能够实现均衡的梯度累积，即减缓前后横跳，加速向下滚动。动量居功至伟。尤其是引入 Nesterov 加速后，动量的针对性更强，收敛速率也更快了。
 
@@ -762,6 +786,14 @@ $$
 
 可见 AdaGrad 对于大梯度有更大的步长，并且随着进入平缓的部分逐渐衰减。但是这仅仅类似于 SGD 加上一个自适应，并没有对 rosenbrock 这种地形做很好的适应，尤其在后期一直在梯度方向横跳。
 
+下面是 AdaGrad 在 Fashion-MNIST 上面的表现，可能是 CNN 和自适应学习率不大对付，这里的一系列算法的 train_loss 都降得比较难。具体可以看这篇论文：arXiv:1705.08292。所以下面比较就在这几个自适应学习率优化器内部比，毕竟存在这么一个不公平，我可用的 GPU 性能也不支持在一个可行的时间内训练多个大参数量的 Transformer 模型……所以大家将就看吧，有新的实验也欢迎补充数据。
+
+![Adagrad_performance_curves](./optimizer_pics/Adagrad_performance_curves.png)
+
+![Adagrad_landscape_pca](./optimizer_pics/Adagrad_landscape_pca.png)
+
+可以看到就连 6000 个 Batch 后 train_loss 都没有降到 0.1 左右。不过我们确实看到了 AdaGrad 在努力自适应损失地形，相比 SGD 系列算法，AdaGrad 在开头的下降是相当迅速的。
+
 #### AdaGrad 的代码实现
 
 同样让我们看看 `PyTorch` 对这个算法的实现。
@@ -910,8 +942,7 @@ $$
 
 RMS 指的就是 $\sqrt{\epsilon+G_n}$，既有滑动窗口的平方平均 (Mean Square)，又在最后开了根(Root)。
 
-prop的意思就是反向传播了。毕竟我们是对神经网络做的优化。
-
+prop的意思就是传播了。毕竟我们是对神经网络做的优化。
 
 让我们来看看 RMSprop 的轨迹演示：
 
@@ -919,7 +950,15 @@ prop的意思就是反向传播了。毕竟我们是对神经网络做的优化�
 
 ![rosenbrock_RMSprop](./optimizer_pics/rosenbrock_RMSprop.gif)
 
-RMSprop 相比于 AdaGrad 其实只是更改了学习率自适应程度，还是没有逃脱在 rosenbrock 下反复横跳的宿命。这已经不是一般的损失地形了，必须要~~出重拳~~引入动量来调整参数更新方向！——不过这都是后话了，有关讨论敬请参阅 Adam 一节。
+RMSprop 相比于 AdaGrad 其实只是更改了学习率自适应程度，还是没有逃脱在 rosenbrock 下反复横跳的宿命。这已经不是一般的损失地形了，必须要出重拳（雾）必须要引入动量来调整参数更新方向！——不过这都是后话了，有关讨论敬请参阅 Adam 一节。
+
+下面看看 RMSprop 在 Fashion-MNIST 上面的性能：
+
+![RMSprop_performance_curves](./optimizer_pics/RMSprop_performance_curves.png)
+
+![RMSprop_landscape_pca](./optimizer_pics/RMSprop_landscape_pca.png)
+
+在约 5000 个 Batch 后 RMSprop 的 train_loss 降到了 0.1 附近；约 2000 个 Batch 后 acc 升到了 0.9 以上。相比于 AdaGrad 有相当的提升。
 
 #### RMSprop 的代码实现
 
@@ -1078,6 +1117,12 @@ $$
 
 可以看到相比于之前的几个 Ada（Adaptive 的省写）优化器，尽管 AdaDelta 的学习率大了好几倍，在参数更新量上面还是偏保守。
 
+![Adadelta_performance_curves](./optimizer_pics/Adadelta_performance_curves.png)
+
+![Adadelta_landscape_pca](./optimizer_pics/Adadelta_landscape_pca.png)
+
+在 Fashion-MNIST 上面 AdaDelta 的效果仍然受限于保守的参数更新量，过了 6000 个 batch 后 train_loss 还没收敛到 0.1，不过大概在 3000 个 batch 后 acc 能上 0.9。
+
 下面是 AdaDelta 的代码实现：
 
 <details>
@@ -1208,6 +1253,14 @@ $$
 ![rosenbrock_Adam](./optimizer_pics/rosenbrock_Adam.gif)
 
 在自适应学习率的基础上引入动量之后，Adam 的性能相比 RMSprop 可以说是突飞猛进！在 rastrigin 地形下通过初始的大学习率找到正确的谷地然后慢慢衰减学习率下降到精确解；在 rosenbrock 地形下不仅不再反复横跳，还能沿着谷底有效前进。
+
+下面看看 Adam 在 Fashion-MNIST 上的表现：
+
+![Adam_performance_curves](./optimizer_pics/Adam_performance_curves.png)
+
+![Adam_landscape_pca](./optimizer_pics/Adam_landscape_pca.png)
+
+可以看到 Adam 优化器取得了相当优秀的结果：在 3500 个 Batch 后 train_loss 降到了 0.1 附近；900 个 Batch 后 acc 稳定在 0.9 以上。
 
 等着看代码吗？别急，Adam 优化器在提出之后，也是经历了如过山车一般起伏的波折，现在的 Adam 实现早就不是原来那个 Adam 了。
 
@@ -1527,6 +1580,14 @@ $$
 
 ![rosenbrock_Adamax](./optimizer_pics/rosenbrock_Adamax.gif)
 
+再看看实际任务上面的表现：
+
+![Adamax_performance_curves](./optimizer_pics/Adamax_performance_curves.png)
+
+![Adamax_landscape_pca](./optimizer_pics/Adamax_landscape_pca.png)
+
+还是较 Adam 略逊一筹啊，train_loss 降到 0.1 附近要花费接近 6000 个 Batch；acc 升到 0.9 附近需要接近 1500 个 Batch。
+
 还是来看看代码实现吧：
 
 <details>
@@ -1679,7 +1740,13 @@ $$
 
 ![rosenbrock_NAdam](./optimizer_pics/rosenbrock_NAdam.gif)
 
-看来 Nadam 和 Adam 差不太多，并没有像 SGD 引入 NAG 那样惊艳。
+看来 Nadam 和 Adam 差不太多，并没有像 SGD 引入 NAG 那样惊艳。还是看看它在真实任务上面的表现吧：
+
+![NAdam_performance_curves](./optimizer_pics/NAdam_performance_curves.png)
+
+![NAdam_landscape_pca](./optimizer_pics/NAdam_landscape_pca.png)
+
+事实上和 Adam 也没有特别大的区别：在约 2900 个 Batch 后 train_loss 降到了 0.1 附近；和 Adam 一样在约 900 个 Batch 后 acc 升到了 0.9。
 
 下面是代码：
 
@@ -1807,6 +1874,10 @@ def _single_tensor_nadam(
 
 </details>
 
+#### LAMB
+
+Researcher 的奇怪的命名品味啊……后面我们还能看到 Lion 优化器，不知道是不是专门吃 LAMB 的……无论如何让我们来看看吧。
+
 ### Shampoo
 
 让我们回顾那个在最优点附近的 Hessian 近似： $H\approx\dfrac{1}{\sigma^2} \sqrt{GG^\top}$，Shampoo 的思想是选取更精确的近似以逼进 $GG^\top$。
@@ -1873,6 +1944,8 @@ $$
 这里下标出现了 $t$ 是因为考虑到取逆 $2k
 $ 次根的复杂性，我们不必每一轮迭代都去计算这预条件子 $P_{t}$，而是可以选择在多轮周期之后再更新。
 
+很遗憾的是，`torch_optimizer` 库实现的 Shampoo 优化器慢到了几乎不可用的水平。怎么高效计算这个根呢？答案要等到后面的 Muon 优化器了。
+
 下面是 Shampoo 优化器的轨迹：
 
 ![rastrigin_Shampoo](./optimizer_pics/rastrigin_Shampoo.gif)
@@ -1880,6 +1953,8 @@ $ 次根的复杂性，我们不必每一轮迭代都去计算这预条件子 $P
 ![rosenbrock_Shampoo](./optimizer_pics/rosenbrock_Shampoo.gif)
 
 可以看到，有了对二阶信息更精确的估计，Shampoo 的效果甚至比 Adam 更加惊艳。在谷底处 Shampoo 基本上没有了横跳现象。不过，我们能不能把参数更新方向再优化一下？欲知如何优化，且看后文“符号梯度下降”。
+
+由于库实现太慢了，跑一个 batch 就要好几秒，所以这里就不放出在 Fashion-MNIST 上面的测试结果了。
 
 有了之前的讨论，我们就看得懂 `torch-optimizer` 库的实现了：
 
@@ -2070,6 +2145,14 @@ Rprop 的出现早于 RMSprop，从命名风格就可以看出它们的一脉相
 
 可以看到，如果忽略全量梯度计算这个（大）问题，Rprop 在这两个地形的收敛能力完全可以媲美 Adam！尤其是在 rosenbrock 地形下 Rprop 沿着谷底移动的速度是相当快的。
 
+下面则展示了如果以 mini-batch 方式运行 Rprop 的惨烈效果：
+
+![Rprop_performance_curves](./optimizer_pics/Rprop_performance_curves.png)
+
+![Rprop_landscape_pca](./optimizer_pics/Rprop_landscape_pca.png)
+
+演都不演了，根本收敛不了。
+
 现在让我们来看看 Rprop 的更新公式：
 
 $$
@@ -2205,6 +2288,12 @@ $$
 ![rosenbrock_Lion](./optimizer_pics/rosenbrock_Lion.gif)
 
 可以看见 Lion 也在这两个地形获得了不错的表现。虽然在 rastrigin 地形下面 hyperopt 并没有搜出一个特别好的参数（第一张图太小第二张图太大），但是对于 rosenbrock 地形，Lion 取得了我们目前所见最快的谷底行进速度。
+
+![Lion_performance_curves](./optimizer_pics/Lion_performance_curves.png)
+
+![Lion_landscape_pca](./optimizer_pics/Lion_landscape_pca.png)
+
+Lion 在这个任务下面相当能打啊。仅需要约 3500 个 batch 就可以将 train_loss 降到 0.1 水平，约 700 个 batch 就可以把 acc 刷上 0.9。
 
 让我们看看 `torch-optimizer` 库的实现：
 
@@ -2657,6 +2746,8 @@ MSE 干到了 1e-3 量级。下面是训练过程的损失曲线、参数变化�
 真的不是同一张图哈，可以自行放大对比一下。
 
 可以看到 Newton-Shculz 迭代需要的这个参数容差还比较大，只要不是特别离谱，有理有据搜索出来的参数基本上效果都差不多。
+
+Muon 在这个任务上面的表现已经到了逆天的水平了。不到 2000 个 batch 就能让 train_loss 降到 0.1 左右，让 acc 上升到 0.9 也只用了大约 500 个 batch。简直干趴下之前一众优化算法。
 
 下面，让我们看看 Muon 的代码（为展示原理这里只给出单设备的）：
 
