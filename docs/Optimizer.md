@@ -2179,50 +2179,105 @@ $ 次根的复杂性，我们不必每一轮迭代都去计算这预条件子 $P
 
 ![rosenbrock_Shampoo](./optimizer_pics/rosenbrock_Shampoo.gif)
 
-可以看到，有了对二阶信息更精确的估计，Shampoo 的效果甚至比 Adam 更加惊艳。在谷底处 Shampoo 基本上没有了横跳现象。不过，我们能不能把参数更新方向再优化一下？欲知如何优化，且看后文“符号梯度下降”。
+可以看到，有了对二阶信息更精确的估计，Shampoo 的效果不输 Adam。在谷底处 Shampoo 基本上没有了横跳现象。不过，我们能不能把参数更新方向再优化一下？欲知如何优化，且看后文“符号梯度下降”。
 
-由于库实现太慢了，跑一个 batch 就要好几秒，所以这里就不放出在 Fashion-MNIST 上面的测试结果了。
+由于库实现太慢了，跑一个 batch 就要好几秒，这里求逆根采用的是苏剑林[这个博客](https://kexue.fm/archives/11175)提到的 Newton-Schulz 迭代，如果看不明白，可以先去读 Muon 那一章，再去读这个博客即可。
 
-有了之前的讨论，我们就看得懂 `torch-optimizer` 库的实现了：
+![Shampoo_performance_curves](./optimizer_pics/Shampoo_performance_curves.png)
+
+![Shampoo_landscape_pca](./optimizer_pics/Shampoo_landscape_pca.png)
+
+尽管做了优化，这个版本的 Shampoo 仍然跑得非常慢以至于跑满 P100 也只能有 5.6 it/s 的训练速度。它在第 6000 多 batch 后 train_loss 才勉强收敛到 0.1，不过倒是在第 1200 左右 batch 就能让 acc 上升到 0.9 以上。不过损失地形上面优化器倒是出现了奇怪的横跳，不知道是不是实现的问题，感觉没有发挥出理论的潜力啊……
 
 <details>
 
-<summary> Shampoo 的实现</summary>
+<summary> Shampoo 的实现（Newton-Schulz 迭代版）</summary>
 
 ```python
 import torch
 from torch.optim.optimizer import Optimizer
-# 导入一些此实现的类型别名
-from typing import Any, Callable, Dict, Iterable, Optional, Tuple, Union
-Params = Union[Iterable[torch.Tensor], Iterable[Dict[str, Any]]]
-OptLossClosure = Callable[[], float]
-OptFloat = Optional[float]
 
+# 导入类型提示，兼容不同版本的 PyTorch 和 torch_optimizer
+try:
+    from torch.optim.optimizer import Params, OptLossClosure, OptFloat
+except ImportError:
+    from torch_optimizer.types import Params, OptLossClosure, OptFloat
 
-def _matrix_power(matrix: torch.Tensor, power: float) -> torch.Tensor:
-    """计算矩阵的幂。用于计算预条件矩阵的负根。"""
-    # 为了加速SVD计算，将矩阵移动到CPU上执行
-    device = matrix.device
-    matrix = matrix.cpu()
-    # 对矩阵进行奇异值分解 (SVD)
-    u, s, v = torch.svd(matrix)
-    # 计算 s 的 power 次幂，然后重构矩阵: u @ diag(s^power) @ v^T
-    # @ 是矩阵乘法, .t() 是转置
-    return (u @ s.pow_(power).diag() @ v.t()).to(device)
+# --- 迭代求逆根算法的预计算系数 ---
+# 这是一个硬编码的系数表，用于不同阶数 (r) 的矩阵求逆根的多项式近似。
+# 每一行对应一个 r 值 (r=1, 2, 3, ...)。
+# 每个元组 (a, b, c) 是多项式 p(x) = a + bx + cx^2 的系数。
+# 这是算法的核心“黑魔法”，是预先通过数值优化得到的。
+coefs = [
+    None,  # r=0 无意义
+    # r=1
+    [
+        (14.2975, -31.2203, 18.9214), (7.12258, -7.78207, 2.35989),
+        (6.9396, -7.61544, 2.3195), (5.98456, -6.77016, 2.12571),
+        (3.79109, -4.18664, 1.39555), (3, -3, 1),
+    ],
+    # r=2 (用于四阶张量，如卷积核)
+    [
+        (7.42487, -18.3958, 12.8967), (3.48773, -2.33004, 0.440469),
+        (2.77661, -2.07064, 0.463023), (1.99131, -1.37394, 0.387593),
+        (15 / 8, -5 / 4, 3 / 8), # 理论最优系数
+    ],
+    # r=3
+    [
+        (5.05052, -13.5427, 10.2579), (2.31728, -1.06581, 0.144441),
+        (1.79293, -0.913562, 0.186699), (1.56683, -0.786609, 0.220008),
+        (14 / 9, -7 / 9, 2 / 9),
+    ],
+    # r=4
+    [
+        (3.85003, -10.8539, 8.61893), (1.80992, -0.587778, 0.0647852),
+        (1.50394, -0.594516, 0.121161), (45 / 32, -9 / 16, 5 / 32),
+    ],
+    # r=5
+    [
+        (3.11194, -8.28217, 6.67716), (1.5752, -0.393327, 0.0380364),
+        (1.3736, -0.44661, 0.0911259), (33 / 25, -11 / 25, 3 / 25),
+    ],
+]
+
+def abc(r=1, steps=None, scale=1):
+    """一个生成器，用于按需提供上述系数。"""
+    w, steps = coefs[r], steps or len(coefs[r])
+    # 按照迭代步数提供系数，如果步数超过系数表长度，则重复使用最后一个系数
+    for a, b, c in w[:steps] + w[-1:] * max(steps - len(w), 0):
+        # 根据缩放因子 scale 对系数进行调整
+        yield a / scale, b / scale**(r + 1), c / scale**(2 * r + 1)
+
+def _compute_inv_root_iterative(P: torch.Tensor, r: int, eps: float) -> torch.Tensor:
+    """使用迭代矩阵乘法方法，高效计算 P^(-1/r)。"""
+    s = 1  # 论文中定义的常量
+    I = torch.eye(P.shape[0], dtype=P.dtype, device=P.device) # 创建单位矩阵
+    
+    # 为了数值稳定性，对输入矩阵 P 进行归一化
+    t = torch.sqrt((P * P).sum()) # 计算 P 的 Frobenius 范数
+    P_norm = P / t + eps * I # 归一化并加上一个小的扰动项
+    
+    G = I.clone() # G 将会是最终的 P^(-1/r)
+    
+    # steps=None 会让 abc 使用该阶数下所有可用的系数
+    for a, b, c in abc(r, steps=None, scale=1.001): # scale > 1.0 保证收敛
+        # 计算多项式 W = a*I + b*P_norm + c*P_norm^2
+        W = a * I + b * P_norm + c * (P_norm @ P_norm)
+        # 这是一个耦合迭代过程，同时更新 G 和 P_norm
+        W1 = torch.linalg.matrix_power(W, s)
+        W2 = torch.linalg.matrix_power(W, r)
+        G = G @ W1
+        P_norm = P_norm @ W2
+        
+    # 最后，对结果进行反归一化，得到最终的逆根矩阵
+    return G * (t ** (-s / r))
 
 
 class Shampoo(Optimizer):
-    r"""实现 Shampoo 优化器算法。
-
-    在论文 `Shampoo: Preconditioned Stochastic Tensor Optimization` 中被提出。
-
-    参数:
-        params: 需要优化的参数的迭代器或定义了参数组的字典。
-        lr: 学习率 (默认: 1e-1)
-        momentum: 动量因子 (默认: 0)
-        weight_decay: 权重衰减 (L2 惩罚) (默认: 0)
-        epsilon: 为保证数值稳定性加到对角线上的小值 (默认: 1e-4)
-        update_freq: 计算预条件矩阵逆的频率 (默认: 1)
+    r"""实现了 Shampoo 优化器算法。
+    
+    **注意**: 这个版本被修改为使用一种快速的、基于迭代矩阵乘法的方法来计算矩阵的逆根，
+    而不是原始的基于 SVD 的方法。
     """
 
     def __init__(
@@ -2231,20 +2286,25 @@ class Shampoo(Optimizer):
         lr: float = 1e-1,
         momentum: float = 0.0,
         weight_decay: float = 0.0,
-        epsilon: float = 1e-4,
-        update_freq: int = 1,
+        epsilon: float = 1e-4,     # 用于稳定预处理器 (preconditioner)
+        update_freq: int = 1,      # 每隔多少步更新一次逆根矩阵
+        iter_eps: float = 1e-5,    # 迭代求逆根算法中的扰动项
     ):
-        # --- 参数校验 ---
+        # --- 输入参数合法性检查 ---
         if lr <= 0.0:
-            raise ValueError("无效的学习率: {}".format(lr))
+            raise ValueError('无效的学习率: {}'.format(lr))
         if momentum < 0.0:
-            raise ValueError("无效的动量值: {}".format(momentum))
+            raise ValueError('无效的动量值: {}'.format(momentum))
         if weight_decay < 0.0:
-            raise ValueError("无效的权重衰减值: {}".format(weight_decay))
+            raise ValueError(
+                '无效的 weight_decay 值: {}'.format(weight_decay)
+            )
         if epsilon < 0.0:
-            raise ValueError("无效的 epsilon 值: {}".format(epsilon))
+            raise ValueError('无效的 epsilon 值: {}'.format(epsilon))
         if update_freq < 1:
-            raise ValueError("无效的更新频率: {}".format(update_freq))
+            raise ValueError('无效的 update_freq 值: {}'.format(update_freq))
+        if iter_eps < 0.0:
+            raise ValueError('无效的 iter_eps 值: {}'.format(iter_eps))
 
         defaults = dict(
             lr=lr,
@@ -2252,94 +2312,94 @@ class Shampoo(Optimizer):
             weight_decay=weight_decay,
             epsilon=epsilon,
             update_freq=update_freq,
+            iter_eps=iter_eps, 
         )
         super(Shampoo, self).__init__(params, defaults)
 
     def step(self, closure: OptLossClosure = None) -> OptFloat:
-        """执行单步优化。"""
         loss = None
         if closure is not None:
             loss = closure()
 
         for group in self.param_groups:
-            for p in group["params"]:
+            for p in group['params']:
                 if p.grad is None:
                     continue
                 grad = p.grad.data
-                order = grad.ndimension()  # 获取梯度的阶数（维度数量）
+                order = grad.ndimension() # 获取梯度张量的阶数 (维度数量)
                 original_size = grad.size()
                 state = self.state[p]
-                momentum = group["momentum"]
-                weight_decay = group["weight_decay"]
+                momentum = group['momentum']
+                
+                # 确定使用的求逆根的阶数 r，最大不超过系数表中定义的最大阶数
+                inv_root_order = min(order, len(coefs) - 1)
 
                 # --- 状态初始化 ---
                 if len(state) == 0:
-                    state["step"] = 0
+                    state['step'] = 0
                     if momentum > 0:
-                        state["momentum_buffer"] = grad.clone()
-                    # 为每个维度初始化预条件矩阵和其逆矩阵
+                        state['momentum_buffer'] = grad.clone()
+                    # 为张量的每个维度初始化一个预处理器 (preconditioner) 矩阵
                     for dim_id, dim in enumerate(grad.size()):
-                        # 预条件矩阵 state["precond_{dim_id}"] 初始化为单位矩阵乘以 epsilon
-                        state["precond_{}".format(dim_id)] = group[
-                            "epsilon"
-                        ] * torch.eye(dim, out=grad.new(dim, dim))
-                        # 逆预条件矩阵初始化为零矩阵
+                        # precond_i 是第 i 维的协方差矩阵
+                        state[f'precond_{dim_id}'] = group[
+                            'epsilon'
+                        ] * torch.eye(dim, dtype=grad.dtype, device=grad.device)
+                        # inv_precond_i 是其对应的逆根矩阵
                         state[
-                            "inv_precond_{}".format(dim_id)
-                        ] = grad.new(dim, dim).zero_()
+                            f'inv_precond_{dim_id}'
+                        ] = torch.zeros_like(state[f'precond_{dim_id}'])
 
-                # --- 应用动量和权重衰减 ---
+                # 1. 应用动量 (Momentum)
                 if momentum > 0:
-                    # 这不是标准的动量，而是对梯度的平滑
-                    grad.mul_(1 - momentum).add_(
-                        state["momentum_buffer"], alpha=momentum
-                    )
+                    if 'momentum_buffer' not in state:
+                         buf = state['momentum_buffer'] = grad.clone()
+                    else:
+                         buf = state['momentum_buffer']
+                         buf.mul_(momentum).add_(grad, alpha=1 - momentum)
+                    grad = buf # 后续操作在动量缓冲上进行
 
-                if weight_decay > 0:
-                    grad.add_(p.data, alpha=group["weight_decay"])
+                # 2. 应用权重衰减 (Weight Decay)
+                if group['weight_decay'] > 0:
+                    grad.add_(p.data, alpha=group['weight_decay'])
 
-                # --- Shampoo 核心：计算和应用预条件矩阵 ---
-                # 详细过程见论文中的算法2
-                # 循环处理每个维度
+                # --- 核心：逐维度进行预处理 ---
+                # 遍历张量的每一个维度
                 for dim_id, dim in enumerate(grad.size()):
-                    precond = state["precond_{}".format(dim_id)]
-                    inv_precond = state["inv_precond_{}".format(dim_id)]
+                    precond = state[f'precond_{dim_id}']
+                    inv_precond = state[f'inv_precond_{dim_id}']
 
-                    # --- 1. 重塑梯度以隔离当前维度 ---
-                    # 将当前维度 dim_id 换到第0维
+                    # a. 将当前维度换到第0维，并将其他维度展平
                     grad = grad.transpose_(0, dim_id).contiguous()
                     transposed_size = grad.size()
-                    # 将梯度重塑为 (dim, -1) 的二维矩阵
                     grad = grad.view(dim, -1)
 
-                    # --- 2. 更新预条件矩阵 ---
+                    # b. 更新预处理器 (协方差矩阵)
+                    # 这是在累积二阶矩信息
                     grad_t = grad.t()
-                    # 累加 g * g^T 到预条件矩阵中
                     precond.add_(grad @ grad_t)
                     
-                    # --- 3. (周期性地) 计算逆预条件矩阵 ---
-                    # 每隔 update_freq 步，计算一次预条件矩阵的 -1/order 次幂
-                    if state["step"] % group["update_freq"] == 0:
-                        inv_precond.copy_(_matrix_power(precond, -1.0 / order))
+                    # c. 定期更新逆根矩阵 (这是计算成本最高的部分)
+                    if state['step'] % group['update_freq'] == 0:
+                        inv_precond.copy_(_compute_inv_root_iterative(
+                            precond,
+                            r=inv_root_order, # 使用与张量阶数匹配的根
+                            eps=group['iter_eps']
+                        ))
 
-                    # --- 4. 应用预条件 ---
-                    # 将梯度与逆预条件矩阵相乘
+                    # d. 使用逆根矩阵对梯度进行预处理
                     if dim_id == order - 1:
-                        # 如果是最后一个维度，为了效率，梯度先转置再乘
+                        # 对于最后一个维度，需要右乘
                         grad = grad_t @ inv_precond
-                        # 将预条件化后的梯度恢复到原始形状
-                        grad = grad.view(original_size)
+                        grad = grad.view(original_size) # 恢复原始形状
                     else:
-                        # 如果不是最后一个维度，直接左乘
+                        # 对于其他维度，左乘
                         grad = inv_precond @ grad
-                        # 恢复到转置后的形状，准备处理下一个维度
-                        grad = grad.view(transposed_size)
+                        grad = grad.view(transposed_size) # 恢复转置后的形状
 
-                state["step"] += 1
-                # 更新动量缓冲（用的是预条件化后的梯度）
-                state["momentum_buffer"] = grad
-                # --- 更新参数 ---
-                p.data.add_(grad, alpha=-group["lr"])
+                state['step'] += 1
+                # 3. 最后一步：用最终处理过的梯度更新参数
+                p.data.add_(grad, alpha=-group['lr'])
 
         return loss
 ```
@@ -2677,7 +2737,7 @@ class Lion(Optimizer):
 
 ### Muon
 
-最后让我们祭出 Muon 优化器，也就是 Kimi-K2 模型训练使用的优化器。这一节的撰写，在很大程度上参考了苏剑林的博客：
+最后让我们祭出 Muon 优化器，也就是 Kimi-K2 模型训练使用的优化器。这一节的撰写，在很大程度上参考了苏剑林的博客。
 
 我们计划从两条路线“包抄”推导 Muon 优化器。
 
@@ -3171,6 +3231,8 @@ class SingleDeviceMuonWithAuxAdam(torch.optim.Optimizer):
 </details>
 
 ## 非梯度参数优化
+
+Per aspera ad astra. 亲爱的读者朋友，恭喜您和我一起度过了这段难忘的研习梯度参数优化的旅程。现在，让我们调转方向，看看别处的风景吧。
 
 ### L-BFGS
 
