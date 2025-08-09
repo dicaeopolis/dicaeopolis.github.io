@@ -1876,7 +1876,37 @@ def _single_tensor_nadam(
 
 #### LAMB
 
-Researcher 的奇怪的命名品味啊……后面我们还能看到 Lion 优化器，不知道是不是专门吃 LAMB 的……无论如何让我们来看看吧。
+Researchers 的奇怪的命名品味啊……后面我们还能看到 Lion 优化器，不知道是不是专门吃 LAMB 的……无论如何让我们来看看吧。
+
+LAMB 在 Adam 上面的改进点在于对“何时应该多更新参数”的一个先验估计：如果本来参数大，并且算出来的更新量小，那就意味着本来应该优化的参数没有得到有效优化，也就是，如果我们取 $r=\dfrac{|\theta_{n-1}|}{|\Delta\theta|}$ 再乘以原来的参数更新量，就可以实现有效优化。具体而言，LAMB 优化器的更新公式是：
+
+$$
+\begin{align*}
+    g_n&=\nabla\mathcal{L({x};\theta_{n-1})}\\
+    M_n&=(1-\beta_1)g_n+\beta_1M_{n-1}\\
+    G_{n}&=\beta_2 G_n + (1-\beta_2)g_n\odot g_n\\
+    \hat M_n&=\dfrac{M_n}{1-\beta_1^n}\\
+    \hat G_n&=\dfrac{G_n}{1-\beta_2^n}\\
+    \tilde M_n&=\dfrac{\eta}{\sqrt{\epsilon+\hat G_n}} \hat M_n-\eta\lambda\theta_{n-1}\\
+    \theta_n&=\theta_{n-1}-\dfrac{\Phi(\theta_{n-1})}{|\tilde M_n|}\tilde{M}_n
+\end{align*}
+$$
+
+这里的 $\Phi(x)$ 可以取 $x$ 也可以做裁剪取 $\max{(\min{(x,\gamma_a)},\gamma_b)}$ 来把参数控制在这样一个范围内。
+
+LAMB 的初衷就是解决 Adam 在大批量训练的时候梯度方差过小导致训不动或者训炸的问题。这样做看来确实比较有用，让我们来看看表现吧：
+
+![rastrigin_Lamb](./optimizer_pics/rastrigin_Lamb.gif)
+
+![rosenbrock_Lamb](./optimizer_pics/rosenbrock_Lamb.gif)
+
+这里 rosenbrock 疑似参数有些小了。下面是实际任务的测试：
+
+![Lamb_performance_curves](./optimizer_pics/Lamb_performance_curves.png)
+
+![Lamb_landscape_pca](./optimizer_pics/Lamb_landscape_pca.png)
+
+可以看到 LAMB 取得了和 Adam 差不多的水平。在约 4000 个 Batch 后 train_loss 降到了 0.1 附近；约 1000 个 Batch 后 acc 稳定在 0.9 以上。
 
 ### Shampoo
 
