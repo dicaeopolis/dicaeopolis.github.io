@@ -402,7 +402,7 @@ print("\n" + "="*50)
 
 </details>
 
-## MLP 模型
+## 多层感知机
 
 ### MLP 模型的训练结果展示
 
@@ -451,6 +451,8 @@ MLP(
 对于图像分类任务而言，MLP 的做法是将其展平成一维向量来丢进矩阵里面跑。我第一次接触的时候就觉得这很没道理，图像本身就有两个维度，这种“平面化”的信息，感觉就被一个 nn.Flatten 给丢弃了。
 
 事实上结果也是这样，
+
+## 卷积神经网络
 
 ```python
 class CNN(nn.Module):
@@ -571,6 +573,324 @@ CNN(
 [Benchmarks on test set]
   - Test loss: 0.7148
   - Test accuracy: 75.85%
+
+==================================================
+```
+
+## 在 CIFAR-10 上从零训练 ResNet-18
+
+## 对预训练 ResNet-18 在 CIFAR-10 上进行微调
+
+```python
+from torchvision.models import resnet18
+class ResNet18(nn.Module):
+    def __init__(self, pretrained=False, num_classes=10):
+        super(ResNet18, self).__init__()
+        # 加载预训练或随机初始化的ResNet-18
+        self.resnet = resnet18(pretrained=pretrained)
+        
+        # 调整第一个卷积层以适应32x32输入
+        # 原始ResNet-18的第一个卷积层是7x7, stride=2, padding=3
+        # 对于32x32图像，我们改为3x3, stride=1, padding=1
+        self.resnet.conv1 = nn.Conv2d(
+            3, 64, kernel_size=3, stride=1, padding=1, bias=False
+        )
+        
+        # 调整最大池化层，不需要下采样太多
+        self.resnet.maxpool = nn.Identity()  # 移除最大池化层
+        
+        # 调整最后一个全连接层以适应CIFAR-10的10个类别
+        in_features = self.resnet.fc.in_features
+        self.resnet.fc = nn.Linear(in_features, num_classes)
+        
+    def forward(self, x):
+        return self.resnet(x)
+
+def get_model_on_device():
+    model = ResNet18(pretrained=True)
+    return model.to(device)
+```
+
+```text
+==================================================
+               Results
+==================================================
+
+[Hyper parameters]
+  - Best LR: 0.000330
+  - Best epochs: 3 epochs
+  - Batch size: 128
+
+[Model structure]
+  - Model type: Pretrained ResNet18
+  - Model structure:
+ResNet18(
+  (resnet): ResNet(
+    (conv1): Conv2d(3, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+    (bn1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (relu): ReLU(inplace=True)
+    (maxpool): Identity()
+    (layer1): Sequential(
+      (0): BasicBlock(
+        (conv1): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+        (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+      (1): BasicBlock(
+        (conv1): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+        (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+    )
+    (layer2): Sequential(
+      (0): BasicBlock(
+        (conv1): Conv2d(64, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+        (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (downsample): Sequential(
+          (0): Conv2d(64, 128, kernel_size=(1, 1), stride=(2, 2), bias=False)
+          (1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+      (1): BasicBlock(
+        (conv1): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+        (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+    )
+    (layer3): Sequential(
+      (0): BasicBlock(
+        (conv1): Conv2d(128, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (downsample): Sequential(
+          (0): Conv2d(128, 256, kernel_size=(1, 1), stride=(2, 2), bias=False)
+          (1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+      (1): BasicBlock(
+        (conv1): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+    )
+    (layer4): Sequential(
+      (0): BasicBlock(
+        (conv1): Conv2d(256, 512, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+        (conv2): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (downsample): Sequential(
+          (0): Conv2d(256, 512, kernel_size=(1, 1), stride=(2, 2), bias=False)
+          (1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+      (1): BasicBlock(
+        (conv1): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+        (conv2): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+    )
+    (avgpool): AdaptiveAvgPool2d(output_size=(1, 1))
+    (fc): Linear(in_features=512, out_features=10, bias=True)
+  )
+)
+  - Total params: 11,173,962
+
+[Training infomation]
+  - Training duration on full training set: 1m 55s
+  - Training device: cuda on Kaggle's free P100, Thank you Google!
+
+[Benchmarks on test set]
+  - Test loss: 0.3450
+  - Test accuracy: 89.06%
+
+==================================================
+```
+
+## ViT
+
+```python
+from torch import Tensor
+class PatchEmbedding(nn.Module):
+    """将图像分割为补丁并进行嵌入"""
+    def __init__(self, img_size=32, patch_size=4, in_channels=3, embed_dim=128):
+        super().__init__()
+        self.img_size = img_size
+        self.patch_size = patch_size
+        
+        # 计算补丁数量
+        self.num_patches = (img_size // patch_size) ** 2
+        
+        # 使用卷积层实现补丁嵌入 (等价于每个补丁应用一个卷积核)
+        self.proj = nn.Conv2d(
+            in_channels, 
+            embed_dim, 
+            kernel_size=patch_size, 
+            stride=patch_size
+        )
+
+    def forward(self, x: Tensor) -> Tensor:
+        # x形状: (batch_size, in_channels, img_size, img_size)
+        x = self.proj(x)  # 输出形状: (batch_size, embed_dim, num_patches^(1/2), num_patches^(1/2))
+        x = x.flatten(2)  # 输出形状: (batch_size, embed_dim, num_patches)
+        x = x.transpose(1, 2)  # 输出形状: (batch_size, num_patches, embed_dim)
+        return x
+
+class TransformerClassifier(nn.Module):
+    """用于CIFAR-10分类的Transformer模型"""
+    def __init__(
+        self,
+        img_size=32,
+        patch_size=4,
+        in_channels=3,
+        num_classes=10,
+        embed_dim=128,
+        depth=4,          # Transformer编码器层数
+        num_heads=4,      # 注意力头数
+        mlp_ratio=2.0,    # MLP隐藏层维度比例
+        dropout=0.1,      # Dropout概率
+    ):
+        super().__init__()
+        
+        # 补丁嵌入
+        self.patch_embed = PatchEmbedding(
+            img_size=img_size,
+            patch_size=patch_size,
+            in_channels=in_channels,
+            embed_dim=embed_dim
+        )
+        num_patches = self.patch_embed.num_patches
+        
+        # 类别令牌 (用于最终分类)
+        self.class_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
+        
+        # 位置嵌入 (可学习)
+        self.pos_embed = nn.Parameter(torch.zeros(1, num_patches + 1, embed_dim))
+        
+        # Dropout层
+        self.pos_drop = nn.Dropout(p=dropout)
+        
+        # Transformer编码器
+        encoder_layer = nn.TransformerEncoderLayer(
+            d_model=embed_dim,
+            nhead=num_heads,
+            dim_feedforward=int(embed_dim * mlp_ratio),
+            dropout=dropout,
+            batch_first=True,  # 批处理维度在前
+        )
+        self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=depth)
+        
+        # 分类头
+        self.classifier = nn.Sequential(
+            nn.LayerNorm(embed_dim),
+            nn.Linear(embed_dim, num_classes)
+        )
+
+    def forward(self, x: Tensor) -> Tensor:
+        # x形状: (batch_size, 3, 32, 32)
+        batch_size = x.shape[0]
+        
+        # 补丁嵌入
+        x = self.patch_embed(x)  # 输出形状: (batch_size, num_patches, embed_dim)
+        
+        # 扩展类别令牌到批次大小
+        class_tokens = self.class_token.expand(batch_size, -1, -1)  # 形状: (batch_size, 1, embed_dim)
+        
+        # 将类别令牌与补丁嵌入拼接
+        x = torch.cat((class_tokens, x), dim=1)  # 形状: (batch_size, num_patches + 1, embed_dim)
+        
+        # 添加位置嵌入并应用dropout
+        x = x + self.pos_embed
+        x = self.pos_drop(x)
+        
+        # Transformer编码
+        x = self.transformer_encoder(x)  # 形状: (batch_size, num_patches + 1, embed_dim)
+        
+        # 使用类别令牌的输出进行分类
+        x = x[:, 0]  # 取类别令牌对应的输出，形状: (batch_size, embed_dim)
+        x = self.classifier(x)  # 形状: (batch_size, num_classes)
+        
+        return x
+
+def get_model_on_device():
+    model = TransformerClassifier(
+        img_size=32,
+        patch_size=4,
+        in_channels=3,
+        num_classes=10,
+        embed_dim=192,
+        depth=4,
+        num_heads=8,
+        mlp_ratio=2.0,
+        dropout=0.1
+    )
+    return model.to(device)
+```
+
+```text
+==================================================
+               Results
+==================================================
+
+[Hyper parameters]
+  - Best LR: 0.000456
+  - Best epochs: 11 epochs
+  - Batch size: 128
+
+[Model structure]
+  - Model type: ViT
+  - Model structure:
+TransformerClassifier(
+  (patch_embed): PatchEmbedding(
+    (proj): Conv2d(3, 192, kernel_size=(4, 4), stride=(4, 4))
+  )
+  (pos_drop): Dropout(p=0.1, inplace=False)
+  (transformer_encoder): TransformerEncoder(
+    (layers): ModuleList(
+      (0-3): 4 x TransformerEncoderLayer(
+        (self_attn): MultiheadAttention(
+          (out_proj): NonDynamicallyQuantizableLinear(in_features=192, out_features=192, bias=True)
+        )
+        (linear1): Linear(in_features=192, out_features=384, bias=True)
+        (dropout): Dropout(p=0.1, inplace=False)
+        (linear2): Linear(in_features=384, out_features=192, bias=True)
+        (norm1): LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+        (norm2): LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+        (dropout1): Dropout(p=0.1, inplace=False)
+        (dropout2): Dropout(p=0.1, inplace=False)
+      )
+    )
+  )
+  (classifier): Sequential(
+    (0): LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+    (1): Linear(in_features=192, out_features=10, bias=True)
+  )
+)
+  - Total params: 1,212,490
+
+[Training infomation]
+  - Training duration on full training set: 4m 43s
+  - Training device: cuda on Kaggle's free P100, Thank you Google!
+
+[Benchmarks on test set]
+  - Test loss: 0.8867
+  - Test accuracy: 69.90%
 
 ==================================================
 ```

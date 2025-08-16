@@ -99,6 +99,7 @@ markdown_extensions:
 
 plugins:
   - search
+  - mermaid2
   - encryptcontent:
       title_prefix: '[Protected]'
       summary: '不给你看😝'

@@ -20,7 +20,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install mkdocs mkdocs-material mkdocs-encryptcontent-plugin pymdown-extensions
+          pip install mkdocs mkdocs-material mkdocs-encryptcontent-plugin pymdown-extensions mkdocs-mermaid2-plugin
 
       - name: Deploy docs
         run: mkdocs gh-deploy --force
