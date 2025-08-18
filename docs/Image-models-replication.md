@@ -651,11 +651,11 @@ CNN(
 
 ### 对 CNN 模型的解读和评述
 
-结构图：
+结构图（请放大观看）：
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313244', 'tertiaryColor': '#181825'}}}%%
-graph TB
+graph LR
     %% Styling definitions
     classDef box fill:#313244,stroke:#cdd6f4,stroke-width:2px,color:#cdd6f4,radius:8px;
     classDef input fill:#585b70,stroke:#89b4fa,stroke-width:2px,color:#cdd6f4;
@@ -672,7 +672,7 @@ graph TB
     %% Feature Extractor
     %% -- Conv Block 1 --
     subgraph Block1["Conv Block 1"]
-        B["Conv2d<br> 3x32 x 3×3 kernel tensor"] 
+        B["Conv2d<br> 3x32 x 3×3 kernel"] 
         C["BatchNorm2d<br> 32 channels"]
         D["ReLU"]
         E["MaxPool2d<br> 2×2/2"]
@@ -683,7 +683,7 @@ graph TB
 
     %% -- Conv Block 2 --
     subgraph Block2["Conv Block 2"]
-        F["Conv2d<br> 32x64 x 3×3 kernel tensor"] 
+        F["Conv2d<br> 32x64 x 3×3 kernel"] 
         G["BatchNorm2d<br> 64 channels"]
         H["ReLU"]
         I["MaxPool2d<br> 2×2/2"]
@@ -694,7 +694,7 @@ graph TB
 
     %% -- Conv Block 3 --
     subgraph Block3["Conv Block 3"]
-        J["Conv2d<br> 64x128 x 3×3 kernel tensor"]
+        J["Conv2d<br> 64x128 x 3×3 kernel"]
         K["BatchNorm2d<br> 128 channels"]
         L["ReLU"]
         M["MaxPool2d<br> 2×2/2"]
