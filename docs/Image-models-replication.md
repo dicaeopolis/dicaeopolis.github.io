@@ -454,15 +454,60 @@ MLP(
 模型结构图：
 
 ```mermaid
-graph TD
-    A[Input: 3x32x32 Image] --> B[Flatten]
-    B --> C[Linear: 3072 in → 512 out]
-    C --> D[ReLU]
-    D --> E[Linear: 512 in → 256 out]
-    E --> F[ReLU]
-    F --> G[Linear: 256 in → 10 out]
-    G --> H[Output Logits]
-    H --> I[CrossEntropyLoss]
+%%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313244', 'tertiaryColor': '#181825'}}}%%
+graph LR
+    %% Graph direction and styling
+    classDef box fill:#313244,stroke:#cdd6f4,stroke-width:2px,color:#cdd6f4,radius:8px;
+    classDef input fill:#585b70,stroke:#89b4fa,stroke-width:2px,color:#cdd6f4;
+    classDef output fill:#313244,stroke:#f38ba8,stroke-width:2px,color:#cdd6f4;
+    classDef result fill:#45475a,stroke:#a6e3a1,stroke-width:2px,color:#cdd6f4;
+
+    %% Input Layer
+    subgraph Input["Input Layer"]
+        A[("RGB Image<br>3x32x32")]
+    end
+    class Input input;
+
+    %% Flatten Layer
+    subgraph Flatten["Flatten Layer"]
+        B[("Flatten")]
+    end
+    A --> |3 @ 32x32| B
+    class Flatten box;
+
+    %% Hidden Layer 1
+    subgraph Hidden1["Hidden Layer 1"]
+        C["Linear<br>3072x512"]
+        D["ReLU"]
+    end
+    B -->|3072| C --> D
+    class Hidden1 box;
+
+    %% Hidden Layer 2
+    subgraph Hidden2["Hidden Layer 2"]
+        E["Linear<br>512x256"] 
+        F["ReLU"]
+    end
+    D -->|512| E --> F
+    class Hidden2 box;
+
+    %% Output Layer
+    subgraph Output["Output Layer"]
+        G["Linear<br>256x10"]
+    end
+    F -->|256| G
+    class Output output;
+
+    %% Classification Result
+    subgraph Result["Classification Result"]
+        H[("10 output logits")]
+    end
+    G -->|10| H
+    class Result result;
+
+    %% Styling
+    style A stroke-dasharray: 5 5
+    style H stroke:#a6e3a1,stroke-width:3px
 ```
 
 这是一个三层的多层感知机，参数量 1.7M。这点参数量反映下来就是即使是 P100 这种老 GPU 都根本没使劲，倒是 CPU 一直在满负荷发力，搬运数据。
@@ -609,35 +654,83 @@ CNN(
 结构图：
 
 ```mermaid
-graph TD
-    A[Input: 3x32x32 Image] --> B[Conv Block 1]
-    B --> C[Conv Block 2]
-    C --> D[Conv Block 3]
-    D --> E[Flatten]
-    E --> F[Linear: 2048->512]
-    F --> G[ReLU]
-    G --> H[Dropout: 0.5]
-    H --> I[Linear: 512->10]
-    I --> J[Output Logits]
-    J --> K[CrossEntropyLoss]
+%%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313244', 'tertiaryColor': '#181825'}}}%%
+graph TB
+    %% Styling definitions
+    classDef box fill:#313244,stroke:#cdd6f4,stroke-width:2px,color:#cdd6f4,radius:8px;
+    classDef input fill:#585b70,stroke:#89b4fa,stroke-width:2px,color:#cdd6f4;
+    classDef output fill:#313244,stroke:#f38ba8,stroke-width:2px,color:#cdd6f4;
+    classDef result fill:#45475a,stroke:#a6e3a1,stroke-width:2px,color:#cdd6f4;
+    classDef conv fill:#313244,stroke:#74c7ec,stroke-width:2px,color:#cdd6f4;
 
-    subgraph Conv Block 1
-        B1[Conv2d: 3->32, kernel=3x3, padding=1] --> B2[BatchNorm2d: 32]
-        B2 --> B3[ReLU]
-        B3 --> B4[MaxPool2d: 2x2, stride=2]
+    %% Input Layer
+    subgraph Input["Input"]
+        A[("3@32×32")]
     end
+    class Input input;
 
-    subgraph Conv Block 2
-        C1[Conv2d: 32->64, kernel=3x3, padding=1] --> C2[BatchNorm2d: 64]
-        C2 --> C3[ReLU]
-        C3 --> C4[MaxPool2d: 2x2, stride=2]
+    %% Feature Extractor
+    %% -- Conv Block 1 --
+    subgraph Block1["Conv Block 1"]
+        B["Conv2d<br> 3x32 x 3×3 kernel tensor"] 
+        C["BatchNorm2d<br> 32 channels"]
+        D["ReLU"]
+        E["MaxPool2d<br> 2×2/2"]
     end
+    A --> B
+    B -->|32 @ 32x32| C --> D --> E
+    class Block1 conv;
 
-    subgraph Conv Block 3
-        D1[Conv2d: 64->128, kernel=3x3, padding=1] --> D2[BatchNorm2d: 128]
-        D2 --> D3[ReLU]
-        D3 --> D4[MaxPool2d: 2x2, stride=2]
+    %% -- Conv Block 2 --
+    subgraph Block2["Conv Block 2"]
+        F["Conv2d<br> 32x64 x 3×3 kernel tensor"] 
+        G["BatchNorm2d<br> 64 channels"]
+        H["ReLU"]
+        I["MaxPool2d<br> 2×2/2"]
     end
+    E --> |32 @ 16×16| F
+    F --> |64 @ 16×16| G --> H --> I
+    class Block2 conv;
+
+    %% -- Conv Block 3 --
+    subgraph Block3["Conv Block 3"]
+        J["Conv2d<br> 64x128 x 3×3 kernel tensor"]
+        K["BatchNorm2d<br> 128 channels"]
+        L["ReLU"]
+        M["MaxPool2d<br> 2×2/2"]
+    end
+    I --> |64 @ 8×8| J
+    J --> |128 @ 8×8| K --> L --> M
+    class Block3 conv;
+
+    %% Feature Flattening
+    subgraph Flatten["Flatten"]
+        N[("2048")]
+    end
+    M --> |128 @ 4×4| N
+    class Flatten box;
+
+    %% Classifier
+    subgraph Classifier["Classifier"]
+        O["Linear<br> 2048x512"]
+        P["ReLU"]
+        Q["Dropout<br> p = 0.5"]
+        R["Linear<br> 512x10"]
+    end
+    N --> O
+    O --> P --> Q --> R
+    class Classifier box;
+
+    %% Output Layer
+    subgraph Output["Classification Result"]
+        S[("10 output logits")]
+    end
+    R --> S
+    class Output output;
+
+    %% Styling
+    style A stroke-dasharray: 5 5
+    style S stroke:#a6e3a1,stroke-width:3px
 ```
 
 CNN 通过先验引入稀疏连接（也就是 `conv2d` ）不仅可以实现对更大规模网络的稀疏近似，满足图像的平移不变性，还具有很好的可解释性（卷积核对应一个小面积的感受野，解决之前提到 MLP 的展平操作的问题，并且不同的卷积核提取不同的特征）。因此相当适合图像处理。当然最后还是得依靠一个 MLP 作为分类头，不过这里的展平操作就合理多了，因为经过多次 `conv2d` 之后，模型提取到的都是空间上弱相关的深层次（抽象）特征了。下面来聊聊训练上的参数迁移问题。
