@@ -669,82 +669,72 @@ graph LR
 
     %% Input Layer
     subgraph Input["Input"]
-        %% Corrected syntax to standard rectangle
-        A["(3 @ 32×32)"]
+        A[("3@32×32")]
     end
     class Input input;
 
-    %% Initial Convolution
-    subgraph InitConv["Initial Convolution"]
-        %% Removed space before <br>
-        B["Conv2d<br>3x64 x 3×3"] 
-        C["BatchNorm2d<br>64 channels"]
+    %% Feature Extractor
+    %% -- Conv Block 1 --
+    subgraph Block1["Conv Block 1"]
+        B["Conv2d<br> 3x32 x 3×3 kernel"] 
+        C["BatchNorm2d<br> 32 channels"]
         D["ReLU"]
+        E["MaxPool2d<br> 2×2/2"]
     end
     A --> B
-    B --> C --> D
-    class InitConv conv;
+    B -->|32 @ 32x32| C --> D --> E
+    class Block1 conv;
 
-    %% Layer 1 (2× BasicBlock without downsample)
-    subgraph Layer1["Layer1 (2×BasicBlock)"]
-        F["BasicBlock 1"]
-        G["BasicBlock 1"]
+    %% -- Conv Block 2 --
+    subgraph Block2["Conv Block 2"]
+        F["Conv2d<br> 32x64 x 3×3 kernel"] 
+        G["BatchNorm2d<br> 64 channels"]
+        H["ReLU"]
+        I["MaxPool2d<br> 2×2/2"]
     end
-    D --> |64 @ 32×32| F
-    F --> |64 @ 32×32| G
-    class Layer1 box;
+    E --> |32 @ 16×16| F
+    F --> |64 @ 16×16| G --> H --> I
+    class Block2 conv;
 
-    %% Layer 2 (2× BasicBlock with downsample in first block)
-    subgraph Layer2["Layer2 (2×BasicBlock)"]
-        H["BasicBlock 2"]
-        I["BasicBlock 1"]
+    %% -- Conv Block 3 --
+    subgraph Block3["Conv Block 3"]
+        J["Conv2d<br> 64x128 x 3×3 kernel"]
+        K["BatchNorm2d<br> 128 channels"]
+        L["ReLU"]
+        M["MaxPool2d<br> 2×2/2"]
     end
-    G --> |64 @ 32×32| H
-    H --> |128 @ 16×16| I
-    class Layer2 box;
+    I --> |64 @ 8×8| J
+    J --> |128 @ 8×8| K --> L --> M
+    class Block3 conv;
 
-    %% Layer 3 (2× BasicBlock with downsample in first block)
-    subgraph Layer3["Layer3 (2×BasicBlock)"]
-        J["BasicBlock 2"]
-        K["BasicBlock 1"]
+    %% Feature Flattening
+    subgraph Flatten["Flatten"]
+        N[("2048")]
     end
-    I --> |128 @ 16×16| J
-    J --> |256 @ 8×8| K
-    class Layer3 box;
+    M --> |128 @ 4×4| N
+    class Flatten box;
 
-    %% Layer 4 (2× BasicBlock with downsample in first block)
-    subgraph Layer4["Layer4 (2×BasicBlock)"]
-        L["BasicBlock 2"]
-        M["BasicBlock 1"]
+    %% Classifier
+    subgraph Classifier["Classifier"]
+        O["Linear<br> 2048x512"]
+        P["ReLU"]
+        Q["Dropout<br> p = 0.5"]
+        R["Linear<br> 512x10"]
     end
-    K --> |256 @ 8×8| L
-    L --> |512 @ 4×4| M
-    class Layer4 box;
-
-    %% Global Pooling and FC
-    subgraph PoolFC["GAP & Classfiaction"]
-        N["AdaptiveAvgPool2d<br>1×1"]
-        O["Flatten<br>512-dim vec"]
-        P["Linear<br>512x10"]
-    end
-    
-    %% CRITICAL FIX: Broke the complex chain into separate lines
-    M --> |512 @ 4×4| N
-    N --> |512 @ 1×1| O
-    O --> |512| P
-    class PoolFC box;
+    N --> O
+    O --> P --> Q --> R
+    class Classifier box;
 
     %% Output Layer
-    subgraph Output["output"]
-        %% Corrected syntax to standard rectangle
-        Q["(10)"]
+    subgraph Output["Classification Result"]
+        S[("10 output logits")]
     end
-    P --> Q
+    R --> S
     class Output output;
 
     %% Styling
     style A stroke-dasharray: 5 5
-    style Q stroke:#a6e3a1,stroke-width:3px
+    style S stroke:#a6e3a1,stroke-width:3px
 ```
 
 `conv2d` 就是卷积操作，本质上是从输入张量 `(batch_size, in_channel, H, W)` 到输出张量 `(batch_size, out_channel, H, W)` 的一个利用四维张量 `(in_channel, out_channel, H', W')` 的卷积核进行的卷积操作，具体是对于单张图像的各个通道进行填充后，将自定义的 `in_channel@H'xW'` 的矩阵在其上一一对应进行滑动覆盖，并对覆盖到的区域进行逐元素求积并求和，得到了单个新矩阵，如此共选取 `out_channel` 次自定义矩阵，就得到了输出张量 `(batch_size, out_channel, H, W)` 这是任意一本深度学习教材都会讲解的内容。
@@ -1426,3 +1416,11 @@ TransformerClassifier(
 
 ==================================================
 ```
+
+## Patch based LSTM
+
+## VAE
+
+## ACGAN
+
+## U-Net as a feature extractor
