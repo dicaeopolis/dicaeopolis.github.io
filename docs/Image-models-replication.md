@@ -1035,7 +1035,7 @@ graph LR
     classDef conv fill:#313244,stroke:#74c7ec,stroke-width:2px,color:#cdd6f4;
 
     %% Input Layer
-    subgraph Input["输入"]
+    subgraph Input["Input"]
         A[("3 @ 32×32")]
     end
     class Input input;
@@ -1152,7 +1152,6 @@ graph LR
 Basic block 2 是带降采样的残差连接：
 
 ```mermaid
-% Basic block ~w/dwsp
 %%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313244', 'tertiaryColor': '#181825'}}}%%
 graph LR
     %% Styling definitions
@@ -1166,7 +1165,7 @@ graph LR
         C["ReLU"]
         D["Conv2d <br> 64x64 x 3×3"] 
         E["BatchNorm2d <br> 64 channels"]
-        F(("\+"))
+        F(("+"))
         G["ReLU"]
     end
     
@@ -1184,6 +1183,7 @@ graph LR
     class BasicBlockNoDS residual;
 ```
 
+对于较复杂的分类任务而言，
 
 ## ViT
 
