@@ -10,7 +10,7 @@
 
 这个代码框架的大致介绍是：通过模型暴露的一个接口函数 `get_model_on_device()` 获取模型实例，然后使用 hyperopt 框架，在 CIFAR-10 数据集上分割 20% 数据用以对模型进行全局学习率和训练轮次的早停法调参；获取最优参数后，在全量数据上进行训练，最后收集训练信息得到结果和部分数据变化的可视化图像。
 
-由于每一次都要花大量时间寻找合适的学习率，笔者花了一天时间研究了一下 muP（[Paper link here](https://arxiv.org/abs/2203.03466)） 的原理以及怎样迁移学习率，结论：在已有数据上（MLP, CNN, ResNet-18）进行的实验和相关理论计算证明，模型架构（残差连接，BN等）会影响损失地形（[Paper link here](https://arxiv.org/pdf/1712.09913)），导致跨架构的学习率迁移失效。其实很明显，比如微调ResNet就比从零训练ResNet的best LR更低，因为预训练权重已经在一个 minima 附近了，损失地形比起随机点位更平坦。所以该花时间调参还得花时间调参。不过，可以考虑在小宽度模型上再 scale up，这样就符合 muP 的初心了。具体的实验过程，还请大家参阅后文。
+由于每一次都要花大量时间寻找合适的学习率，笔者花了一天时间研究了一下 muP（[Paper link here](https://arxiv.org/abs/2203.03466)） 的原理以及怎样迁移学习率，结论：在已有数据上（MLP, CNN, ResNet-18）进行的实验和相关理论计算证明，模型架构（残差连接，BN等）会影响损失地形（[Paper link here](https://arxiv.org/pdf/1712.09913)），导致跨架构的学习率迁移失效。其实很明显，比如微调ResNet就比从零训练ResNet的best LR更低，因为预训练权重已经在一个最小值附近了，损失地形比起随机点位更平坦。所以该花时间调参还得花时间调参。不过，可以考虑在小宽度模型上再 scale up，这样就符合 muP 的初心了。具体的实验过程，还请大家参阅后文。
 
 下面是每一个 Cell 的代码：
 
@@ -510,11 +510,15 @@ graph LR
     style H stroke:#a6e3a1,stroke-width:3px
 ```
 
-这是一个三层的多层感知机，参数量 1.7M。这点参数量反映下来就是即使是 P100 这种老 GPU 都根本没使劲，倒是 CPU 一直在满负荷发力，搬运数据。
+MLP 是利用 $\reals^n\rightarrow\reals^m$ 的多重线性映射实现数据的降维，但是单纯的线性映射嵌套仍是 $\reals^{d_{in}}\rightarrow\reals^{d_{out}}$ 的线性映射，因此需要在层与层之间添加非线性的激活函数引入非线性。这样一个足够宽的两层全连接网络即可拟合任意函数。
 
-对于图像分类任务而言，MLP 的做法是将其一来就展平成一维向量来丢进矩阵里面跑。我第一次接触的时候就觉得这很没道理，图像本身就有两个维度，这种“平面化”的信息，感觉就被一个 `nn.Flatten` 给丢弃了。虽然说理论上经过足够数据训练之后，一个 fc layer 足够有能力提取两个维度上的相关性（万能拟合定理），但是网络要足够宽，数据要足够多，正则化要足够充分，而如果不引入更多先验知识来捕捉图像信息的特征，训练效率和参数效率都是极其低下的。
+在这个任务里面，我们使用一个三层的 MLP，并采用 ReLU 作为层间的激活函数，由于我们对 one-hot 向量进行分类，因此使用交叉熵损失，如果用 MSE 的话，求导之后会发现它是交叉熵的导数乘以权重，这就不适合梯度稳定更新。
 
-事实上结果也是这样，经过 13 个 Epoch 的训练之后，模型在 CIFAR-10 只上取得了 54.44% 的准确率。增大模型的宽度和深度理论上可以改善，但是效率太低了。
+输入上是将 3@32x32 的图像展平成 3072 维的向量。当然我觉得这很没道理，图像本身就有两个维度三个通道，这种“平面化”的信息，感觉就被一个 `nn.Flatten` 给丢弃了。虽然说理论上经过足够数据训练之后，一个 fc layer 足够有能力提取各个维度上的相关性（万能拟合定理），但是网络要足够宽，数据要足够多，正则化要足够充分，而如果不引入更多先验知识来捕捉图像信息的特征，训练效率和参数效率都是极其低下的。
+
+这是一个三层的多层感知机，参数量 1.7M。第一次训练下来发现这点参数量反映下来就是即使是 P100 这种老 GPU 都根本没使劲，倒是 CPU 一直在满负荷发力，搬运数据。后来意识到，dataloader 里面可以写上 `num_workers=6` 以及 `pin_memory=True` 来提升访存效率，并且把 batch_size 调大（反正就 2 M不到的模型爆不了显存），训练效率高了很多啊。
+
+经过 13 个 Epoch 的训练之后，模型在 CIFAR-10 只上取得了 54.44% 的准确率。增大模型的宽度和深度理论上可以改善，但是效率太低了。因此需要发掘图像信息的特性，在模型结构上面引入更多先验信息，寻找能够更高效提取信息的架构。
 
 ## 卷积神经网络
 
@@ -607,8 +611,8 @@ def get_model_on_device():
 ==================================================
 
 [Hyper parameters]
-  - Best LR: 0.000565
-  - Best epochs: 11 epochs
+  - Best LR: 0.000199
+  - Best epochs: 16 epochs
   - Batch size: 128
 
 [Model structure]
@@ -639,12 +643,12 @@ CNN(
   - Total params: 1,147,914
 
 [Training infomation]
-  - Training duration on full training set: 2m 33s
+  - Training duration on full training set: 4m 7s
   - Training device: cuda on Kaggle's free P100, Thank you Google!
 
 [Benchmarks on test set]
-  - Test loss: 0.7148
-  - Test accuracy: 75.85%
+  - Test loss: 0.7026
+  - Test accuracy: 77.33%
 
 ==================================================
 ```
@@ -733,24 +737,55 @@ graph LR
     style S stroke:#a6e3a1,stroke-width:3px
 ```
 
-CNN 通过先验引入稀疏连接（也就是 `conv2d` ）不仅可以实现对更大规模网络的稀疏近似，满足图像的平移不变性，还具有很好的可解释性（卷积核对应一个小面积的感受野，解决之前提到 MLP 的展平操作的问题，并且不同的卷积核提取不同的特征）。因此相当适合图像处理。当然最后还是得依靠一个 MLP 作为分类头，不过这里的展平操作就合理多了，因为经过多次 `conv2d` 之后，模型提取到的都是空间上弱相关的深层次（抽象）特征了。下面来聊聊训练上的参数迁移问题。
+`conv2d` 就是卷积操作，本质上是从输入张量 `(batch_size, in_channel, H, W)` 到输出张量 `(batch_size, out_channel, H, W)` 的一个利用四维张量 `(in_channel, out_channel, H', W')` 的卷积核进行的卷积操作，具体是对于单张图像的各个通道进行填充后，将自定义的 `in_channel@H'xW'` 的矩阵在其上一一对应进行滑动覆盖，并对覆盖到的区域进行逐元素求积并求和，得到了单个新矩阵，如此共选取 `out_channel` 次自定义矩阵，就得到了输出张量 `(batch_size, out_channel, H, W)` 这是任意一本深度学习教材都会讲解的内容。
 
-这里我控制了 CNN 的参数量基本上和 MLP 在一个数量级（1M），并且 CNN 的参数量还略少一点。之前提到尝试过使用 muP 迁移学习率，但是 MLP 的 fan_in 是 512 （隐藏层输入维度）而 CNN 的 fan_in 是最大通道数 128。关于这一点，有下面的说明：
+CNN 通过先验引入稀疏连接（也就是 `conv2d` ）不仅可以实现对更大规模网络的稀疏近似，满足图像的平移不变性，还具有很好的可解释性（卷积核对应一个小面积的感受野，解决之前提到 MLP 的展平操作的问题，并且不同的卷积核提取不同的特征）。因此相当适合图像处理。当然最后还是得依靠一个 MLP 作为分类头，不过这里的展平操作就合理多了，因为经过多次 `conv2d` 之后，模型提取到的都是空间上弱相关的深层次（抽象）特征了。在这些特征之间进行组合就非常合理且直观了。
 
-1. 为什么不是真正隐藏层的输入维度 2048？因为考虑对 CNN 做宽度上的 scale up 时，是考虑增加的通道数。实质上，`conv2d` 是对全连接的稀疏化改造，从提取更多特征的角度考虑，MLP 只需要简单增加 fan_out，但是 CNN 不能靠增加 kernel_size 或者其他，只能靠增加通道数，因为更多通道才能依靠更多样的卷积核来容纳更多特征。
+这个网络虽然参数量不如先前的 MLP，但是宽度要宽一些（我理解的网络宽度即通道数，因为这决定了模型捕获的特征数量），根据 muP 的理论，学习率可以翻 4 倍（MLP隐藏层维度 512， CNN 最大通道数 128），结论大致符合预期。
 
-2. 取最大是因为使用的全局学习率，所以应该保证瓶颈处的更新量不爆炸，也就是取尽可能保守的学习率，根据 $\eta$ 和 $d^\alpha$（其中 $\alpha$ 是和优化器有关的指数，具体取决于优化器的参数更新量，对于 Adam 一般使用 signSGD 近似，具体可见本站的“神经网络优化器概论”这篇文章）的反比例关系，所以才取的最大的通道数。类似的，其实对 MLP 也是取到的最大的隐藏层输入维度 512。
+## 在 CIFAR-10 上从零训练 ResNet-18 / 对预训练 ResNet-18 在 CIFAR-10 上进行微调
 
-因此根据 Adam 的计算方法，$\alpha$ 应该取到 $1$，所以迁移的学习率是 $0.000056 \times \dfrac{512}{128} = 0.000212$。不过，事情真的是这样吗？
+### 训练结果展示
 
-实际上搜索到的最优学习率是这个的两倍多，我觉得有以下几个点成为理由：
+<details>
 
-1. BatchNorm 已经预先对卷积的结果做了正则化，也就是对结果的分布进行归一化，因而能够承受更大的学习率。
-2. CNN 的 `conv2d` 捕获到了图像本身的平移不变性，并且易于学习各种用于提取特征的卷积核，这就从先验角度构造了一个“更容易”学习的结构，从损失地形角度上说就是这种稀疏性带来了更平坦的损失地形，从而能够承受更大的学习率。
+<summary> 代码 </summary>
 
-后面在 ResNet 上做的两个训练就更能够看出这两点来。
+```python
+from torchvision.models import resnet18
+class ResNet18(nn.Module):
+    def __init__(self, pretrained=False, num_classes=10):
+        super(ResNet18, self).__init__()
+        # 加载预训练或随机初始化的ResNet-18
+        self.resnet = resnet18(pretrained=pretrained)
+        
+        # 调整第一个卷积层以适应32x32输入
+        # 原始ResNet-18的第一个卷积层是7x7, stride=2, padding=3
+        # 对于32x32图像，我们改为3x3, stride=1, padding=1
+        self.resnet.conv1 = nn.Conv2d(
+            3, 64, kernel_size=3, stride=1, padding=1, bias=False
+        )
+        
+        # 调整最大池化层，不需要下采样太多
+        self.resnet.maxpool = nn.Identity()  # 移除最大池化层
+        
+        # 调整最后一个全连接层以适应CIFAR-10的10个类别
+        in_features = self.resnet.fc.in_features
+        self.resnet.fc = nn.Linear(in_features, num_classes)
+        
+    def forward(self, x):
+        return self.resnet(x)
 
-## 在 CIFAR-10 上从零训练 ResNet-18
+def get_model_on_device():
+    model = ResNet18()# pretrained=True 使用预训练权重，反之不使用。
+    return model.to(device)
+```
+
+</details>
+
+<details>
+
+<summary> 从零训练结果 </summary>
 
 ```text
 
@@ -865,37 +900,11 @@ ResNet18(
 ==================================================
 ```
 
-## 对预训练 ResNet-18 在 CIFAR-10 上进行微调
+</details>
 
-```python
-from torchvision.models import resnet18
-class ResNet18(nn.Module):
-    def __init__(self, pretrained=False, num_classes=10):
-        super(ResNet18, self).__init__()
-        # 加载预训练或随机初始化的ResNet-18
-        self.resnet = resnet18(pretrained=pretrained)
-        
-        # 调整第一个卷积层以适应32x32输入
-        # 原始ResNet-18的第一个卷积层是7x7, stride=2, padding=3
-        # 对于32x32图像，我们改为3x3, stride=1, padding=1
-        self.resnet.conv1 = nn.Conv2d(
-            3, 64, kernel_size=3, stride=1, padding=1, bias=False
-        )
-        
-        # 调整最大池化层，不需要下采样太多
-        self.resnet.maxpool = nn.Identity()  # 移除最大池化层
-        
-        # 调整最后一个全连接层以适应CIFAR-10的10个类别
-        in_features = self.resnet.fc.in_features
-        self.resnet.fc = nn.Linear(in_features, num_classes)
-        
-    def forward(self, x):
-        return self.resnet(x)
+<details>
 
-def get_model_on_device():
-    model = ResNet18(pretrained=True)
-    return model.to(device)
-```
+<summary> 微调结果 </summary>
 
 ```text
 ==================================================
@@ -1008,6 +1017,173 @@ ResNet18(
 
 ==================================================
 ```
+
+</details>
+
+### 对 ResNet-18 模型的解读和评述
+
+ResNet-18 的结构如下所示：
+
+```meimaid
+%%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313244', 'tertiaryColor': '#181825'}}}%%
+graph LR
+    %% Styling definitions
+    classDef box fill:#313244,stroke:#cdd6f4,stroke-width:2px,color:#cdd6f4,radius:8px;
+    classDef input fill:#585b70,stroke:#89b4fa,stroke-width:2px,color:#cdd6f4;
+    classDef output fill:#313244,stroke:#f38ba8,stroke-width:2px,color:#cdd6f4;
+    classDef result fill:#45475a,stroke:#a6e3a1,stroke-width:2px,color:#cdd6f4;
+    classDef conv fill:#313244,stroke:#74c7ec,stroke-width:2px,color:#cdd6f4;
+
+    %% Input Layer
+    subgraph Input["输入"]
+        A[("3 @ 32×32")]
+    end
+    class Input input;
+
+    %% Initial Convolution
+    subgraph InitConv["Initial Convolution"]
+        B["Conv2d <br> 3x64 x 3×3"] 
+        C["BatchNorm2d <br> 64 channels"]
+        D["ReLU"]
+    end
+    A --> B
+    B --> C --> D
+    class InitConv conv;
+
+    %% Layer 1 (2× BasicBlock without downsample)
+    subgraph Layer1["Layer1 (2×BasicBlock)"]
+        F["BasicBlock 1"]
+        G["BasicBlock 1"]
+    end
+    D --> |64 @ 32×32| F
+    F --> |64 @ 32×32| G
+    class Layer1 box;
+
+    %% Layer 2 (2× BasicBlock with downsample in first block)
+    subgraph Layer2["Layer2 (2×BasicBlock)"]
+        H["BasicBlock 2"]
+        I["BasicBlock 1"]
+    end
+    G --> |64 @ 32×32| H
+    H --> |128 @ 16×16| I
+    class Layer2 box;
+
+    %% Layer 3 (2× BasicBlock with downsample in first block)
+    subgraph Layer3["Layer3 (2×BasicBlock)"]
+        J["BasicBlock 2"]
+        K["BasicBlock 1"]
+    end
+    I --> |128 @ 16×16| J
+    J --> |256 @ 8×8| K
+    class Layer3 box;
+
+    %% Layer 4 (2× BasicBlock with downsample in first block)
+    subgraph Layer4["Layer4 (2×BasicBlock)"]
+        L["BasicBlock 2"]
+        M["BasicBlock 1"]
+    end
+    K --> |256 @ 8×8| L
+    L --> |512 @ 4×4| M
+    class Layer4 box;
+
+    %% Global Pooling and FC
+    subgraph PoolFC["GAP & Classfiaction"]
+        N["AdaptiveAvgPool2d <br> 1×1"]
+        O["Flatten <br> 512-dim vec"]
+        P["Linear <br> 512x10"]
+    end
+    M --> |512 @ 4×4| N --> |512 @ 1×1| O --> |512| P
+    class PoolFC box;
+
+    %% Output Layer
+    subgraph Output["output"]
+        Q[("10")]
+    end
+    P --> Q
+    class Output output;
+
+    %% Styling
+    style A stroke-dasharray: 5 5
+    style Q stroke:#a6e3a1,stroke-width:3px
+```
+
+其中，Basic block 1 是不带降采样的残差连接：
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313244', 'tertiaryColor': '#181825'}}}%%
+graph LR
+    %% Styling definitions
+    classDef box fill:#313244,stroke:#cdd6f4,stroke-width:2px,color:#cdd6f4,radius:8px;
+    classDef residual fill:#313244,stroke:#f5c2e7,stroke-width:2px,color:#cdd6f4;
+    classDef downsample fill:#313244,stroke:#74c7ec,stroke-width:2px,color:#cdd6f4;
+
+    %% BasicBlock Structure (With Downsample)
+    subgraph BasicBlockWithDS["BasicBlock 1"]
+        A["Conv2d <br> 64x128 x 3×3 /2"] 
+        B["BatchNorm2d <br> 128 channels"]
+        C["ReLU"]
+        D["Conv2d: 128x128 x 3×3"] 
+        E["BatchNorm2d <br> 128 channels"]
+        F(("\+"))
+        G["ReLU"]
+        
+        subgraph Downsample["Downsampling"]
+            H["Conv2d: 64x128 x 1×1 /2"]
+            I["BatchNorm2d <br> 128 channels"]
+        end
+    end
+    
+    %% Input
+    Input[("64 @ H×W")] --> A
+    Input --> H
+    
+    %% Connections
+    A --> B --> C --> D --> E --> F
+    H --> I --> F
+    F --> G
+    
+    %% Output
+    G --> Output[("128 @ H/2×W/2")]
+    
+    class BasicBlockWithDS residual;
+    class Downsample downsample;
+```
+
+Basic block 2 是带降采样的残差连接：
+
+```mermaid
+% Basic block ~w/dwsp
+%%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313244', 'tertiaryColor': '#181825'}}}%%
+graph LR
+    %% Styling definitions
+    classDef box fill:#313244,stroke:#cdd6f4,stroke-width:2px,color:#cdd6f4,radius:8px;
+    classDef residual fill:#313244,stroke:#f5c2e7,stroke-width:2px,color:#cdd6f4;
+
+    %% BasicBlock Structure (No Downsample)
+    subgraph BasicBlockNoDS["BasicBlock 2"]
+        A["Conv2d <br> 64x64 x 3×3"] 
+        B["BatchNorm2d <br> 64 channels"]
+        C["ReLU"]
+        D["Conv2d <br> 64x64 x 3×3"] 
+        E["BatchNorm2d <br> 64 channels"]
+        F(("\+"))
+        G["ReLU"]
+    end
+    
+    %% Input
+    Input[("64 @ H×W")] --> A
+    Input --> F
+    
+    %% Connections
+    A --> B --> C --> D --> E --> F
+    F --> G
+    
+    %% Output
+    G --> Output[("64 @ H×W")]
+    
+    class BasicBlockNoDS residual;
+```
+
 
 ## ViT
 
