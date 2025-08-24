@@ -1034,9 +1034,10 @@ ResNet18(
 
 ResNet-18 的结构如下所示：
 
-```meimaid
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313244', 'tertiaryColor': '#181825'}}}%%
 graph LR
-    %% Styling definitions (classDef is well-supported)
+    %% Styling definitions
     classDef box fill:#313244,stroke:#cdd6f4,stroke-width:2px,color:#cdd6f4,radius:8px;
     classDef input fill:#585b70,stroke:#89b4fa,stroke-width:2px,color:#cdd6f4;
     classDef output fill:#313244,stroke:#f38ba8,stroke-width:2px,color:#cdd6f4;
@@ -1045,8 +1046,7 @@ graph LR
 
     %% Input Layer
     subgraph Input["Input"]
-        %% Corrected syntax: Use standard ["text"] for rectangles
-        A["(3 @ 32×32)"]
+        A[("3 @ 32×32")]
     end
     class Input input;
 
@@ -1107,14 +1107,14 @@ graph LR
 
     %% Output Layer
     subgraph Output["output"]
-        %% Corrected syntax
-        Q["(10)"]
+        Q[("10")]
     end
     P --> Q
     class Output output;
 
-    %% The 'style' directive is removed. We use classDef for styling Q instead.
-    class Q result;
+    %% Styling
+    style A stroke-dasharray: 5 5
+    style Q stroke:#a6e3a1,stroke-width:3px
 ```
 
 其中，Basic block 1 是不带降采样的残差连接：
