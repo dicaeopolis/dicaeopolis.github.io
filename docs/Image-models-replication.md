@@ -1125,16 +1125,50 @@ graph LR
     %% Styling definitions
     classDef box fill:#313244,stroke:#cdd6f4,stroke-width:2px,color:#cdd6f4,radius:8px;
     classDef residual fill:#313244,stroke:#f5c2e7,stroke-width:2px,color:#cdd6f4;
+
+    %% BasicBlock Structure (No Downsample)
+    subgraph BasicBlockNoDS["BasicBlock 1"]
+        A["Conv2d <br> 64x64 x 3×3"] 
+        B["BatchNorm2d <br> 64 channels"]
+        C["ReLU"]
+        D["Conv2d <br> 64x64 x 3×3"] 
+        E["BatchNorm2d <br> 64 channels"]
+        F(("+"))
+        G["ReLU"]
+    end
+    
+    %% Input
+    Input[("64 @ H×W")] --> A
+    Input --> F
+    
+    %% Connections
+    A --> B --> C --> D --> E --> F
+    F --> G
+    
+    %% Output
+    G --> Output[("64 @ H×W")]
+    
+    class BasicBlockNoDS residual;
+```
+
+Basic block 2 是带降采样的残差连接：
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313244', 'tertiaryColor': '#181825'}}}%%
+graph LR
+    %% Styling definitions
+    classDef box fill:#313244,stroke:#cdd6f4,stroke-width:2px,color:#cdd6f4,radius:8px;
+    classDef residual fill:#313244,stroke:#f5c2e7,stroke-width:2px,color:#cdd6f4;
     classDef downsample fill:#313244,stroke:#74c7ec,stroke-width:2px,color:#cdd6f4;
 
     %% BasicBlock Structure (With Downsample)
-    subgraph BasicBlockWithDS["BasicBlock 1"]
+    subgraph BasicBlockWithDS["BasicBlock 2"]
         A["Conv2d <br> 64x128 x 3×3 /2"] 
         B["BatchNorm2d <br> 128 channels"]
         C["ReLU"]
         D["Conv2d: 128x128 x 3×3"] 
         E["BatchNorm2d <br> 128 channels"]
-        F(("\+"))
+        F(("+"))
         G["ReLU"]
         
         subgraph Downsample["Downsampling"]
@@ -1159,41 +1193,67 @@ graph LR
     class Downsample downsample;
 ```
 
-Basic block 2 是带降采样的残差连接：
+ResNet-18 的结构（在长宽维度）正如一个漏斗一样，除了初始化层和 Layer 1 以外，其余的 Layer 都是 Basic block 2 -> Basic block 1 的结构，也就是归纳特征——提取特征的一个顺序。最后使用自适应性池化来应对不同的输入。因为 torch 提供的 ResNet-18 是基于 ImageNet 设计的，输入是 3@224x224，利用自适应性池化，就可以只用修改对输入的处理了。
 
-```mermaid
-%%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313244', 'tertiaryColor': '#181825'}}}%%
-graph LR
-    %% Styling definitions
-    classDef box fill:#313244,stroke:#cdd6f4,stroke-width:2px,color:#cdd6f4,radius:8px;
-    classDef residual fill:#313244,stroke:#f5c2e7,stroke-width:2px,color:#cdd6f4;
+除此之外，ResNet 使用了多种技术才使如此深层的网络成为可能。
 
-    %% BasicBlock Structure (No Downsample)
-    subgraph BasicBlockNoDS["BasicBlock 2"]
-        A["Conv2d <br> 64x64 x 3×3"] 
-        B["BatchNorm2d <br> 64 channels"]
-        C["ReLU"]
-        D["Conv2d <br> 64x64 x 3×3"] 
-        E["BatchNorm2d <br> 64 channels"]
-        F(("+"))
-        G["ReLU"]
-    end
-    
-    %% Input
-    Input[("64 @ H×W")] --> A
-    Input --> F
-    
-    %% Connections
-    A --> B --> C --> D --> E --> F
-    F --> G
-    
-    %% Output
-    G --> Output[("64 @ H×W")]
-    
-    class BasicBlockNoDS residual;
-```
+一是使用 ReLU 激活。其他激活函数如 sigmoid，其导数在 $[-1,1]$ 之间，这就导致梯度向深层流动的时候不断被一个绝对值小于 $1$ 的数乘起来，逐渐消失。ReLU 求导要么 $0$ 要么 $1$，也就是梯度要么在负数输出处停止流动要么就直接原封不动传下去。
 
-对于较复杂的分类任务而言，
+二是使用 BatchNorm2d。批归一化试图将数据拉回标准正态分布，这解耦了层与层之间的输入依赖，相当于每一层都只用将一批标准正态数据映射到标准正态数据，独立性大大增强，反映到损失地形上，就是对模型的微扰（也就是优化器带来的参数更新）带来的（可能的）巨大扰动（即崎岖的损失地形）给平坦化了。
+
+当然上面的两点在一般的 CNN 中都有使用，像 GoogLeNet 这种基于 Inception 的网络也只有 22 层，但是基于 ResNet 的网络可以轻松达到成百上千层，关键在于——
+
+三是残差连接。Kaiming 意识到以下对比：考虑一般的神经网络单层
+
+$$
+y=\phi (\mathrm{Layer}(x))
+$$
+
+其中 $y$ 为输出，$\phi$ 为激活函数，$\mathrm{Layer}$ 为对输入 $x$ 做的操作，比如矩阵乘法或者卷积等。
+
+那么向前传递的梯度为
+
+$$
+\dfrac{\partial y}{\partial x}=\dfrac{\partial \mathrm{Layer}}{\partial x}\phi' (\mathrm{Layer}(x))
+$$
+
+也就是一个数乘以小于等于 $1$ 的数。但是，如果我们考虑这样的单层：
+
+$$
+y=\phi (x+\mathrm{Layer}(x))
+$$
+
+那么向前传递的梯度为
+
+$$
+\dfrac{\partial y}{\partial x}=(1+\dfrac{\partial \mathrm{Layer}}{\partial x})\phi' (\mathrm{Layer}(x))
+$$
+
+嗯，这样传递到的梯度确实变多了，但是还是受制于激活函数的导数啊，感觉……用处不大？
+
+呵呵，事情没有那么简单。要不回头看看网络结构里面**ReLU的位置到底在哪里**呢？
+
+是在两个 conv2d 的中间！也就是说，事实上顺序应该是
+
+$$
+y=x+\phi (\mathrm{Layer}(x))
+$$
+
+那么向前传递的梯度为
+
+$$
+\dfrac{\partial y}{\partial x}=1+\dfrac{\partial \mathrm{Layer}}{\partial x}\phi' (\mathrm{Layer}(x))
+$$
+
+这样，不管自己梯度多少，深层的梯度就都能顺畅流动到浅层了。
+
+当然 kaiming 在论文里面的观点是恒等变换不易学习所以转而学习残差，这样即使什么都没有学到，至少还能保留恒等映射的能力。不过我更喜欢从数学角度推导咯~
+
+最后可以看到 ResNet-18 虽然宽度比 CNN 大一倍，但是居然可以承受比 CNN 大好几个数量级的学习率，原因就在于这几个方案使得损失地形极度平滑，参数更新量即使比较大，也不会有特别大的震荡。然后 muP 的理论在这里就完全失效了，毕竟 muP 研究的是同一模型不同尺度的参数调整规律。
+
+后面我使用 torch 官方提供的在 ImageNet 上预训练的权重，使用更小的学习率就可以得到更加的效果，果然预训练就是最佳的参数初始化策略啊。
+
+可以看到 ResNet 的测试准确率有上了一个台阶。Scaling law 持续发力中......不过提到 Scaling law，怎么能不请出我们的 Transformer 模型呢？
 
 ## ViT
 
