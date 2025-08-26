@@ -1425,9 +1425,9 @@ TransformerClassifier(
 
 ### 对 ViT 模型的解读和评述
 
-本次实验仍然是从零训练+微调。从零训练使用展示的一个 nano-ViT，微调使用的是 torchvision 提供的预训练权重 `ViT_B_16_Weights.IMAGENET1K_V1`，通过冻结骨干网络替换分类头的方式进行微调。
+本次实验仍然是从零训练+微调。从零训练使用展示的一个 nanoViT，微调使用的是 torchvision 提供的预训练权重 `ViT_B_16_Weights.IMAGENET1K_V1`，通过冻结骨干网络替换分类头的方式进行微调。
 
-下面是 nano-ViT 的结构示意，我们从宏观到微观来拆解。
+下面是 nanoViT 的结构示意，我们从宏观到微观来拆解。
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313244', 'tertiaryColor': '#181825'}}}%%
@@ -1502,7 +1502,7 @@ graph LR
     style L stroke:#a6e3a1,stroke-width:3px
 ```
 
-这里利用卷积操作，将 3@32x32 的图像变成 192@16x16 的图像补丁，并将后两个维度展平，就得到 192x256 的矩阵，其中 256 是补丁的个数，192 是通道数（提取的特征数量），也就是每个补丁可以映射到 192 维的嵌入空间里面。因此我们将矩阵转置为 256x192，也就是输入序列长度乘以嵌入维数，这就和 TrasformerEncoder 的要求匹配了。
+这里利用卷积操作，将 3@32x32 的图像变成 192@16x16 的图像补丁，并将后两个维度展平，就得到 192x256 的矩阵，其中 256 是补丁的个数，192 是通道数（提取的特征数量），也就是每个补丁可以映射到 192 维的嵌入空间里面。因此我们将矩阵转置为 256x192，也就是输入序列长度乘以嵌入维数，这就和 TrasformerEncoder 的要求匹配了。选择 2x2 的补丁一方面有受到 ViT 论文标题 An image is worth 16x16 words 的影响，毕竟 32 / 2 = 16，另一方面就是类比卷积神经网络的 3x3 卷积核，所以考虑在 2x2 和 4x4 中间选，因为先前测试过 4x4 的 patch_size 效果不如 2x2 好，于是就定下来是 2x2 了。
 
 我们知道注意力矩阵不包含位置信息，所以需要位置编码来对不同位置的同一个 token 进行区分。ViT 的作者尝试了 1-D, 2-D 固定位置编码以及可学习的位置编码，效果都差不多，因此在这里使用可学习的位置编码。
 
@@ -1567,7 +1567,8 @@ graph LR
     Add2 --> Output[("T×192")]
 ```
 
-下面是多头自注意力每一个头的计算过程。其实我认为这里的头数类似于 conv2d 的通道数，衡量获取特征的多少；但是另一方面又被嵌入维度所限制，因为头数一多，分给每个头的投影维度就少了，信息也变少了。图上面的头数为 8 是我随意设置的，不过苏剑林有一个维度公式 [n > 8.33 log N](https://kexue.fm/archives/8711) 对于注意力机制而言，N 就是预训练的序列长度 T 也就是 256，n 就是每个注意力头的维度，算出来要大于 $8.33 * \log_2 256\approx 66.64$ 才能够在每个头里面有效定位 token，所以这里的 num_heads 设置成 3 应该会好一点。
+下面是多头自注意力每一个头的计算过程。其实我认为这里的头数类似于 conv2d 的通道数，衡量获取特征的多少；但是另一方面又被嵌入维度所限制，因为头数一多，分给每个头的投影维度就少了，信息也变少了。图上面的头数为 8 是我随意设置的，不过苏剑林有一个维度公式 [n > 8.33 log N](https://kexue.fm/archives/8711) 对于注意力机制而言，N 就是预训练的序列长度 T 也就是 256，n 就是每个注意力头的维度，算出来要大于 $8.33 \times \log_2 256\approx 66.64$ 才能够在每个头里面有效定位 token，所以这里的 num_heads 设置成 3 理论上应该会好一点。实际上可能是因为输入数据量太少，如果设置成 3 结果是 loss 0.9111 以及 acc=69.17%，反倒没有 8 的效果好。
+
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313244', 'tertiaryColor': '#181825'}}}%%
@@ -1587,9 +1588,9 @@ graph LR
 
     %% Linear Transformations
     subgraph Transformations["Linear proj for head_i"]
-        B["Projection matrix W_q_i<br> embed_dim×d_k = 192 x 24"]
+        B["Projection matrix W_q_i<br> embed_dim×d_q = 192 x 24"]
         C["Projection matrix W_k_i<br> embed_dim×d_k = 192 x 24"]
-        D["Projection matrix W_v_i<br> embed_dim×d_k = 192 x 24"]
+        D["Projection matrix W_v_i<br> embed_dim×d_v = 192 x 24"]
     end
     A --> B
     A --> C
@@ -1597,7 +1598,7 @@ graph LR
     class Transformations transform;
 
     %% Transformed Representations
-    E["Q_i = XW_q_i<br>T×d_k"]
+    E["Q_i = XW_q_i<br>T×d_q"]
     F["K_i = XW_k_i<br>T×d_k"]
     G["V_i = XW_v_i<br>T×d_v"]
     
@@ -1643,6 +1644,8 @@ graph LR
 由于笔者采用的是一个即插即用的端到端网络训练和评估框架，所以我想，定义模型的时候，`__init__`里面声明一下冻结骨干网，替换一下分类头，然后在`forward`里面上采样一下就行了。结果就是，对这 7690 个参数的微调，算上 5 次在训练子集上调参和一次全量数据的微调，一共花（浪费了）10 小时。
 
 这是怎么回事呢？消耗时间的大头竟是**前向传播**也就是推理！实际上因为每一个 epoch 都需要对全部训练样本都完整走一遍前向过程，所以在找超参数的时候我重复进行了 $\dfrac{1}{5}(52+34+31+91+65)=54.6$ 次全量数据的前向传播，但实际上我们已经冻结了骨干网络，所以只需要走一次全量数据前向传播，得到它们最后输出的 784 维编码向量即可！也就是说整个训练流程其实只需要十来分钟就可以完成的……
+
+无论如何微调结果是相当棒的，准确率达到了 95% 以上，可以~~在 osu! 里面拿到 S 评级了~~和那些 SOTA 模型坐一桌了。
 
 ## Patch based LSTM
 
