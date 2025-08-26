@@ -12,6 +12,8 @@
 
 由于每一次都要花大量时间寻找合适的学习率，笔者花了一天时间研究了一下 muP（[Paper link here](https://arxiv.org/abs/2203.03466)） 的原理以及怎样迁移学习率，结论：在已有数据上（MLP, CNN, ResNet-18）进行的实验和相关理论计算证明，模型架构（残差连接，BN等）会影响损失地形（[Paper link here](https://arxiv.org/pdf/1712.09913)），导致跨架构的学习率迁移失效。其实很明显，比如微调ResNet就比从零训练ResNet的best LR更低，因为预训练权重已经在一个最小值附近了，损失地形比起随机点位更平坦。所以该花时间调参还得花时间调参。不过，可以考虑在小宽度模型上再 scale up，这样就符合 muP 的初心了。具体的实验过程，还请大家参阅后文。
 
+当然，这个框架也有缺陷，主要是它只能对端到端的网络进行一键式训练和评估，像 VAE 和 AC-GAN 这种标签辅助的生成网络，就需要自行修改了。
+
 下面是每一个 Cell 的代码：
 
 <!-- 这里提供可供复制的折叠代码块模板。
@@ -407,7 +409,7 @@ print("\n" + "="*50)
 
 </details>
 
-## 在 CIFAR-10 上训练多层感知机
+## MLP
 
 ### MLP 模型的训练结果展示
 
@@ -518,11 +520,11 @@ MLP 是利用 $\mathbb{R}^n\rightarrow\mathbb{R}^m$ 的多重线性映射实现�
 
 这是一个三层的多层感知机，参数量 1.7M。第一次训练下来发现这点参数量反映下来就是即使是 P100 这种老 GPU 都根本没使劲，倒是 CPU 一直在满负荷发力，搬运数据。后来意识到，dataloader 里面可以写上 `num_workers=6` 以及 `pin_memory=True` 来提升访存效率，并且把 batch_size 调大（反正就 2 M不到的模型爆不了显存），训练效率高了很多啊。
 
-经过 13 个 Epoch 的训练之后，模型在 CIFAR-10 只上取得了 54.44% 的准确率。增大模型的宽度和深度理论上可以改善，但是效率太低了。因此需要发掘图像信息的特性，在模型结构上面引入更多先验信息，寻找能够更高效提取信息的架构。
+经过 13 个 Epoch 的训练之后，模型在 CIFAR-10 只上取得了 54.44% 的准确率。增大模型的宽度和深度理论上可以改善，但是效率太低了。因此需要发掘图像信息的特性，在模型结构上面引入更多先验信息，寻找能够更高效提取信息的架构。所以可以看到现在的网络架构中，MLP 仅仅是作为分类头出现的。
 
 ## 卷积神经网络
 
-### CNN 模型的训练结果展示
+### CNN
 
 <details>
 
@@ -739,13 +741,13 @@ graph LR
 
 `conv2d` 就是卷积操作，本质上是从输入张量 `(batch_size, in_channel, H, W)` 到输出张量 `(batch_size, out_channel, H, W)` 的一个利用四维张量 `(in_channel, out_channel, H', W')` 的卷积核进行的卷积操作，具体是对于单张图像的各个通道进行填充后，将自定义的 `in_channel@H'xW'` 的矩阵在其上一一对应进行滑动覆盖，并对覆盖到的区域进行逐元素求积并求和，得到了单个新矩阵，如此共选取 `out_channel` 次自定义矩阵，就得到了输出张量 `(batch_size, out_channel, H, W)` 这是任意一本深度学习教材都会讲解的内容。
 
-CNN 通过先验引入稀疏连接（也就是 `conv2d` ）不仅可以实现对更大规模网络的稀疏近似，满足图像的平移不变性，还具有很好的可解释性（卷积核对应一个小面积的感受野，解决之前提到 MLP 的展平操作的问题，并且不同的卷积核提取不同的特征）。因此相当适合图像处理。当然最后还是得依靠一个 MLP 作为分类头，不过这里的展平操作就合理多了，因为经过多次 `conv2d` 之后，模型提取到的都是空间上弱相关的深层次（抽象）特征了。在这些特征之间进行组合就非常合理且直观了。
+CNN 通过先验引入稀疏连接（也就是 `conv2d` ）不仅可以实现对更大规模网络的稀疏近似，满足图像的平移不变性，还具有很好的可解释性（卷积核对应一个小面积的感受野，解决之前提到 MLP 的展平操作的问题，并且不同的卷积核提取不同的特征）。因此相当适合图像处理。当然最后还是得依靠一个 MLP 作为分类头，不过这里的展平操作就合理多了，因为经过多次 `conv2d` 之后，模型提取到的都是空间上弱相关的深层次（抽象）特征了。在这些特征之间进行组合就非常合理且直观了。在很长的一段时间内，CNN 作为高效的特征提取器，一直都是各种 CV 网络的砖石。
 
-这个网络虽然参数量不如先前的 MLP，但是宽度要宽一些（我理解的网络宽度即通道数，因为这决定了模型捕获的特征数量），根据 muP 的理论，学习率可以翻 4 倍（MLP隐藏层维度 512， CNN 最大通道数 128），结论大致符合预期。
+这个网络虽然参数量不如先前的 MLP，但是宽度要宽一些（我理解的网络宽度即通道数，因为这决定了模型捕获的特征数量），根据 muP 的理论，学习率可以翻 4 倍（MLP隐藏层维度 512， CNN 最大通道数 128），结论大致符合预期。CNN 的高效性正在于其中，以更低的参数量获得更优的效果。
 
-## 在 CIFAR-10 上从零训练 ResNet-18 / 对预训练 ResNet-18 在 CIFAR-10 上进行微调
+## ResNet
 
-### 训练结果展示
+### ResNet-18 模型的训练结果展示
 
 <details>
 
@@ -1022,6 +1024,8 @@ ResNet18(
 
 ### 对 ResNet-18 模型的解读和评述
 
+考虑到笔者使用的 GPU 性能较弱，本次使用的是 ResNet-18 架构，这是一个相对浅的 ResNet，相比于 ResNet-50 等基于 BottleNeck 块的网络，ResNet-18 由稍有不同的 BasicBlock 组成。
+
 ResNet-18 的结构如下所示：
 
 ```mermaid
@@ -1183,7 +1187,7 @@ graph LR
     class Downsample downsample;
 ```
 
-ResNet-18 的结构（在长宽维度）正如一个漏斗一样，除了初始化层和 Layer 1 以外，其余的 Layer 都是 Basic block 2 -> Basic block 1 的结构，也就是归纳特征——提取特征的一个顺序。最后使用自适应性池化来应对不同的输入。因为 torch 提供的 ResNet-18 是基于 ImageNet 设计的，输入是 3@224x224，利用自适应性池化，就可以只用修改对输入的处理了。
+ResNet-18 的结构（在长宽维度）正如一个漏斗一样，除了初始化层和 Layer 1 以外，其余的 Layer 都是 Basic block 2 -> Basic block 1 的结构，也就是归纳特征到提取特征的一个顺序。最后使用自适应性池化来应对不同的输入。因为 torch 提供的 ResNet-18 是基于 ImageNet 设计的，输入是 3@224x224，利用自适应性池化，就可以只用修改对输入的处理了。
 
 除此之外，ResNet 使用了多种技术才使如此深层的网络成为可能。
 
@@ -1247,11 +1251,13 @@ $$
 
 ## ViT
 
+### ViT 模型的训练结果展示
+
 ```python
 from torch import Tensor
 class PatchEmbedding(nn.Module):
     """将图像分割为补丁并进行嵌入"""
-    def __init__(self, img_size=32, patch_size=4, in_channels=3, embed_dim=128):
+    def __init__(self, img_size=32, patch_size=2, in_channels=3, embed_dim=128):
         super().__init__()
         self.img_size = img_size
         self.patch_size = patch_size
@@ -1279,7 +1285,7 @@ class TransformerClassifier(nn.Module):
     def __init__(
         self,
         img_size=32,
-        patch_size=4,
+        patch_size=2,
         in_channels=3,
         num_classes=10,
         embed_dim=128,
@@ -1353,7 +1359,7 @@ class TransformerClassifier(nn.Module):
 def get_model_on_device():
     model = TransformerClassifier(
         img_size=32,
-        patch_size=4,
+        patch_size=2,
         in_channels=3,
         num_classes=10,
         embed_dim=192,
@@ -1371,8 +1377,8 @@ def get_model_on_device():
 ==================================================
 
 [Hyper parameters]
-  - Best LR: 0.000456
-  - Best epochs: 11 epochs
+  - Best LR: 0.000232
+  - Best epochs: 16 epochs
   - Batch size: 128
 
 [Model structure]
@@ -1380,7 +1386,7 @@ def get_model_on_device():
   - Model structure:
 TransformerClassifier(
   (patch_embed): PatchEmbedding(
-    (proj): Conv2d(3, 192, kernel_size=(4, 4), stride=(4, 4))
+    (proj): Conv2d(3, 192, kernel_size=(2, 2), stride=(2, 2))
   )
   (pos_drop): Dropout(p=0.1, inplace=False)
   (transformer_encoder): TransformerEncoder(
@@ -1404,20 +1410,346 @@ TransformerClassifier(
     (1): Linear(in_features=192, out_features=10, bias=True)
   )
 )
-  - Total params: 1,212,490
+  - Total params: 1,242,442
 
 [Training infomation]
-  - Training duration on full training set: 4m 43s
+  - Training duration on full training set: 19m 55s
   - Training device: cuda on Kaggle's free P100, Thank you Google!
 
 [Benchmarks on test set]
-  - Test loss: 0.8867
-  - Test accuracy: 69.90%
+  - Test loss: 0.7802
+  - Test accuracy: 73.24%
 
 ==================================================
 ```
 
+### 对 ViT 模型的解读和评述
+
+本次实验仍然是从零训练+微调。从零训练使用展示的一个 nano-ViT，微调使用的是 torchvision 提供的预训练权重 `ViT_B_16_Weights.IMAGENET1K_V1`，通过冻结骨干网络替换分类头的方式进行微调。
+
+下面是 nano-ViT 的结构示意：
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313244', 'tertiaryColor': '#181825'}}}%%
+graph LR
+    %% Styling definitions
+    classDef box fill:#313244,stroke:#cdd6f4,stroke-width:2px,color:#cdd6f4,radius:8px;
+    classDef input fill:#585b70,stroke:#89b4fa,stroke-width:2px,color:#cdd6f4;
+    classDef output fill:#313244,stroke:#f38ba8,stroke-width:2px,color:#cdd6f4;
+    classDef result fill:#45475a,stroke:#a6e3a1,stroke-width:2px,color:#cdd6f4;
+    classDef conv fill:#313244,stroke:#74c7ec,stroke-width:2px,color:#cdd6f4;
+    classDef transformer fill:#313244,stroke:#f5c2e7,stroke-width:2px,color:#cdd6f4;
+
+    %% Input Layer
+    subgraph Input["Input"]
+        A[("3@32×32")]
+    end
+    class Input input;
+
+    %% Patch Embedding
+    subgraph PatchEmbed["Patch Embedding"]
+        B["Conv2d<br> 3x192 x 2×2 / 2"]
+        C["Dropout<br> p=0.1"]
+        U["CLS token<br>192 dim vector"]
+        V[("contact")]
+    end
+    U --> V
+    A --> B --> V
+    V --> C
+    class PatchEmbed conv;
+
+    %% Positional Encoding
+    subgraph PosEnc["Postional Encoding"]
+        S["Parameter Matrix<br>(256+1) x 192<br>1 for CLS token"]
+    end
+    class PosEnc conv;
+
+    T["Dropout<br>p=0.1"]
+    D[("+")]
+    S --> D --> T
+    C -->|257 tokens or patches<br>embedded into 192 dim per patch| D
+    %% Transformer Encoder
+    subgraph TransformerEncoder["Transformer Encoder"]
+        E["Encoder Layer 1"]
+        F["Encoder Layer 2"]
+        G["Encoder Layer 3"]
+        H["Encoder Layer 4"]
+    end
+    T -->|257x192| E --> F --> G --> H
+    class TransformerEncoder transformer;
+
+    %% Extract [CLS] Token
+    I["Extract CLS token"]
+    H -->|257x192| I
+
+    %% Classification Head
+    subgraph Classifier["MLP Head"]
+        J["LayerNorm<br>192 dim"]
+        K["Linear<br>192x10"]
+    end
+    I -->|192 dim vector| J --> K
+    class Classifier box;
+
+    %% Output Layer
+    subgraph Output["Output"]
+        L[("10")]
+    end
+    K --> L
+    class Output output;
+
+    %% Styling
+    style A stroke-dasharray: 5 5
+    style L stroke:#a6e3a1,stroke-width:3px
+```
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313244', 'tertiaryColor': '#181825'}}}%%
+graph LR
+    %% Styling definitions
+    classDef box fill:#313244,stroke:#cdd6f4,stroke-width:2px,color:#cdd6f4,radius:8px;
+    classDef attention fill:#313244,stroke:#f5c2e7,stroke-width:2px,color:#cdd6f4;
+    classDef ffn fill:#313244,stroke:#74c7ec,stroke-width:2px,color:#cdd6f4;
+
+    %% Input
+    Input[("T×192")] --> Norm1["LayerNorm<br>192 dim"]
+    
+    %% Multi-head Attention (8 heads)
+    subgraph SelfAttn["Multi-Head Attention"]
+        subgraph SA["Multi-Head Self Attention"]
+            Z1["Attention Head 0<br>Tx192->Tx24"]
+            Z2["......"]
+            Z3["Attention Head 7<br>Tx192->Tx24"]
+        end
+        Conc["Contact"]
+        Proj["Linear<br> 192x192"]
+    end
+    Norm1 --> Z1
+    Norm1 --> Z2
+    Norm1 --> Z3
+    Z1 --> Conc
+    Z2 --> Conc
+    Z3 --> Conc
+    Conc -->|Tx192| Proj
+    class SelfAttn attention;
+    
+    %% Residual Connection 1
+    Proj --> Dropout1["Dropout: p=0.1"]
+    Dropout1 --> Add1(("+"))
+    Input --> Add1
+    
+    %% Feed Forward Network
+    Add1 --> Norm2["LayerNorm<br>192 dims"]
+    
+    subgraph FFN["Feed Forward Network"]
+        Linear1["Linear<br> 192x384"]
+        Dropout2["Dropout<br> p=0.1"]
+        Linear2["Linear<br> 384x192"]
+    end
+    Norm2 --> Linear1 --> Dropout2 --> Linear2
+    class FFN ffn;
+    
+    %% Residual Connection 2
+    Linear2 --> Dropout3["Dropout<br>p=0.1"]
+    Dropout3 --> Add2(("+"))
+    Add1 --> Add2
+    
+    %% Output
+    Add2 --> Output[("T×192")]
+```
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313244', 'tertiaryColor': '#181825'}}}%%
+graph LR
+    %% Styling definitions
+    classDef box fill:#313244,stroke:#cdd6f4,stroke-width:2px,color:#cdd6f4,radius:8px;
+    classDef input fill:#585b70,stroke:#89b4fa,stroke-width:2px,color:#cdd6f4;
+    classDef transform fill:#313244,stroke:#74c7ec,stroke-width:2px,color:#cdd6f4;
+    classDef attention fill:#313244,stroke:#f5c2e7,stroke-width:2px,color:#cdd6f4;
+    classDef output fill:#313244,stroke:#f38ba8,stroke-width:2px,color:#cdd6f4;
+
+    %% Input
+    subgraph Input["Input sequence"]
+        A[("T×embed_dim<br>T = 257<br>embed_dim = 192")]
+    end
+    class Input input;
+
+    %% Linear Transformations
+    subgraph Transformations["Linear proj for head_i"]
+        B["Projection matrix W_q_i<br> embed_dim×d_k = 192 x 24"]
+        C["Projection matrix W_k_i<br> embed_dim×d_k = 192 x 24"]
+        D["Projection matrix W_v_i<br> embed_dim×d_k = 192 x 24"]
+    end
+    A --> B
+    A --> C
+    A --> D
+    class Transformations transform;
+
+    %% Transformed Representations
+    E["Q_i = XW_q_i<br>T×d_k"]
+    F["K_i = XW_k_i<br>T×d_k"]
+    G["V_i = XW_v_i<br>T×d_v"]
+    
+    B --> E
+    C --> F
+    D --> G
+
+    %% Attention Score Calculation
+    subgraph ScoreCalc["Attention Score"]
+        H["Q_i K_iᵀ <br>-------<br> √(d_k)"]
+        I["Softmax<br>Row-wise Norm"]
+    end
+    E --> H
+    F --> H
+    H -->|T x T| I
+
+    %% Output Calculation
+    subgraph OutputCalc["Attention Result"]
+        J["Attention_i = O_i V_i"]
+    end
+    I -->|Attention Score O_i<br>T x T| J
+    G --> J
+
+    %% Output
+    subgraph Output["Output for head_i"]
+        K[("T×d_v")]
+    end
+    J --> K
+    class Output output;
+
+    %% Styling
+    style A stroke-dasharray: 5 5
+```
+
 ## Patch based LSTM
+
+```python
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from einops import rearrange
+
+class PatchRNN(nn.Module):
+    def __init__(self, num_classes=10, img_size=32, patch_size=4, 
+                 embed_dim=128, hidden_size=256, num_layers=2, 
+                 bidirectional=True, dropout=0.1):
+        super(PatchRNN, self).__init__()
+        
+        # 计算patch数量
+        self.patch_size = patch_size
+        self.num_patches = (img_size // patch_size) ** 2
+        
+        # Patch嵌入层: 将每个patch投影到embed_dim维空间
+        self.patch_embed = nn.Linear(patch_size * patch_size * 3, embed_dim)
+        
+        # 可学习的位置编码
+        self.pos_embed = nn.Parameter(torch.randn(1, self.num_patches, embed_dim))
+        
+        # Dropout层
+        self.dropout = nn.Dropout(dropout)
+        
+        # RNN主干网络 (使用LSTM)
+        self.rnn = nn.LSTM(
+            input_size=embed_dim,
+            hidden_size=hidden_size,
+            num_layers=num_layers,
+            batch_first=True,
+            bidirectional=bidirectional,
+            dropout=dropout if num_layers > 1 else 0
+        )
+        
+        # 分类头
+        rnn_output_size = hidden_size * 2 if bidirectional else hidden_size
+        self.classifier = nn.Sequential(
+            nn.LayerNorm(rnn_output_size),
+            nn.Linear(rnn_output_size, hidden_size),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.Linear(hidden_size, num_classes)
+        )
+
+    def forward(self, x):
+        # x形状: [B, 3, 32, 32]
+        B = x.shape[0]
+        
+        # 1. 将图像分割成patches
+        # 使用einops库进行清晰的重组操作
+        patches = rearrange(x, 'b c (h p1) (w p2) -> b (h w) (p1 p2 c)', 
+                           p1=self.patch_size, p2=self.patch_size)
+        
+        # 2. 将每个patch投影到嵌入空间
+        patch_embeddings = self.patch_embed(patches)  # [B, num_patches, embed_dim]
+        
+        # 3. 添加位置编码
+        patch_embeddings = patch_embeddings + self.pos_embed
+        
+        # 4. 应用dropout
+        patch_embeddings = self.dropout(patch_embeddings)
+        
+        # 5. 通过RNN处理序列
+        rnn_output, _ = self.rnn(patch_embeddings)  # [B, num_patches, hidden_size * num_directions]
+        
+        # 6. 取序列的最后一个输出（考虑了双向信息）
+        # 对于双向RNN，最后一个时间步的输出已经包含了正向和反向的信息
+        sequence_representation = rnn_output[:, -1, :]  # [B, hidden_size * num_directions]
+        
+        # 7. 分类
+        logits = self.classifier(sequence_representation)
+        return logits
+
+def get_model_on_device():
+    # 创建模型实例
+    model = PatchRNN(
+        num_classes=10,        # CIFAR-10有10个类别
+        img_size=32,           # CIFAR-10图像尺寸
+        patch_size=2,          # 2x2的patch
+        embed_dim=128,         # 嵌入维度
+        hidden_size=256,       # RNN隐藏状态维度
+        num_layers=2,          # RNN层数
+        bidirectional=True,    # 使用双向RNN
+        dropout=0.1            # Dropout率
+    )
+    
+    # 将模型移动到指定设备
+    return model.to(device)
+```
+
+```text
+==================================================
+               Results
+==================================================
+
+[Hyper parameters]
+  - Best LR: 0.001774
+  - Best epochs: 17 epochs
+  - Batch size: 128
+
+[Model structure]
+  - Model type: Patched LSTM
+  - Model structure:
+PatchRNN(
+  (patch_embed): Linear(in_features=12, out_features=128, bias=True)
+  (dropout): Dropout(p=0.1, inplace=False)
+  (rnn): LSTM(128, 256, num_layers=2, batch_first=True, dropout=0.1, bidirectional=True)
+  (classifier): Sequential(
+    (0): LayerNorm((512,), eps=1e-05, elementwise_affine=True)
+    (1): Linear(in_features=512, out_features=256, bias=True)
+    (2): GELU(approximate='none')
+    (3): Dropout(p=0.1, inplace=False)
+    (4): Linear(in_features=256, out_features=10, bias=True)
+  )
+)
+  - Total params: 2,536,842
+
+[Training infomation]
+  - Training duration on full training set: 17m 21s
+  - Training device: cuda on Kaggle's free P100, Thank you Google!
+
+[Benchmarks on test set]
+  - Test loss: 1.1961
+  - Test accuracy: 68.08%
+
+==================================================
+```
 
 ## VAE
 
