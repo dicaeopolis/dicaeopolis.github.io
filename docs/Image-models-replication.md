@@ -1253,6 +1253,10 @@ $$
 
 ### ViT 模型的训练结果展示
 
+<details>
+
+<summary> nanoViT 的训练代码</summary>
+
 ```python
 from torch import Tensor
 class PatchEmbedding(nn.Module):
@@ -1371,6 +1375,83 @@ def get_model_on_device():
     return model.to(device)
 ```
 
+</details>
+
+<details>
+
+<summary> ViT-B-16 的微调代码（原理）</summary>
+
+```python
+import torch
+import torch.nn as nn
+import torchvision.models as models
+import torchvision.transforms as T
+from torchvision.models import ViT_B_16_Weights
+
+class ViT_Cifar10(nn.Module):
+    """
+    一个真正“即插即用”的ViT-B/16模型，专门用于CIFAR-10。
+
+    这个类会自动处理输入尺寸不匹配的问题：
+    1. 内置一个上采样层，在前向传播时自动将输入的32x32图像放大到224x224。
+    2. 加载在ImageNet上预训练的ViT-B/16权重。
+    3. 将分类头替换为适用于CIFAR-10的10个类别。
+    """
+    def __init__(self, num_classes: int = 10):
+        super().__init__()
+        
+        # 步骤1: 定义一个上采样/调整大小的层
+        # T.Resize 是 torchvision.transforms 中的一个类，它可以作为 nn.Module 使用
+        self.upsampler = T.Resize((224, 224), antialias=True)
+        
+        # 步骤2: 加载预训练的ViT模型
+        self.vit = models.vit_b_16(weights=ViT_B_16_Weights.IMAGENET1K_V1)
+        
+        # 步骤3: 冻结主干网络的所有参数
+        for param in self.vit.parameters():
+            param.requires_grad = False
+            
+        # 步骤4: 替换分类头
+        in_features = self.vit.heads.head.in_features
+        self.vit.heads.head = nn.Linear(in_features=in_features, out_features=num_classes)
+        
+        # 确保新分类头的参数是可训练的
+        for param in self.vit.heads.parameters():
+            param.requires_grad = True
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        定义模型的前向传播。
+        
+        Args:
+            x (torch.Tensor): 输入的图像张量，可以是 (B, 3, 32, 32)
+        
+        Returns:
+            torch.Tensor: 模型输出的logits，形状为 (B, num_classes)
+        """
+        # --- 关键改动 ---
+        # 在送入ViT之前，首先将输入图像上采样到224x224
+        x = self.upsampler(x)
+        
+        # 现在，尺寸匹配了，可以安全地调用ViT
+        return self.vit(x)
+def get_model_on_device():
+    """
+    实例化ViTForCifar10模型，并将其移动到在主作用域中定义的设备上。
+    
+    Returns:
+        ViTForCifar10: 配置好并移动到设备上的模型实例。
+    """
+    model = ViT_Cifar10(num_classes=10)
+    return model.to(device)
+```
+
+</details>
+
+<details>
+
+<summary> nanoViT 的训练结果</summary>
+
 ```text
 ==================================================
                Results
@@ -1422,6 +1503,235 @@ TransformerClassifier(
 
 ==================================================
 ```
+
+</details>
+
+<details>
+
+<summary> ViT-B-16 的微调结果 </summary>
+
+```text
+==================================================
+               Results
+==================================================
+
+[Hyper parameters]
+  - Best LR: 0.000308
+  - Best epochs: 45 epochs
+  - Batch size: 128
+
+[Model structure]
+  - Model type: ViT
+  - Model structure:
+ViT_Cifar10(
+  (upsampler): Resize(size=(224, 224), interpolation=bilinear, max_size=None, antialias=True)
+  (vit): VisionTransformer(
+    (conv_proj): Conv2d(3, 768, kernel_size=(16, 16), stride=(16, 16))
+    (encoder): Encoder(
+      (dropout): Dropout(p=0.0, inplace=False)
+      (layers): Sequential(
+        (encoder_layer_0): EncoderBlock(
+          (ln_1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (self_attention): MultiheadAttention(
+            (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+          )
+          (dropout): Dropout(p=0.0, inplace=False)
+          (ln_2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (mlp): MLPBlock(
+            (0): Linear(in_features=768, out_features=3072, bias=True)
+            (1): GELU(approximate='none')
+            (2): Dropout(p=0.0, inplace=False)
+            (3): Linear(in_features=3072, out_features=768, bias=True)
+            (4): Dropout(p=0.0, inplace=False)
+          )
+        )
+        (encoder_layer_1): EncoderBlock(
+          (ln_1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (self_attention): MultiheadAttention(
+            (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+          )
+          (dropout): Dropout(p=0.0, inplace=False)
+          (ln_2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (mlp): MLPBlock(
+            (0): Linear(in_features=768, out_features=3072, bias=True)
+            (1): GELU(approximate='none')
+            (2): Dropout(p=0.0, inplace=False)
+            (3): Linear(in_features=3072, out_features=768, bias=True)
+            (4): Dropout(p=0.0, inplace=False)
+          )
+        )
+        (encoder_layer_2): EncoderBlock(
+          (ln_1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (self_attention): MultiheadAttention(
+            (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+          )
+          (dropout): Dropout(p=0.0, inplace=False)
+          (ln_2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (mlp): MLPBlock(
+            (0): Linear(in_features=768, out_features=3072, bias=True)
+            (1): GELU(approximate='none')
+            (2): Dropout(p=0.0, inplace=False)
+            (3): Linear(in_features=3072, out_features=768, bias=True)
+            (4): Dropout(p=0.0, inplace=False)
+          )
+        )
+        (encoder_layer_3): EncoderBlock(
+          (ln_1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (self_attention): MultiheadAttention(
+            (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+          )
+          (dropout): Dropout(p=0.0, inplace=False)
+          (ln_2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (mlp): MLPBlock(
+            (0): Linear(in_features=768, out_features=3072, bias=True)
+            (1): GELU(approximate='none')
+            (2): Dropout(p=0.0, inplace=False)
+            (3): Linear(in_features=3072, out_features=768, bias=True)
+            (4): Dropout(p=0.0, inplace=False)
+          )
+        )
+        (encoder_layer_4): EncoderBlock(
+          (ln_1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (self_attention): MultiheadAttention(
+            (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+          )
+          (dropout): Dropout(p=0.0, inplace=False)
+          (ln_2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (mlp): MLPBlock(
+            (0): Linear(in_features=768, out_features=3072, bias=True)
+            (1): GELU(approximate='none')
+            (2): Dropout(p=0.0, inplace=False)
+            (3): Linear(in_features=3072, out_features=768, bias=True)
+            (4): Dropout(p=0.0, inplace=False)
+          )
+        )
+        (encoder_layer_5): EncoderBlock(
+          (ln_1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (self_attention): MultiheadAttention(
+            (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+          )
+          (dropout): Dropout(p=0.0, inplace=False)
+          (ln_2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (mlp): MLPBlock(
+            (0): Linear(in_features=768, out_features=3072, bias=True)
+            (1): GELU(approximate='none')
+            (2): Dropout(p=0.0, inplace=False)
+            (3): Linear(in_features=3072, out_features=768, bias=True)
+            (4): Dropout(p=0.0, inplace=False)
+          )
+        )
+        (encoder_layer_6): EncoderBlock(
+          (ln_1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (self_attention): MultiheadAttention(
+            (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+          )
+          (dropout): Dropout(p=0.0, inplace=False)
+          (ln_2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (mlp): MLPBlock(
+            (0): Linear(in_features=768, out_features=3072, bias=True)
+            (1): GELU(approximate='none')
+            (2): Dropout(p=0.0, inplace=False)
+            (3): Linear(in_features=3072, out_features=768, bias=True)
+            (4): Dropout(p=0.0, inplace=False)
+          )
+        )
+        (encoder_layer_7): EncoderBlock(
+          (ln_1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (self_attention): MultiheadAttention(
+            (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+          )
+          (dropout): Dropout(p=0.0, inplace=False)
+          (ln_2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (mlp): MLPBlock(
+            (0): Linear(in_features=768, out_features=3072, bias=True)
+            (1): GELU(approximate='none')
+            (2): Dropout(p=0.0, inplace=False)
+            (3): Linear(in_features=3072, out_features=768, bias=True)
+            (4): Dropout(p=0.0, inplace=False)
+          )
+        )
+        (encoder_layer_8): EncoderBlock(
+          (ln_1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (self_attention): MultiheadAttention(
+            (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+          )
+          (dropout): Dropout(p=0.0, inplace=False)
+          (ln_2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (mlp): MLPBlock(
+            (0): Linear(in_features=768, out_features=3072, bias=True)
+            (1): GELU(approximate='none')
+            (2): Dropout(p=0.0, inplace=False)
+            (3): Linear(in_features=3072, out_features=768, bias=True)
+            (4): Dropout(p=0.0, inplace=False)
+          )
+        )
+        (encoder_layer_9): EncoderBlock(
+          (ln_1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (self_attention): MultiheadAttention(
+            (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+          )
+          (dropout): Dropout(p=0.0, inplace=False)
+          (ln_2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (mlp): MLPBlock(
+            (0): Linear(in_features=768, out_features=3072, bias=True)
+            (1): GELU(approximate='none')
+            (2): Dropout(p=0.0, inplace=False)
+            (3): Linear(in_features=3072, out_features=768, bias=True)
+            (4): Dropout(p=0.0, inplace=False)
+          )
+        )
+        (encoder_layer_10): EncoderBlock(
+          (ln_1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (self_attention): MultiheadAttention(
+            (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+          )
+          (dropout): Dropout(p=0.0, inplace=False)
+          (ln_2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (mlp): MLPBlock(
+            (0): Linear(in_features=768, out_features=3072, bias=True)
+            (1): GELU(approximate='none')
+            (2): Dropout(p=0.0, inplace=False)
+            (3): Linear(in_features=3072, out_features=768, bias=True)
+            (4): Dropout(p=0.0, inplace=False)
+          )
+        )
+        (encoder_layer_11): EncoderBlock(
+          (ln_1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (self_attention): MultiheadAttention(
+            (out_proj): NonDynamicallyQuantizableLinear(in_features=768, out_features=768, bias=True)
+          )
+          (dropout): Dropout(p=0.0, inplace=False)
+          (ln_2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+          (mlp): MLPBlock(
+            (0): Linear(in_features=768, out_features=3072, bias=True)
+            (1): GELU(approximate='none')
+            (2): Dropout(p=0.0, inplace=False)
+            (3): Linear(in_features=3072, out_features=768, bias=True)
+            (4): Dropout(p=0.0, inplace=False)
+          )
+        )
+      )
+      (ln): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+    )
+    (heads): Sequential(
+      (head): Linear(in_features=768, out_features=10, bias=True)
+    )
+  )
+)
+  - Total params: 7,690
+
+[Training infomation]
+  - Training duration on full training set: 265m 15s
+  - Training device: cuda on Kaggle's free P100, Thank you Google!
+
+[Benchmarks on test set]
+  - Test loss: 0.1402
+  - Test accuracy: 95.42%
+
+==================================================
+```
+
+</details>
 
 ### 对 ViT 模型的解读和评述
 
@@ -1502,7 +1812,7 @@ graph LR
     style L stroke:#a6e3a1,stroke-width:3px
 ```
 
-这里利用卷积操作，将 3@32x32 的图像变成 192@16x16 的图像补丁，并将后两个维度展平，就得到 192x256 的矩阵，其中 256 是补丁的个数，192 是通道数（提取的特征数量），也就是每个补丁可以映射到 192 维的嵌入空间里面。因此我们将矩阵转置为 256x192，也就是输入序列长度乘以嵌入维数，这就和 TrasformerEncoder 的要求匹配了。选择 2x2 的补丁一方面有受到 ViT 论文标题 An image is worth 16x16 words 的影响，毕竟 32 / 2 = 16，另一方面就是类比卷积神经网络的 3x3 卷积核，所以考虑在 2x2 和 4x4 中间选，因为先前测试过 4x4 的 patch_size 效果不如 2x2 好，于是就定下来是 2x2 了。
+这里利用卷积操作，将 3@32x32 的图像变成 192@16x16 的图像补丁，并将后两个维度展平，就得到 192x256 的矩阵，其中 256 是补丁的个数，192 是通道数（提取的特征数量），也就是每个补丁可以映射到 192 维的嵌入空间里面。选 192 是为了控制参数量在 1M 的数量级，其实应该更大的，具体可见下面的讨论。因此我们将矩阵转置为 256x192，也就是输入序列长度乘以嵌入维数，这就和 TrasformerEncoder 的要求匹配了。选择 2x2 的补丁一方面有受到 ViT 论文标题 An image is worth 16x16 words 的影响，毕竟 32 / 2 = 16，另一方面就是类比卷积神经网络的 3x3 卷积核，所以考虑在 2x2 和 4x4 中间选，因为先前测试过 4x4 的 patch_size 效果不如 2x2 好，于是就定下来是 2x2 了。
 
 我们知道注意力矩阵不包含位置信息，所以需要位置编码来对不同位置的同一个 token 进行区分。ViT 的作者尝试了 1-D, 2-D 固定位置编码以及可学习的位置编码，效果都差不多，因此在这里使用可学习的位置编码。
 
@@ -1510,7 +1820,7 @@ graph LR
 
 下面是每一个 TrasformerEncoder 层的细节实现。值得注意的是两个残差连接，分别跨越了多头注意力模块和前馈神经网络模块。残差连接的作用之前已经详细阐述，此处不必多说。
 
-这里的前馈神经网络实现和一般的 MLP head 不大一样。之前我们看到的 MLP head 都是漏斗型的，这里的 FFN 却是先升维再降维。因为此处 FFN 只是对拼接的多头注意力进行混合，不是压缩而是混合特征，因此需要在高维度区分特征，另一方面是，加入激活函数的 FFN 在升维的时候基本上不会因为 ReLU 的死连接而导致信息的损失（也就是降秩）。
+这里的前馈神经网络实现和一般的 MLP head 不大一样。之前我们看到的 MLP head 都是漏斗型的，这里的 FFN 却是先升维再降维。因为此处 FFN 只是对拼接的多头注意力进行混合，不是压缩而是混合特征，因此需要在高维度区分特征，另一方面是，加入激活函数的 FFN 在升维的时候基本上不会因为 ReLU 或者 GELU 等其他激活函数的死连接而导致信息的损失（也就是降秩）。
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313244', 'tertiaryColor': '#181825'}}}%%
@@ -1567,7 +1877,7 @@ graph LR
     Add2 --> Output[("T×192")]
 ```
 
-下面是多头自注意力每一个头的计算过程。其实我认为这里的头数类似于 conv2d 的通道数，衡量获取特征的多少；但是另一方面又被嵌入维度所限制，因为头数一多，分给每个头的投影维度就少了，信息也变少了。图上面的头数为 8 是我随意设置的，不过苏剑林有一个维度公式 [n > 8.33 log N](https://kexue.fm/archives/8711) 对于注意力机制而言，N 就是预训练的序列长度 T 也就是 256，n 就是每个注意力头的维度，算出来要大于 $8.33 \times \log_2 256\approx 66.64$ 才能够在每个头里面有效定位 token，所以这里的 num_heads 设置成 3 理论上应该会好一点。实际上可能是因为输入数据量太少，如果设置成 3 结果是 loss 0.9111 以及 acc=69.17%，反倒没有 8 的效果好。
+下面是多头自注意力每一个头的计算过程。其实我认为这里的头数类似于 conv2d 的通道数，衡量获取特征的多少；但是另一方面又被嵌入维度所限制，因为头数一多，分给每个头的投影维度就少了，信息也变少了。图上面的头数为 8 是我随意设置的，不过苏剑林有一个维度公式 [n > 8.33 log N](https://kexue.fm/archives/8711) 对于注意力机制而言，N 就是预训练的序列长度 T 也就是 256，n 就是每个注意力头的维度，算出来要大于 $8.33 \times \log_2 256\approx 66.64$ 才能够在每个头里面有效定位 token，所以这里的 num_heads 设置成 3 理论上看似会好一点。实际上回到之前的讨论，虽然维度够了，但是提取的特征不够，所以还是差一点，loss = 0.9111 而 acc 很遗憾地只有 69.17%。所以回过头来，如果我们综合刚刚的讨论把 num_heads 设置到 8 而每个头的维度设置成 64……诶，这不就是 ViT_B_16 使用的嵌入维度 768 嘛！
 
 
 ```mermaid
@@ -1637,15 +1947,17 @@ graph LR
 
 最后训练出来的 nanoViT 在 CIFAR-10 上获得了 73.24% 的准确率，和朴素 CNN 的准确率在一个水平。因为 Transformer 要大量数据投喂，所以不 Scale 怎么能行呢？
 
-于是我选择一个大一点的，在 ImageNet 上已经预训练过的模型进行微调，也就是 `ViT_B_16_Weights.IMAGENET1K_V1` 这个模型权重，[文档在此](https://docs.pytorch.ac.cn/vision/stable/models.html#table-of-all-available-classification-weights)。
+于是我选择一个大一点的，在 ImageNet 上已经预训练过的模型进行微调，也就是 `ViT_B_16_Weights.IMAGENET1K_V1` 这个模型权重，[文档在此](https://docs.pytorch.ac.cn/vision/stable/models.html#table-of-all-available-classification-weights)。这个神经网络基本上和刚刚的 nanoViT 完全一样，只不过扩大了对应的参数量，将编码器增加到了 12 个，而 FFN 层间激活函数使用了 GELU 而已。
 
 微调的方法就是先把 32x32 的图像上采样到 224x224，就能和为 ImageNet 预训练的输入匹配了，然后冻结骨干网络，只需要替换分类头，训练好这个 MLP 分类分类头即可。由于这个模型的嵌入维度是 768，所以我们只需要对一个 7690 个参数进行微调就行了，按理说很快，不过……
 
-由于笔者采用的是一个即插即用的端到端网络训练和评估框架，所以我想，定义模型的时候，`__init__`里面声明一下冻结骨干网，替换一下分类头，然后在`forward`里面上采样一下就行了。结果就是，对这 7690 个参数的微调，算上 5 次在训练子集上调参和一次全量数据的微调，一共花（浪费了）10 小时。
+由于笔者采用的是一个即插即用的端到端网络训练和评估框架，所以我想，定义模型的时候，`__init__`里面声明一下冻结骨干网，替换一下分类头，然后在`forward`里面上采样一下就行了。结果就是，对这 7690 个参数的微调，算上 5 次在训练子集上调参和一次全量数据的微调，一共花（浪费了）10 小时。所以大家不要直接复制上面的那个微调原理代码，会很浪费时间（和电，如果你使用云端收费 GPU 的话还很浪费钱）。
 
 这是怎么回事呢？消耗时间的大头竟是**前向传播**也就是推理！实际上因为每一个 epoch 都需要对全部训练样本都完整走一遍前向过程，所以在找超参数的时候我重复进行了 $\dfrac{1}{5}(52+34+31+91+65)=54.6$ 次全量数据的前向传播，但实际上我们已经冻结了骨干网络，所以只需要走一次全量数据前向传播，得到它们最后输出的 784 维编码向量即可！也就是说整个训练流程其实只需要十来分钟就可以完成的……
 
 无论如何微调结果是相当棒的，准确率达到了 95% 以上，可以~~在 osu! 里面拿到 S 评级了~~和那些 SOTA 模型坐一桌了。
+
+将图像利用 Patch 来转换成嵌入序列的方式很有意思！既然 Transformer 的注意力计算是 $O(T^2d)$ 的，为何不请出序列数据处理的元祖，宝刀未老的 RNN 呢？
 
 ## Patch based LSTM
 
