@@ -2129,7 +2129,131 @@ PatchRNN(
 ==================================================
 ```
 
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313244', 'tertiaryColor': '#181825'}}}%%
+graph LR
+    %% Styling definitions
+    classDef box fill:#313244,stroke:#cdd6f4,stroke-width:2px,color:#cdd6f4,radius:8px;
+    classDef input fill:#585b70,stroke:#89b4fa,stroke-width:2px,color:#cdd6f4;
+    classDef output fill:#313244,stroke:#f38ba8,stroke-width:2px,color:#cdd6f4;
+    classDef conv fill:#313244,stroke:#74c7ec,stroke-width:2px,color:#cdd6f4;
+    classDef rnn fill:#313244,stroke:#f9e2af,stroke-width:2px,color:#cdd6f4;
 
+    %% Input Layer
+    subgraph Input["Input"]
+        A[("3@32×32")]
+    end
+    class Input input;
+
+    %% Patch Embedding
+    subgraph PatchEmbed["Patch Embedding"]
+        B["Conv2d<br> 3x128 x 2×2 / 2"]
+    end
+    A -->|Image| B
+    class PatchEmbed conv;
+
+    %% Positional Encoding
+    subgraph PosEnc["Positional Encoding"]
+        S["Parameter Matrix<br>256 x 128"]
+    end
+    class PosEnc conv;
+
+    D[("+")]
+    S --> D
+    B -->|256 patches<br>128 dim per patch| D
+
+    %% Dropout
+    T["Dropout<br>p=0.1"]
+    D --> T
+
+    %% RNN Encoder
+    subgraph RnnEncoder["RNN Encoder"]
+        E["2-Layer Bi-LSTM<br>hidden=256"]
+    end
+    T -->|256x128| E
+    class RnnEncoder rnn;
+
+    %% Extract Last Output
+    I["Extract Last<br>Time Step's Output"]
+    E -->|Sequence Output<br>256x512| I
+
+    %% Classification Head
+    subgraph Classifier["MLP Head"]
+        J["LayerNorm<br>512 dim"]
+        K["Linear<br>512x256"]
+        L["GELU"]
+        M["Dropout<br>p=0.1"]
+        N["Linear<br>256x10"]
+    end
+    I -->|Vector<br>512 dim| J --> K --> L --> M --> N
+    class Classifier box;
+
+    %% Output Layer
+    subgraph OutputLayer["Output"]
+        O[("10")]
+    end
+    N --> O
+    class OutputLayer output;
+
+    %% Styling
+    style A stroke-dasharray: 5 5
+    style O stroke:#a6e3a1,stroke-width:3px
+```
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313244', 'tertiaryColor': '#181825'}}}%%
+graph LR
+    %% Styling definitions
+    classDef box fill:#313244,stroke:#cdd6f4,stroke-width:2px,color:#cdd6f4,radius:8px;
+    classDef input fill:#585b70,stroke:#89b4fa,stroke-width:2px,color:#cdd6f4;
+    classDef output fill:#313244,stroke:#f38ba8,stroke-width:2px,color:#cdd6f4;
+    classDef rnn fill:#313244,stroke:#f9e2af,stroke-width:2px,color:#cdd6f4;
+
+    %% Input
+    Input[("Input Sequence<br>256 × 128")]
+    class Input input
+
+    %% Layer 1
+    subgraph LSTM_Layer_1 ["LSTM Layer 1"]
+        direction LR
+        Fwd1["Forward LSTM<br>h=256"]
+        Bwd1["Backward LSTM<br>h=256"]
+    end
+    
+    Concat1["Concatenate<br>Outputs"]
+    
+    Input --> Fwd1
+    Input --> Bwd1
+    Fwd1 --> |256x256| Concat1
+    Bwd1 --> |256x256| Concat1
+    
+    %% Dropout between layers
+    Drop["Dropout<br>p=0.1"]
+    Concat1 --> |256x512| Drop
+    
+    %% Layer 2
+    subgraph LSTM_Layer_2 ["LSTM Layer 2"]
+        direction LR
+        Fwd2["Forward LSTM<br>h=256"]
+        Bwd2["Backward LSTM<br>h=256"]
+    end
+
+    Concat2["Concatenate<br>Outputs"]
+
+    Drop --> Fwd2
+    Drop --> Bwd2
+    Fwd2 --> |256x256| Concat2
+    Bwd2 --> |256x256| Concat2
+
+    %% Output
+    Output[("Output Sequence<br>256 × 512")]
+    class Output output
+    
+    Concat2 --> |256x512| Output
+
+    %% Styling
+    class LSTM_Layer_1,LSTM_Layer_2 rnn
+```
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313244', 'tertiaryColor': '#181825'}}}%%
