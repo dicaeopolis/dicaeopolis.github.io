@@ -12,7 +12,7 @@
 
 这个代码框架的大致介绍是：通过模型暴露的一个接口函数 `get_model_on_device()` 获取模型实例，然后使用 hyperopt 框架，在 CIFAR-10 数据集上分割 20% 数据用以对模型进行全局学习率和训练轮次的早停法调参；获取最优参数后，在全量数据上进行训练，最后收集训练信息得到结果和部分数据变化的可视化图像。
 
-由于每一次都要花大量时间寻找合适的学习率，笔者花了一天时间研究了一下 muP（[Paper link here](https://arxiv.org/abs/2203.03466)） 的原理以及怎样迁移学习率，结论：在已有数据上（MLP, CNN, ResNet-18）进行的实验和相关理论计算证明，模型架构（残差连接，BN等）会影响损失地形（[Paper link here](https://arxiv.org/pdf/1712.09913)），导致跨架构的学习率迁移失效。其实很明显，比如微调ResNet就比从零训练ResNet的best LR更低，因为预训练权重已经在一个最小值附近了，损失地形比起随机点位更平坦。所以该花时间调参还得花时间调参。不过，可以考虑在小宽度模型上再 scale up，这样就符合 muP 的初心了。具体的实验过程，还请大家参阅后文。
+由于每一次都要花大量时间寻找合适的学习率，笔者花了一天时间研究了一下 muP（[Paper link here](https://arxiv.org/abs/2203.03466)） 的原理以及怎样迁移学习率，结论：在已有数据上（MLP, CNN, ResNet-18）进行的实验和相关理论计算证明，模型架构（残差连接，BN 等）会影响损失地形（[Paper link here](https://arxiv.org/pdf/1712.09913)），导致跨架构的学习率迁移失效。其实很明显，比如微调ResNet就比从零训练ResNet的best LR更低，因为预训练权重已经在一个最小值附近了，损失地形比起随机点位更平坦。所以该花时间调参还得花时间调参。不过，可以考虑在小宽度模型上再 scale up，这样就符合 muP 的初心了。具体的实验过程，还请大家参阅后文。
 
 当然，这个框架也有缺陷，主要是它只能对端到端的网络进行一键式训练和评估，像 VAE 和 AC-GAN 这种标签辅助的生成网络，就需要自行修改了。
 
@@ -1741,6 +1741,8 @@ ViT_Cifar10(
 
 本次实验仍然是从零训练+微调。从零训练使用展示的一个 nanoViT，微调使用的是 torchvision 提供的预训练权重 `ViT_B_16_Weights.IMAGENET1K_V1`，通过冻结骨干网络替换分类头的方式进行微调。
 
+叫 nanoViT 是为了向 Karpathy 的 nanoGPT 致敬，其他网络都在卷花活的时候，Transformer 真的是大力出奇迹。
+
 下面是 nanoViT 的结构示意，我们从宏观到微观来拆解。
 
 ```mermaid
@@ -1881,8 +1883,7 @@ graph LR
     Add2 --> Output[("T×192")]
 ```
 
-下面是多头自注意力每一个头的计算过程。其实我认为这里的头数类似于 conv2d 的通道数，衡量获取特征的多少；但是另一方面又被嵌入维度所限制，因为头数一多，分给每个头的投影维度就少了，信息也变少了。图上面的头数为 8 是我随意设置的，不过苏剑林有一个维度公式 [n > 8.33 log N](https://kexue.fm/archives/8711) 对于注意力机制而言，N 就是预训练的序列长度 T 也就是 256，n 就是每个注意力头的维度，算出来要大于 $8.33 \times \log_2 256\approx 66.64$ 才能够在每个头里面有效定位 token，所以这里的 num_heads 设置成 3 理论上看似会好一点。实际上回到之前的讨论，虽然维度够了，但是提取的特征不够，所以还是差一点，loss = 0.9111 而 acc 很遗憾地只有 69.17%。所以回过头来，如果我们综合刚刚的讨论把 num_heads 设置到 8 而每个头的维度设置成 64……诶，这不就是 ViT_B_16 使用的嵌入维度 768 嘛！
-
+下面是多头自注意力每一个头的计算过程。其实我认为这里的头数类似于 conv2d 的通道数，衡量获取特征的多少；但是另一方面又被嵌入维度所限制，因为头数一多，分给每个头的投影维度就少了，信息也变少了。图上面的头数为 8 是我随意设置的，不过苏剑林有一个维度公式 [n > 8.33 log N](https://kexue.fm/archives/8711) 对于注意力机制而言，N 就是预训练的序列长度 T 也就是 256，n 就是每个注意力头的维度，算出来要大于 $8.33 \times \log_2 256\approx 66.64$ 才能够在每个头里面有效定位 token，所以这里的 num_heads 设置成 3 理论上看似会好一点。实际上回到之前的讨论，虽然维度够了，但是提取的特征不够，所以还是差一点，loss = 0.9111 而 acc 很遗憾地只有 69.17%。所以回过头来，如果我们综合刚刚的讨论把 num_heads 设置到 8 而每个头的维度设置成 64……诶，这不就是 ViT-B-16 使用的嵌入维度 768 嘛！
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313244', 'tertiaryColor': '#181825'}}}%%
@@ -1965,30 +1966,61 @@ graph LR
 
 这是怎么回事呢？消耗时间的大头竟是**前向传播**也就是推理！实际上因为每一个 epoch 都需要对全部训练样本都完整走一遍前向过程，所以在找超参数的时候我重复进行了 $\dfrac{1}{5}(52+34+31+91+65)=54.6$ 次全量数据的前向传播，但实际上我们已经冻结了骨干网络，所以只需要走一次全量数据前向传播，得到它们最后输出的 784 维编码向量即可！也就是说整个训练流程其实只需要十来分钟就可以完成的……
 
-无论如何微调结果是相当棒的，准确率达到了 95% 以上，可以~~在 osu! 里面拿到 S 评级了~~和那些 SOTA 模型坐一桌了。
+无论如何微调结果是相当棒的，准确率达到了 95% 以上，可以 ~~在 osu! 里面拿到 S 评级了~~ 和那些 SOTA 模型坐一桌了。
 
-将图像利用 Patch 来转换成嵌入序列的方式很有意思！既然 Transformer 的注意力计算是 $O(T^2d)$ 的，为何不请出序列数据处理（和线性注意力）的元祖，宝刀未老的 RNN 呢？
+将图像利用 Patch 来转换成嵌入序列的方式很有意思！既然 Transformer 的注意力计算是 $O(T^2d)$ 的，为何不请出序列数据处理（和线性注意力）的元祖，宝刀未老的 RNN 系列模型呢？（好吧 RNN 因为严重的梯度爆炸/消失问题尚能饭否还得打个问号，我们实际上使用 LSTM）
 
 ## Patch based LSTM
+
+### 训练基于 Patch 的 LSTM 使用的代码
 
 ```python
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from einops import rearrange
+from torch import Tensor
 
-class PatchRNN(nn.Module):
-    def __init__(self, num_classes=10, img_size=32, patch_size=4, 
-                 embed_dim=128, hidden_size=256, num_layers=2, 
-                 bidirectional=True, dropout=0.1):
-        super(PatchRNN, self).__init__()
-        
-        # 计算patch数量
+class PatchEmbedding(nn.Module):
+    """将图像分割为补丁并进行嵌入"""
+    def __init__(self, img_size=32, patch_size=2, in_channels=3, embed_dim=128):
+        super().__init__()
+        self.img_size = img_size
         self.patch_size = patch_size
+        
+        # 计算补丁数量
         self.num_patches = (img_size // patch_size) ** 2
         
-        # Patch嵌入层: 将每个patch投影到embed_dim维空间
-        self.patch_embed = nn.Linear(patch_size * patch_size * 3, embed_dim)
+        # 使用卷积层实现补丁嵌入 (等价于每个补丁应用一个卷积核)
+        self.proj = nn.Conv2d(
+            in_channels, 
+            embed_dim, 
+            kernel_size=patch_size, 
+            stride=patch_size
+        )
+
+    def forward(self, x: Tensor) -> Tensor:
+        # x形状: (batch_size, in_channels, img_size, img_size)
+        x = self.proj(x)  # 输出形状: (batch_size, embed_dim, num_patches^(1/2), num_patches^(1/2))
+        x = x.flatten(2)  # 输出形状: (batch_size, embed_dim, num_patches)
+        x = x.transpose(1, 2)  # 输出形状: (batch_size, num_patches, embed_dim)
+        return x
+
+class PatchLSTM(nn.Module):
+    def __init__(self, num_classes=10, img_size=32, patch_size=2, 
+                 embed_dim=128, hidden_size=256, num_layers=2, 
+                 bidirectional=True, dropout=0.1):
+        super(PatchLSTM, self).__init__()
+        
+        # 使用卷积Patch嵌入层
+        self.patch_embed = PatchEmbedding(
+            img_size=img_size,
+            patch_size=patch_size,
+            in_channels=3,
+            embed_dim=embed_dim
+        )
+        
+        # 计算patch数量
+        self.num_patches = (img_size // patch_size) ** 2
         
         # 可学习的位置编码
         self.pos_embed = nn.Parameter(torch.randn(1, self.num_patches, embed_dim))
@@ -2018,36 +2050,29 @@ class PatchRNN(nn.Module):
 
     def forward(self, x):
         # x形状: [B, 3, 32, 32]
-        B = x.shape[0]
         
-        # 1. 将图像分割成patches
-        # 使用einops库进行清晰的重组操作
-        patches = rearrange(x, 'b c (h p1) (w p2) -> b (h w) (p1 p2 c)', 
-                           p1=self.patch_size, p2=self.patch_size)
+        # 1. 使用卷积层进行patch嵌入
+        patch_embeddings = self.patch_embed(x)  # [B, num_patches, embed_dim]
         
-        # 2. 将每个patch投影到嵌入空间
-        patch_embeddings = self.patch_embed(patches)  # [B, num_patches, embed_dim]
-        
-        # 3. 添加位置编码
+        # 2. 添加位置编码
         patch_embeddings = patch_embeddings + self.pos_embed
         
-        # 4. 应用dropout
+        # 3. 应用dropout
         patch_embeddings = self.dropout(patch_embeddings)
         
-        # 5. 通过RNN处理序列
+        # 4. 通过RNN处理序列
         rnn_output, _ = self.rnn(patch_embeddings)  # [B, num_patches, hidden_size * num_directions]
         
-        # 6. 取序列的最后一个输出（考虑了双向信息）
-        # 对于双向RNN，最后一个时间步的输出已经包含了正向和反向的信息
+        # 5. 取序列的最后一个输出（考虑了双向信息）
         sequence_representation = rnn_output[:, -1, :]  # [B, hidden_size * num_directions]
         
-        # 7. 分类
+        # 6. 分类
         logits = self.classifier(sequence_representation)
         return logits
 
 def get_model_on_device():
     # 创建模型实例
-    model = PatchRNN(
+    model = PatchLSTM(
         num_classes=10,        # CIFAR-10有10个类别
         img_size=32,           # CIFAR-10图像尺寸
         patch_size=2,          # 2x2的patch
@@ -2062,21 +2087,25 @@ def get_model_on_device():
     return model.to(device)
 ```
 
+![alt text](image.png)
+
 ```text
 ==================================================
                Results
 ==================================================
 
 [Hyper parameters]
-  - Best LR: 0.001774
-  - Best epochs: 17 epochs
+  - Best LR: 0.000425
+  - Best epochs: 20 epochs
   - Batch size: 128
 
 [Model structure]
-  - Model type: Patched LSTM
+  - Model type: Patch based LSTM
   - Model structure:
 PatchRNN(
-  (patch_embed): Linear(in_features=12, out_features=128, bias=True)
+  (patch_embed): PatchEmbedding(
+    (proj): Conv2d(3, 128, kernel_size=(2, 2), stride=(2, 2))
+  )
   (dropout): Dropout(p=0.1, inplace=False)
   (rnn): LSTM(128, 256, num_layers=2, batch_first=True, dropout=0.1, bidirectional=True)
   (classifier): Sequential(
@@ -2090,14 +2119,132 @@ PatchRNN(
   - Total params: 2,536,842
 
 [Training infomation]
-  - Training duration on full training set: 17m 21s
+  - Training duration on full training set: 20m 27s
   - Training device: cuda on Kaggle's free P100, Thank you Google!
 
 [Benchmarks on test set]
-  - Test loss: 1.1961
-  - Test accuracy: 68.08%
+  - Test loss: 1.1816
+  - Test accuracy: 68.11%
 
 ==================================================
+```
+
+
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313244', 'tertiaryColor': '#181825'}}}%%
+graph LR
+
+    %% Styling definitions
+    classDef box fill:#313244,stroke:#cdd6f4,stroke-width:2px,color:#cdd6f4,radius:8px;
+    classDef input fill:#585b70,stroke:#89b4fa,stroke-width:2px,color:#cdd6f4;
+    classDef output fill:#313244,stroke:#f38ba8,stroke-width:2px,color:#cdd6f4;
+    classDef gate fill:#313244,stroke:#89dceb,stroke-width:2px,color:#cdd6f4;
+    classDef cell fill:#313244,stroke:#a6e3a1,stroke-width:2px,color:#cdd6f4;
+    classDef op fill:#45475a,stroke:#cdd6f4,stroke-width:1px,shape:circle;
+    classDef transform fill:#313244,stroke:#f5c2e7,stroke-width:2px,color:#cdd6f4;
+    classDef title fill:#1e1e2e,stroke:#cba6f7,stroke-width:1px,color:#cba6f7;
+    
+    %% Inputs
+    subgraph Inputs
+        direction LR
+        Xt["Input x_t<br>dim: 128"]
+        Ht_1["Hidden h_t-1<br>dim: 256"]
+    end
+    Ct_1["Cell c_t-1<br>dim: 256"]
+    
+    %% Concatenation
+    Concat["Concatenate [h_t-1, x_t]<br>dim: 256 + 128 = 384"]
+    Ht_1 --> Concat
+    Xt --> Concat
+
+    %% Linear Transformation
+    subgraph LinearProj ["Gate & Cell Candidate Projections"]
+        W["Linear <br>input: 384<br>output: 4 * 256 = 1024<br>(Effectively 4 parallel Linear(384, 256) layers)"]
+    end
+    Concat --> W
+    class LinearProj transform;
+    
+    %% Gate Activations
+    subgraph GateActivations ["Gate Activations"]
+        direction LR
+        subgraph ForgetGate["Forget Gate"]
+            S_f["Sigmoid"]
+        end
+        subgraph InputGate["Input Gate"]
+            S_i["Sigmoid"]
+        end
+        subgraph CellCandidate["Cell Candidate"]
+            T_g["tanh"]
+        end
+        subgraph OutputGate["Output Gate"]
+            S_o["Sigmoid"]
+        end
+    end
+    W --> |Linear proj for f_t| S_f
+    W --> |Linear proj for i_t| S_i
+    W --> |Linear proj for g_t| T_g
+    W --> |Linear proj for o_t| S_o
+
+    %% Cell State Update
+    subgraph CellState["Cell State Update"]
+        Mul1("⊙")
+        Mul2("⊙")
+        Add("+")
+    end
+    
+    subgraph state["States of this time step"]
+        Ct_1
+        Concat
+    end
+
+    S_f --> |f_t<br>dim: 256| Mul1
+    Ct_1 --> Mul1
+    
+    S_i --> |i_t<br>dim: 256| Mul2
+    T_g --> |g_t<br>dim: 256| Mul2
+    
+    Mul1 --> Add
+    Mul2 --> Add
+    
+    Ct["New Cell c_t<br>dim: 256"]
+    Add --> Ct
+
+    %% Hidden State Update
+    subgraph HiddenState["Hidden State Update"]
+        T_c["tanh"]
+        Mul3("⊙")
+    end
+    
+    Ct --> T_c
+    S_o --> |o_t<br>dim: 256| Mul3
+    T_c --> Mul3
+    
+    Ht["New Hidden h_t<br>dim: 256"]
+    Mul3 --> Ht
+
+    %% Recurrent Connections to next time step
+    Ct ---> nCt_1
+    Ht  ---> nHt_1
+    nXt_1 --> nHt_1
+
+    subgraph nip["Input of the next time step"]
+        nXt_1["Input x_t+1<br>dim: 256"]
+        Ht
+    end
+
+    subgraph nst["States of the next time step"]
+        nCt_1["Cell c_t<br>dim: 256"]
+        nHt_1["Concatenated vector<br>dim: 384"]
+    end
+
+    %% Styling
+    class Title title;
+    class Inputs,nip input;
+    class Ht,Ct output;
+    class GateActivations gate;
+    class CellState,HiddenState cell;
+    class Mul1,Mul2,Mul3,Add op;
 ```
 
 ## VAE
