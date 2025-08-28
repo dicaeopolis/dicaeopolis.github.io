@@ -2391,7 +2391,7 @@ graph LR
     class Mul1,Mul2,Mul3,Add op;
 ```
 
-可以看到每一个时间步下，先将输入和隐藏状态拼接，由这个 384 维的拼接向量经过一个 4 倍隐藏维度的投影层，很自然的就可以把投影向量分成四份。每一份都对当前状态和当前隐藏状态的特征进行映射的向量。这些向量要负责结合细胞状态来控制状态的更新和输出。其实这一步很像优化器的流程，事实上已经有关于 RNN 和优化器的一些对比讨论了。
+可以看到每一个时间步下，先将输入和隐藏状态拼接，由这个 384 维的拼接向量经过一个 4 倍隐藏维度的投影层，很自然的就可以把投影向量分成四份。每一份是都对当前状态和当前隐藏状态的特征进行映射的向量。这些向量要负责结合细胞状态来控制状态的更新和输出。其实这一步很像优化器的流程，事实上已经有关于 RNN 和优化器的一些对比讨论了。
 
 首先来看第一个投影向量 $f_t$，经过 Sigmoid 激活后，将其与细胞状态 $c_{t-1}$ 相乘，也就是通过 $f_t$ 来控制哪些分量应该忘掉，也就是激活后得到 0 的位置。
 
@@ -2423,8 +2423,122 @@ graph LR
 
 ![waifus!](image-1.png)
 
-（第五排从左往右第三个是 galgame "Island" 的女主御原凛音的立绘，大家都来玩啊）
+（第五排从左往右第三个是 galgame "Island" 的女主御原凛音的立绘，大家都来玩啊~ ~~现在知道为什么这个数据集在GitHub上因为版权问题被拿下了吧~~ ）
 
+我们现在的任务就是根据已经有的头像，画出新的头像。也就是 $y=f(x)$ 其中 $y$ 是我们的生成图片， $x$ 是原始图片。为了避免乱生成，其实需要最小化 $y$ 和 $x$ 的偏差。——这不是 ResNet 干的活吗？因此在这里我们需要澄清一点：
 
+我们并不是取学习某一张图片，而是所有训练图片构成的**概率分布**！了解了这个概率分布的形状之后，我们就可以在里面采样，得到生成的图片了。而 ResNet 只会把输入数据原样返回。
+
+我们假设输入的数据为 $x$ 而概率分布为 $p(x)$，我们需要找到一个方式去（近似）描述 $p(x)$。由于数据维度很高，且维度之间有复杂的相互关联，因此直接寻找是相当复杂的，那怎么办呢？
+
+诶，当我们需要在复杂任务里面找规律的时候，第一时间想到的是什么？降维！具体而言，就是考虑这个目标分布是输入通过编码再解码的结果，而编码的过程，就是对特征和规律进行降维、压缩、提取的过程：
+
+$$
+p(x)\approx q(x)=\int q(x|z)q(z)\mathrm d z
+$$
+
+这里，$x$ 是输入，$q(x)$ 是我们对目标函数 $p(x)$ 的拟合尝试，$z$ 是降维后的**隐变量**，$q(z)$ 就是隐变量的分布，而 $q(x|z)$  就是从隐变量生成图片的解码器。这个式子很好理解，里面的等式就是全概率公式。
+
+下面我们要解决这样几个问题：
+- 怎么获取编码器，也就是从原始的图像得到隐变量的分布？
+- 怎么衡量两个分布的近似程度来得到损失函数？
+
+第一个问题比较核心，也涉及到 VAE 的生图风格，我们等会再聊。第二个问题，大家基本上都能脱口而出——使用交叉熵也就是 KL 散度不就行了吗，反正在图像任务那边也是这样做的。
+
+但是这里如果计算 $p(x)$ 和 $q(x)$ 的 KL 散度，其实很不方便，因为一是这些式子都比较原子化拆不开就不好化简（更何况 $p(x)$ 都不知道，没办法算），二是刚刚费力引入的 $z$ 没用上。
+
+因此我们考虑对联合分布 $p(x,z)$ 和 $q(x,z)$ 计算 KL 散度，也就是说利用上隐变量和 $p$ 与 $q$ 的关系：
+
+$$
+\begin{align*}
+  KL\left(p(x,z)||q(x,z)\right)&=\int\int p(x,z) \log \dfrac{p(x,z)}{q(x,z)} \mathrm d x \mathrm d z\\
+  &= \int\int p(x)p(z|x) \log\dfrac{p(x)p(z|x)}{q(x,z)} \mathrm d z \mathrm d x\\
+  &=\int p(x)[\int p(z|x)\log\dfrac{p(x)p(z|x)}{q(x,z)} \mathrm d z]\mathrm d x\\
+  &=\mathbb E_{x\sim p(x)}[\int p(z|x)[\log p(x) + \log p(z|x)- \log q(x,z)] \mathrm d z]\\
+  &=\mathbb E_{x\sim p(x)}[\log p(x)+\int p(z|x)\log\dfrac{p(z|x)}{q(z)q(x|z)}\mathrm d z]\\
+  &=\mathbb E_{x\sim p(x)}[\log p(x)-\int p(z|x)\log q(x|z)\mathrm d z+\int p(z|x)\log\dfrac{p(z|x)}{q(z)}\mathrm d z]\\
+  &=\mathbb E_{x\sim p(x)}[\log p(x)-\mathbb E_{z\sim p(z|x)}[\log q(x|z)]+\int p(z|x)\log\dfrac{p(z|x)}{q(z)}\mathrm d z]\\
+  &=\mathbb E_{x\sim p(x)}[\log p(x)-\mathbb E_{z\sim p(z|x)}[\log q(x|z)]+KL(p(z|x) || q(z))]\\
+  &=\mathbb E_{x\sim p(x)}[\log p(x)]+\mathbb E_{x\sim p(x)}[-\mathbb E_{z\sim p(z|x)}[\log q(x|z)]+KL(p(z|x) || q(z))]\\
+  &=\mathrm{Constant.}+\mathbb E_{x\sim p(x)}[-ELBO]
+\end{align*}
+$$
+
+这就是我们得到的损失函数。推导时应用了期望的性质和条件概率公式以及 KL 散度的定义，第五行消掉第一项的 $p(z|x)$ 是用的概率的归一化性质。整个推导的目标很明确，尽量不要让含有 $p$ 的函数参与到最后的式子里面，利用好已有的 $q$ 相关的函数。于是乎，我们只需要最大化 $ELBO$ 即可。关于 $ELBO$，可以拆开：
+
+$$
+\begin{align*}
+  ELBO&=\mathbb E_{z\sim p(z|x)}[\log q(x|z)]-KL(p(z|x) || q(z))
+\end{align*}
+$$
+
+第一项的意思是是**重构误差**，衡量解码器 $q(x|z)$ 的结果对原图 $x$ 的差异程度；第二项的意思是**衡量编码器对隐变量分布的近似程度**。
+
+实际上我们可以将两项解耦，来分配不同的权重，也就是可以写成
+
+$$
+\begin{align*}
+  ELBO&=\mathbb E_{z\sim p(z|x)}[\log q(x|z)]-\beta KL(p(z|x) || q(z))
+\end{align*}
+$$
+
+这叫做 β-VAE，后面我们会看到这样做的理由和意义。
+
+为了计算 ELBO，$q(x|z)$ 自然是对隐变量 $z$ 解码到 $x$ 上的神经网络，而 VAE 的作者对隐变量分布 $q(z)$ 和编码器 $p(z|x)$ 给了个很激进的方案：默认它们是正态分布！
+
+具体而言，对 $q(z)$ 我们可以直接假定为标准正态分布 $N(0,I)$，但是 $p(z|x)$ 是个条件分布，怎么搞呢？事实上回忆一下多元正态函数的定义：
+
+$$
+p(z|x)=\dfrac{\exp{\left(-0.5\left |\dfrac{z-\mu}{\sigma}\right |^2\right)}}{\prod \sqrt{2\pi\sigma_i^2}}
+$$
+
+这里的 $\mu$ 和 $\sigma$ 都是和隐变量 $z$ 维度一致的向量，也就是说可以用神经网络来压缩！
+
+那么 KL 散度项就可以很轻松解决了：
+
+$$
+\begin{align*}
+  KL &= \int p(z|x)\log\dfrac{p(z|x)}{q(z)}\mathrm d z\\
+  &=\mathbb{E}_{z\sim p(z|x)}[\log \dfrac{p(z|x)}{q(z)}]\\
+  &=\mathbb{E}_{z\sim p(z|x)}[\log\dfrac{\exp{\left(-0.5\left |\dfrac{z-\mu}{\sigma}\right |^2\right)}}{\prod \sqrt{2\pi\sigma_i^2}}\times \dfrac{\prod \sqrt{2\pi}}{\exp{(-0.5 |z|^2)}}]\\
+  &=\mathbb{E}_{z\sim p(z|x)}[0.5|z|^2-0.5\left |\dfrac{z-\mu}{\sigma}\right |^2-\sum \log \sigma_i]\\
+  &=\dfrac 12 \sum \sigma_i^2 +\mu_i^2-1-\log \sigma_i
+\end{align*}
+$$
+
+最后一步使用了正态分布二阶矩的性质：$\mathbb{E}[x^2]=\mu^2+\sigma^2$。
+
+对于重构误差项，我们可能会想到利用 MSE 来衡量重构误差，但是这样做是否有理论依据呢？事实上如果考虑解码器 $q(x|z)$ 和编码器一样服从正态分布，也就是：
+
+$$
+\begin{align*}
+  \mathbb E_{z\sim p(z|x)}[\log q(x|z)]&=\mathbb E_{z\sim p(z|x)}[\log \dfrac{\exp{\left(-0.5\left |\dfrac{x-\mu'}{\sigma'}\right |^2\right)}}{\prod \sqrt{2\pi{\sigma'}_i^2}}]\\
+  &=-\dfrac{1}{2|\sigma'|^2}|x-\mu'|^2-\sum\log \sqrt{2\pi{\sigma'}_i^2}
+\end{align*}
+$$
+
+这里的 $\mu'$ 即解码的均值其实就是输出的图像。如果取 $\sigma'$ 是固定的向量，那就得到 MSE 了。事实上，这里 $\sigma'$ 的大小估计就和 β-VAE 的思想等价，都是来调控两种损失的比例的。因此我们就估计出了最终的损失函数：
+
+$$
+\begin{align*}
+  \mathcal{L}&=-\mathbb E_{x\sim p(x)}[ELBO]\\
+  &=-\mathbb E_{x\sim p(x)}[\mathbb E_{z\sim p(z|x)}[\log q(x|z)]-\beta KL(p(z|x) || q(z))]\\
+  &=\mathbb E_{x\sim p(x)}[\dfrac{1}{2}|x-\mu'|^2-\beta\dfrac 12 \sum \sigma_i^2 +\mu_i^2-1-\log \sigma_i]\\
+  &=\mathbb E_{x\sim p(x)}[MSE -\beta KLD]\\
+  &=\dfrac 1n \sum_i^n (MSE_{x_i}-\beta KLD_{x_i})
+\end{align*}
+$$
+
+最后一步，就是通过采样近似期望。实际上我们进行的是批量训练，因此，每次只需要采样一个输入 $x$ 即可。也就是说最终我们得到了可以计算的损失函数！
+
+$$
+\mathcal{L(x)}=MSE_{x}-\beta KLD_{x}
+$$
+
+但是还有一个问题：虽然这是可以计算的，但 $\mu$ 和 $\sigma$ 的值会随着参数的变化而变化，进而影响到分布 $q(z)$，也就是说带参数的正态分布是无法直接进行微分来反向传播的。这一问题有一个很好的解决方案：重参数化。
+
+也就是从分布 $N(\mu,\sigma^2)$ 采样其实就是一个平移加缩放，只需要在标准分布 $N(0,1)$ 里面采样 $y$，然后计算 $y'=\mu+\sigma y$ 就可以得到从分布 $N(\mu,\sigma^2)$ 采样的结果了。由于线性变换可微，就可以交给优化器做更新了。
+
+如此，通往 VAE 的道路已经铺好，让我们编写代码吧。
 
 ## ACGAN
