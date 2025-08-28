@@ -524,9 +524,9 @@ MLP 是利用 $\mathbb{R}^n\rightarrow\mathbb{R}^m$ 的多重线性映射实现�
 
 经过 13 个 Epoch 的训练之后，模型在 CIFAR-10 只上取得了 54.44% 的准确率。增大模型的宽度和深度理论上可以改善，但是效率太低了。因此需要发掘图像信息的特性，在模型结构上面引入更多先验信息，寻找能够更高效提取信息的架构。所以可以看到现在的网络架构中，MLP 仅仅是作为分类头出现的。
 
-## 卷积神经网络
+## CNN
 
-### CNN
+### CNN 模型的训练结果展示
 
 <details>
 
@@ -1972,7 +1972,11 @@ graph LR
 
 ## Patch based LSTM
 
-### 训练基于 Patch 的 LSTM 使用的代码
+### Patch based LSTM 训练结果展示
+
+<details>
+
+<summary> 训练使用的代码 </summary>
 
 ```python
 import torch
@@ -2087,7 +2091,13 @@ def get_model_on_device():
     return model.to(device)
 ```
 
-![alt text](image.png)
+</details>
+
+<details>
+
+<summary> Patch based LSTM 的训练结果 </summary>
+
+<img src = "image.png" alt = "pLSTM result" />
 
 ```text
 ==================================================
@@ -2128,6 +2138,12 @@ PatchRNN(
 
 ==================================================
 ```
+
+</details>
+
+### 对 Patch based LSTM 的解读和评述
+
+下面是总的模型结构图，使用了双层的双向 LSTM 作为编码器。其实双向仍然在提取位置关系上还是不够充分的，因为尽管图像 Patch 化了，其关联仍然不是纯线性序列的，所以还是加上了可学习的位置编码。这里的结构其实就是类似于把 nanoViT 的四个 TransformerEncoder 换成了基于 LSTM 的 RNN Encoder。至于为什么输入序列维度 128 过了这个编码器之后就变成 512 了呢？且看后面对这个编码器的拆解。
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313244', 'tertiaryColor': '#181825'}}}%%
@@ -2200,6 +2216,8 @@ graph LR
     style O stroke:#a6e3a1,stroke-width:3px
 ```
 
+下面是具体的编码器架构。输入序列是一个长度 256，嵌入维度 128 的序列，分别输入到正向和反向的 LSTM 里面，取输出也就是隐藏层状态 $h$，在嵌入维度上拼到一起，得到新的序列，也就是隐藏层的维度 256，然后再过一遍正反向 LSTM，维度再翻一倍，得到输出的维度 512。所以双向 LSTM 输出维度是隐藏状态维度的两倍。
+
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313244', 'tertiaryColor': '#181825'}}}%%
 graph LR
@@ -2254,6 +2272,8 @@ graph LR
     %% Styling
     class LSTM_Layer_1,LSTM_Layer_2 rnn
 ```
+
+下面是 LSTM 的具体结构。
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313244', 'tertiaryColor': '#181825'}}}%%
@@ -2370,6 +2390,20 @@ graph LR
     class CellState,HiddenState cell;
     class Mul1,Mul2,Mul3,Add op;
 ```
+
+可以看到每一个时间步下，先将输入和隐藏状态拼接，由这个 384 维的拼接向量经过一个 4 倍隐藏维度的投影层，很自然的就可以把投影向量分成四份。每一份都对当前状态和当前隐藏状态的特征进行映射的向量。这些向量要负责结合细胞状态来控制状态的更新和输出。其实这一步很像优化器的流程，事实上已经有关于 RNN 和优化器的一些对比讨论了。
+
+首先来看第一个投影向量 $f_t$，经过 Sigmoid 激活后，将其与细胞状态 $c_{t-1}$ 相乘，也就是通过 $f_t$ 来控制哪些分量应该忘掉，也就是激活后得到 0 的位置。
+
+既然有遗忘，那也需要记忆。这就交给 $i_t$ 和 $g_t$。由于 $i_t$ 是特征经过 Sigmoid 激活的结果，恒为正，因此可以作为纯输入的信息。而 $g_t$ 经过的是 tanh 激活，有正有负，和 $i_t$ 相乘之后，一方面可以说是增加网络的宽度，另一方面也对输入信息提供合理的抑制，防止其单调递增。最后和遗忘门的结果加起来，就可以得到新的细胞状态 $c_t$ 了。这里的细胞状态通过门控决定自己应该保留多少、更新多少，作用就和朴素 RNN 的隐藏状态是一致的。
+
+但是 LSTM 里面也出现了一个隐藏状态，按我的理解，其实 LSTM 区分细胞状态和隐藏状态是一种对 RNN 隐藏状态的功能解耦。因为一方面，隐藏状态要负责记忆先前的序列信息，另一方面，隐藏状态还要肩负起提取序列特征输出的作用，所以 LSTM 采用了细胞状态记忆序列信息，而和输入一起丢进来的那个所谓的隐藏状态，起到的就是提取特征的作用。何以见得？让我们看看输出的计算。
+
+这里仍然是特征经过 Sigmoid 激活后得到向量 $o_t$，然后需要和 tanh 激活后的新细胞状态相乘——也就是说，为了得到新的隐藏状态，需要参考目前的记忆，来选择性提取当前输入带来的特征。
+
+因此 LSTM 也可以解决 RNN 的梯度爆炸/消失的问题。RNN 因为是对记忆的全量更新，很容易遗忘早期信息，同时也在这种全量更新上累积梯度，成了等比数列；而 LSTM 只不过引入门控来限制更新，就可以增强记忆力而缓解梯度问题。
+
+当然最后训练出来一个参数量 2M 的 LSTM，还是没能打败 nanoViT。毕竟二维的注意力矩阵，对长距离/空间上的特征依赖效果必然好于仅靠一两个隐藏状态建模记忆力的 LSTM 好。不过，我们也没有必要勉强它，毕竟，图像任务从来都不是擅长序列建模的 RNN 的强项。至少我们证明了，在图像分类任务上使用 RNN 是可行的。
 
 ## VAE
 
