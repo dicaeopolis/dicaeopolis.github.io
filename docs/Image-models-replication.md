@@ -2465,7 +2465,7 @@ $$
 \end{align*}
 $$
 
-这就是我们得到的损失函数。推导时应用了期望的性质和条件概率公式以及 KL 散度的定义，第五行消掉第一项的 $p(z|x)$ 是用的概率的归一化性质。里面的 $ELBO$ 这个马甲的意思叫 Evidence Lower Bound，即证据下界，其实就是对近似程度的衡量，简单说就是要最大化的量。整个推导的目标很明确，尽量不要让含有 $p$ 的函数参与到最后的式子里面，利用好已有的 $q$ 相关的函数。于是乎，我们只需要最大化 $ELBO$ 即可。关于 $ELBO$，可以拆开：
+这就是我们得到的损失函数。推导时应用了期望的性质和条件概率公式以及 KL 散度的定义，第五行消掉第一项的 $p(z|x)$ 是用的概率的归一化性质。事实上，这一联合分布的 KL 散度恒大于之前提到的边际分布的 KL 散度，所以这个条件甚至更强。里面的 $ELBO$ 这个马甲的意思叫 Evidence Lower Bound，即证据下界，其实就是对近似程度的衡量，简单说就是要最大化的量。整个推导的目标很明确，尽量不要让含有 $p$ 的函数参与到最后的式子里面，利用好已有的 $q$ 相关的函数。而且要让结果靠近对“编码器”和“解码器”的损失计算。于是乎，我们只需要最大化 $ELBO$ 即可。关于 $ELBO$，可以拆开：
 
 $$
 \begin{align*}
@@ -3014,7 +3014,9 @@ graph LR
 
 ### 无监督聚类
 
-第一个想法是，
+第一个想法相当自然，既然我们使用隐变量分布 $q(z)$ 来对原有图像做压缩之后的表征，那么我们只需要对每一个输入 $x$，计算其对应的隐变量分布 $q(z)$ 的均值 $\mu$，就可以将输入压缩到隐空间内。按理说，这个空间是提取了 $x$ 的特征信息的，因此在这个空间里面做无监督的聚类，就可以进行分类了。
+
+具体而言，我们使用 K-means 作为聚类手段，对每个类别进行投票，得票最高的标签代表本类别的标签。最后，对得到的隐空间做 t-SNE 可视化。下面是结果：
 
 |  | β = 0.1 | β = 1 | β = 10|
 |--|:--:|:--:|:--:|
@@ -3022,19 +3024,829 @@ graph LR
 |t-SNE可视化|![alt text](image-8.png)|![alt text](image-16.png)|![alt text](image-10.png)|
 |生成图像|![alt text](image-9.png)|![alt text](image-17.png)|![alt text](image-11.png)|
 
+可以看到，β 基本上对准确率没有影响，因为我们是不带标签信息完全无监督地进行训练的，但是越大的 β 可视化出来的簇越集中，这就意味着增大 KL 散度项的权重，相当有利于数据降维压缩，但是对应图像也越糊，因为这一压缩过程是不可逆的，输出也被过度平滑了。
+
+<details>
+
+<summary> 无监督聚类 VAE 使用的代码 </summary>
+
+```python
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+from torchvision import datasets, transforms
+from torch.utils.data import DataLoader
+
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+from sklearn.manifold import TSNE
+from tqdm import tqdm
+import os
+from scipy.stats import mode
+
+# --- 1. 配置参数 ---
+config = {
+    "METHOD_NAME": "VAE",
+    "LATENT_DIM": 128,
+    "NUM_CLUSTERS": 10,
+    "BATCH_SIZE": 128,
+    "EPOCHS": 30,
+    "LR": 1e-3,
+    "BETA": 0.1,
+    "DEVICE": "cuda" if torch.cuda.is_available() else "cpu",
+    "DATA_PATH": "./data",
+    "OUTPUT_PATH": "./output"
+}
+
+output_dir = os.path.join(config["OUTPUT_PATH"], config["METHOD_NAME"])
+os.makedirs(output_dir, exist_ok=True)
+print(f"Using device: {config['DEVICE']}")
+print(f"Running with Beta = {config['BETA']}")
+
+# --- 2. 数据加载 ---
+transform = transforms.Compose([transforms.ToTensor()])
+train_dataset = datasets.CIFAR10(root=config["DATA_PATH"], train=True, transform=transform, download=True)
+test_dataset = datasets.CIFAR10(root=config["DATA_PATH"], train=False, transform=transform, download=True)
+train_loader = DataLoader(train_dataset, batch_size=config["BATCH_SIZE"], shuffle=True, pin_memory=True, num_workers=4)
+test_loader = DataLoader(test_dataset, batch_size=config["BATCH_SIZE"], shuffle=False)
+classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
+
+# --- 3. 模型定义: VAE ---
+class VAE(nn.Module):
+    def __init__(self, latent_dim):
+        super(VAE, self).__init__()
+        self.latent_dim = latent_dim
+        self.encoder_features = nn.Sequential(
+            nn.Conv2d(3, 64, 3, 1, 1), nn.BatchNorm2d(64), nn.ReLU(True), nn.MaxPool2d(2, 2),
+            nn.Conv2d(64, 128, 3, 1, 1), nn.BatchNorm2d(128), nn.ReLU(True), nn.MaxPool2d(2, 2),
+            nn.Conv2d(128, 256, 3, 1, 1), nn.BatchNorm2d(256), nn.ReLU(True), nn.MaxPool2d(2, 2)
+        )
+        self.fc_mu = nn.Linear(256 * 4 * 4, latent_dim)
+        self.fc_log_var = nn.Linear(256 * 4 * 4, latent_dim)
+        self.decoder_fc = nn.Linear(latent_dim, 256 * 4 * 4)
+        self.decoder_conv = nn.Sequential(
+            nn.ConvTranspose2d(256, 128, 4, 2, 1), nn.BatchNorm2d(128), nn.ReLU(True),
+            nn.ConvTranspose2d(128, 64, 4, 2, 1), nn.BatchNorm2d(64), nn.ReLU(True),
+            nn.ConvTranspose2d(64, 3, 4, 2, 1), nn.Sigmoid()
+        )
+
+    def encode(self, x):
+        h = self.encoder_features(x)
+        h = h.view(h.size(0), -1)
+        return self.fc_mu(h), self.fc_log_var(h)
+
+    def reparameterize(self, mu, log_var):
+        std = torch.exp(0.5 * log_var)
+        eps = torch.randn_like(std)
+        return mu + eps * std
+
+    def decode(self, z):
+        h = self.decoder_fc(z)
+        h = h.view(h.size(0), 256, 4, 4)
+        return self.decoder_conv(h)
+
+    def forward(self, x):
+        mu, log_var = self.encode(x)
+        z = self.reparameterize(mu, log_var)
+        return self.decode(z), x, mu, log_var
+
+# --- 4. 损失函数 ---
+def vae_loss_function(recon_x, x, mu, log_var):
+    MSE = F.mse_loss(recon_x, x, reduction='sum')
+    KLD = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+    return MSE + config["BETA"] * KLD 
+
+# --- 5. 训练循环 ---
+def train(model, train_loader, optimizer, epoch):
+    model.train()
+    total_loss = 0
+    pbar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{config['EPOCHS']}")
+    for data, _ in pbar:
+        data = data.to(config["DEVICE"])
+        optimizer.zero_grad()
+        recon_batch, _, mu, log_var = model(data)
+        loss = vae_loss_function(recon_batch, data, mu, log_var)
+        loss.backward()
+        optimizer.step()
+        total_loss += loss.item()
+        pbar.set_postfix(loss=loss.item() / len(data))
+    avg_loss = total_loss / len(train_loader.dataset)
+    print(f'====> Epoch: {epoch+1} Average loss: {avg_loss:.4f}')
+
+def calculate_and_show_accuracy(cluster_labels, true_labels):
+    cluster_map = {}
+    for i in range(config["NUM_CLUSTERS"]):
+        labels_in_cluster = true_labels[cluster_labels == i]
+        if len(labels_in_cluster) == 0:
+            cluster_map[i] = 0 
+            continue
+        most_common_label = mode(labels_in_cluster, keepdims=False)[0]
+        cluster_map[i] = most_common_label
+    predicted_labels = np.array([cluster_map[c] for c in cluster_labels])
+    accuracy = np.mean(predicted_labels == true_labels)
+    print(f"Clustering Accuracy: {accuracy * 100:.2f}%")
+    print("\nCluster to Label Mapping:")
+    for i in range(config["NUM_CLUSTERS"]):
+        print(f"  Cluster {i} -> '{classes[cluster_map[i]]}'")
+    return cluster_map
+
+def cluster_and_visualize_kmeans(model, data_loader):
+    model.eval()
+    all_latents, all_true_labels = [], []
+    with torch.no_grad():
+        for data, labels in tqdm(data_loader, desc="Encoding data for clustering"):
+            data = data.to(config["DEVICE"])
+            mu, _ = model.encode(data)
+            all_latents.append(mu.cpu().numpy())
+            all_true_labels.append(labels.numpy())
+    all_latents = np.concatenate(all_latents, axis=0)
+    all_true_labels = np.concatenate(all_true_labels, axis=0)
+
+    print("Performing K-Means clustering...")
+    kmeans = KMeans(n_clusters=config["NUM_CLUSTERS"], random_state=42, n_init='auto')
+    cluster_labels = kmeans.fit_predict(all_latents)
+    cluster_map = calculate_and_show_accuracy(cluster_labels, all_true_labels)
+    
+    print("Performing t-SNE...")
+    tsne = TSNE(n_components=2, random_state=42)
+    latents_2d = tsne.fit_transform(all_latents)
+    plt.figure(figsize=(8, 7))
+    plt.scatter(latents_2d[:, 0], latents_2d[:, 1], c=cluster_labels, cmap='tab10', s=10)
+    plt.title('VAE + K-Means Clustering Visualization')
+    plt.savefig(os.path.join(output_dir, "cluster_visualization.png"))
+    plt.show()
+    return kmeans, cluster_map
+
+def generate_labeled_images_kmeans(model, kmeans, cluster_map, save_path, n_samples=5):
+    model.eval()
+    centers = torch.from_numpy(kmeans.cluster_centers_).float().to(config["DEVICE"])
+    fig, axes = plt.subplots(n_samples, config["NUM_CLUSTERS"], figsize=(12, 6))
+    fig.suptitle("Generated Samples per Cluster", fontsize=16)
+    with torch.no_grad():
+        for i in range(config["NUM_CLUSTERS"]):
+            center_i = centers[i].unsqueeze(0).repeat(n_samples, 1)
+            noise = torch.randn_like(center_i) * 0.5
+            samples = center_i + noise
+            generated_images = model.decode(samples).cpu()
+            label_name = classes[cluster_map[i]]
+            axes[0, i].set_title(f"Cluster {i}\n -> '{label_name}'")
+            for j in range(n_samples):
+                img = generated_images[j].permute(1, 2, 0).numpy()
+                axes[j, i].imshow(img)
+                axes[j, i].axis("off")
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
+    plt.savefig(save_path)
+    plt.show()
+
+if __name__ == "__main__":
+    model = VAE(latent_dim=config["LATENT_DIM"]).to(config["DEVICE"])
+    optimizer = optim.Adam(model.parameters(), lr=config["LR"])
+    
+    print("--- Training VAE Model ---")
+    for epoch in range(config["EPOCHS"]):
+        train(model, train_loader, optimizer, epoch)
+    
+    print("\n--- Clustering, Visualization, and Accuracy ---")
+    kmeans_model, cluster_to_label_map = cluster_and_visualize_kmeans(model, test_loader)
+
+    print("\n--- Generating Labeled Images ---")
+    gen_save_path = os.path.join(output_dir, "generated_labeled_images.png")
+    generate_labeled_images_kmeans(model, kmeans_model, cluster_to_label_map, gen_save_path)
+```
+
+</details>
+
 ### CVAE
+
+CVAE 即条件 VAE。CVAE 的目标本不是解决分类任务，而是利用标签来限定生成。为此，首先需要输入带标签的训练数据——这个简单，只需要提取输入特征之后，拼接上标签向量即可，然后压缩到 $\mu$ 和 $\sigma$ 的分布上。然后解码器部分，对隐变量 $z$ 也拼接上标签向量。就完了。
+
+为何？我们最开始是对隐变量 $z$ 进行随机采样的，这就意味着 $z$ 不带有任何标签信息，如果我们给它加上标签信息，也就是说，我们给定标签 $y$，要重建的是基于这个标签的条件分布 $q(z|y)$。对于编码器而言，因为标签 $y$ 已知，所以直接利用联合条件分布 $p(z|x,y)$ 来压缩到 $z$ 上，而对解码器而言，也是一个联合的条件分布 $q(x|z,y)$ 来从隐变量的条件分布来输出服从标签的条件分布。也就是下面的 $ELBO$。
+
+$$
+\begin{align*}
+  ELBO&=\mathbb E_{z\sim p(z|x)}[\log q(x|z,y)]-\beta KL(p(z|x,y) || q(z|y))
+\end{align*}
+$$
+
+而分类方案就是对单个样本取所有标签，计算损失最小的那一个。
+
+CVAE 利用标签的效率好不好呢？让我们看看下面的结果。
 
 |  | β = 0.1 | β = 1 | β = 10|
 |--|:--:|:--:|:--:|
 |准确率变化|![alt text](image-22.png)|![alt text](image-18.png)|![alt text](image-12.png)|
 |生成图像|![alt text](image-23.png)|![alt text](image-19.png)|![alt text](image-13.png)|
 
+可以看到不管 β 调多少，基本上只能比随机基线的 10% 高一丢丢，说明标签在其中的贡献相当小！这说明模型基本上忽略了条件信息，基本上没有将其参与进图像重构中。
+
+<details>
+
+<summary> CVAE 的代码 </summary>
+
+```python
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+from torchvision import datasets, transforms
+from torch.utils.data import DataLoader
+
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.manifold import TSNE
+from tqdm import tqdm
+import os
+
+# --- 1. 配置参数 ---
+config = {
+    "METHOD_NAME": "CVAE",
+    "LATENT_DIM": 128,
+    "NUM_CLASSES": 10,
+    "BATCH_SIZE": 128,
+    "EPOCHS": 30,
+    "LR": 1e-3,
+    "BETA": 0.1,
+    "DEVICE": "cuda" if torch.cuda.is_available() else "cpu",
+    "DATA_PATH": "./data",
+    "OUTPUT_PATH": "./output"
+}
+
+output_dir = os.path.join(config["OUTPUT_PATH"], config["METHOD_NAME"])
+os.makedirs(output_dir, exist_ok=True)
+print(f"Using device: {config['DEVICE']}")
+print(f"Running with Beta = {config['BETA']}")
+
+# --- 2. 数据加载 ---
+transform = transforms.Compose([transforms.ToTensor()])
+train_dataset = datasets.CIFAR10(root=config["DATA_PATH"], train=True, transform=transform, download=True)
+test_dataset = datasets.CIFAR10(root=config["DATA_PATH"], train=False, transform=transform, download=True)
+train_loader = DataLoader(train_dataset, batch_size=config["BATCH_SIZE"], shuffle=True, pin_memory=True, num_workers=4)
+test_loader = DataLoader(test_dataset, batch_size=config["BATCH_SIZE"], shuffle=False)
+classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
+
+# --- 3. 模型定义: CVAE ---
+class CVAE(nn.Module):
+    def __init__(self, latent_dim, num_classes):
+        super(CVAE, self).__init__()
+        self.latent_dim = latent_dim
+        self.num_classes = num_classes
+        
+        self.encoder_features = nn.Sequential(
+            nn.Conv2d(3, 64, 3, 1, 1), nn.BatchNorm2d(64), nn.ReLU(True), nn.MaxPool2d(2, 2),
+            nn.Conv2d(64, 128, 3, 1, 1), nn.BatchNorm2d(128), nn.ReLU(True), nn.MaxPool2d(2, 2),
+            nn.Conv2d(128, 256, 3, 1, 1), nn.BatchNorm2d(256), nn.ReLU(True), nn.MaxPool2d(2, 2)
+        )
+        
+        self.fc_mu = nn.Linear(256 * 4 * 4 + num_classes, latent_dim)
+        self.fc_log_var = nn.Linear(256 * 4 * 4 + num_classes, latent_dim)
+        
+        self.decoder_fc = nn.Linear(latent_dim + num_classes, 256 * 4 * 4)
+        self.decoder_conv = nn.Sequential(
+            nn.ConvTranspose2d(256, 128, 4, 2, 1), nn.BatchNorm2d(128), nn.ReLU(True),
+            nn.ConvTranspose2d(128, 64, 4, 2, 1), nn.BatchNorm2d(64), nn.ReLU(True),
+            nn.ConvTranspose2d(64, 3, 4, 2, 1), nn.Sigmoid()
+        )
+
+    def encode(self, x, y_onehot):
+        h = self.encoder_features(x)
+        h_flat = h.view(h.size(0), -1)
+        h_combined = torch.cat([h_flat, y_onehot], dim=1)
+        return self.fc_mu(h_combined), self.fc_log_var(h_combined)
+
+    def reparameterize(self, mu, log_var):
+        std = torch.exp(0.5 * log_var)
+        eps = torch.randn_like(std)
+        return mu + eps * std
+
+    def decode(self, z, y_onehot):
+        z_combined = torch.cat([z, y_onehot], dim=1)
+        h = self.decoder_fc(z_combined)
+        h = h.view(h.size(0), 256, 4, 4)
+        return self.decoder_conv(h)
+
+    def forward(self, x, y_onehot):
+        mu, log_var = self.encode(x, y_onehot)
+        z = self.reparameterize(mu, log_var)
+        recon_x = self.decode(z, y_onehot)
+        return recon_x, x, mu, log_var
+
+# --- 4. 损失函数 ---
+def cvae_loss_function(recon_x, x, mu, log_var):
+    MSE = F.mse_loss(recon_x, x, reduction='sum')
+    KLD = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+    return MSE + config["BETA"] * KLD
+
+# --- 5. 训练与测试循环 ---
+def train(model, train_loader, optimizer, epoch):
+    model.train()
+    total_loss = 0
+    pbar = tqdm(train_loader, desc=f"Train Epoch {epoch+1}/{config['EPOCHS']}")
+    for data, labels in pbar:
+        data = data.to(config["DEVICE"])
+        labels_onehot = F.one_hot(labels, num_classes=config["NUM_CLASSES"]).float().to(config["DEVICE"])
+        
+        optimizer.zero_grad()
+        recon_batch, _, mu, log_var = model(data, labels_onehot)
+        loss = cvae_loss_function(recon_batch, data, mu, log_var)
+        loss.backward()
+        optimizer.step()
+        
+        total_loss += loss.item()
+        pbar.set_postfix(loss=loss.item() / len(data))
+        
+    avg_loss = total_loss / len(train_loader.dataset)
+    print(f'====> Train Epoch: {epoch+1} | Avg Loss: {avg_loss:.4f}')
+    return avg_loss
+
+def test(model, test_loader, epoch):
+    model.eval()
+    test_loss = 0
+    correct = 0
+    
+    pbar = tqdm(test_loader, desc=f"Test Epoch {epoch+1}/{config['EPOCHS']}")
+    with torch.no_grad():
+        for data, labels in pbar:
+            data, labels = data.to(config["DEVICE"]), labels.to(config["DEVICE"])
+            batch_size = data.size(0)
+            
+            # 存储每个样本在每个候选类别下的损失
+            losses_per_class = torch.zeros(batch_size, config["NUM_CLASSES"]).to(config["DEVICE"])
+            
+            # 遍历所有可能的类别
+            for c in range(config["NUM_CLASSES"]):
+                # 为整个batch创建同一个类别的one-hot标签
+                class_labels = torch.full_like(labels, c)
+                class_onehot = F.one_hot(class_labels, num_classes=config["NUM_CLASSES"]).float()
+                
+                # 计算损失
+                recon_batch, _, mu, log_var = model(data, class_onehot)
+                loss = cvae_loss_function(recon_batch, data, mu, log_var)
+                
+                # VAE损失是整个batch的总和，我们需要每个样本的损失
+                # 这里用平均损失进行近似
+                losses_per_class[:, c] = loss / batch_size
+
+            # 找到每个样本损失最小的类别作为预测结果
+            pred = losses_per_class.argmin(dim=1)
+            correct += pred.eq(labels).sum().item()
+            
+            # 计算测试损失时，我们使用真实标签
+            true_labels_onehot = F.one_hot(labels, num_classes=config["NUM_CLASSES"]).float()
+            recon_true, _, mu_true, log_var_true = model(data, true_labels_onehot)
+            test_loss += cvae_loss_function(recon_true, data, mu_true, log_var_true).item()
+            
+            pbar.set_postfix(acc=f"{100. * correct / len(test_loader.dataset):.2f}%")
+
+    avg_loss = test_loss / len(test_loader.dataset)
+    accuracy = 100. * correct / len(test_loader.dataset)
+    
+    print(f'====> Test set | Avg Loss: {avg_loss:.4f} | Accuracy: {accuracy:.2f}%')
+    return avg_loss, accuracy
+
+
+# --- 6. 可视化函数 ---
+def visualize_latent_space(model, data_loader):
+    model.eval()
+    all_latents, all_labels = [], []
+    with torch.no_grad():
+        for data, labels in tqdm(data_loader, desc="Encoding data for visualization"):
+            data = data.to(config["DEVICE"])
+            labels_onehot = F.one_hot(labels, num_classes=config["NUM_CLASSES"]).float().to(config["DEVICE"])
+            mu, _ = model.encode(data, labels_onehot)
+            all_latents.append(mu.cpu().numpy())
+            all_labels.append(labels.numpy())
+    
+    all_latents = np.concatenate(all_latents, axis=0)
+    all_labels = np.concatenate(all_labels, axis=0)
+    
+    print("Performing t-SNE...")
+    tsne = TSNE(n_components=2, random_state=42, n_iter=300, n_jobs=-1)
+    latents_2d = tsne.fit_transform(all_latents)
+    
+    plt.figure(figsize=(12, 10))
+    scatter = plt.scatter(latents_2d[:, 0], latents_2d[:, 1], c=all_labels, cmap='tab10', s=10)
+    plt.colorbar(scatter, ticks=range(10))
+    plt.title('t-SNE of Latent Space (Colored by True Class)')
+    plt.savefig(os.path.join(output_dir, "latent_space_true_labels.png"))
+    plt.show()
+    
+def generate_images_by_class(model, n_samples=5):
+    model.eval()
+    fig, axes = plt.subplots(n_samples, config["NUM_CLASSES"], figsize=(15, 8))
+    fig.suptitle("Generated Samples by Class", fontsize=16)
+    
+    with torch.no_grad():
+        for class_idx in range(config["NUM_CLASSES"]):
+            class_onehot = F.one_hot(torch.tensor([class_idx]), num_classes=config["NUM_CLASSES"]).float()
+            class_onehot = class_onehot.repeat(n_samples, 1).to(config["DEVICE"])
+            z = torch.randn(n_samples, config["LATENT_DIM"]).to(config["DEVICE"])
+            generated_images = model.decode(z, class_onehot).cpu()
+            axes[0, class_idx].set_title(f"'{classes[class_idx]}'")
+            for sample_idx in range(n_samples):
+                img = generated_images[sample_idx].permute(1, 2, 0).numpy()
+                axes[sample_idx, class_idx].imshow(img)
+                axes[sample_idx, class_idx].axis("off")
+    
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
+    plt.savefig(os.path.join(output_dir, "generated_images_by_class.png"))
+    plt.show()
+
+def plot_curves(train_losses, test_losses, test_accuracies):
+    epochs = range(1, len(train_losses) + 1)
+    
+    plt.figure(figsize=(14, 6))
+    plt.subplot(1, 2, 1)
+    plt.plot(epochs, train_losses, 'bo-', label='Training Loss')
+    plt.plot(epochs, test_losses, 'ro-', label='Test Loss')
+    plt.title('Training and Test Loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.grid(True)
+
+    plt.subplot(1, 2, 2)
+    plt.plot(epochs, test_accuracies, 'go-', label='Test Accuracy')
+    plt.title('Test Accuracy')
+    plt.xlabel('Epochs')
+    plt.ylabel('Accuracy (%)')
+    plt.legend()
+    plt.grid(True)
+    
+    plt.suptitle('Training Metrics', fontsize=16)
+    plt.tight_layout(rect=[0, 0, 1, 0.95])
+    plt.savefig(os.path.join(output_dir, "training_curves.png"))
+    plt.show()
+
+
+# --- 主程序 ---
+if __name__ == "__main__":
+    model = CVAE(latent_dim=config["LATENT_DIM"], num_classes=config["NUM_CLASSES"]).to(config["DEVICE"])
+    optimizer = optim.Adam(model.parameters(), lr=config["LR"])
+    
+    train_losses, test_losses, test_accuracies = [], [], []
+
+    print("--- Training Pure CVAE Model for Classification ---")
+    for epoch in range(config["EPOCHS"]):
+        train_loss = train(model, train_loader, optimizer, epoch)
+        test_loss, test_acc = test(model, test_loader, epoch)
+        
+        train_losses.append(train_loss)
+        test_losses.append(test_loss)
+        test_accuracies.append(test_acc)
+        print("-" * 50)
+    
+    print("\n--- Plotting Training Curves ---")
+    
+    plot_curves(train_losses, test_losses, test_accuracies)
+
+    print("\n--- Visualizing Latent Space ---")
+    visualize_latent_space(model, test_loader)
+
+    print("\n--- Generating Images by Class ---")
+    generate_images_by_class(model)
+```
+
+</details>
+
 ### CVAE 接分类头
+
+最后一个方案比较工程，既然我们的编码器已经实现了一个特征提取器，为什么不直接在这个特征提取器上面训练分类头，最后将分类损失和 VAE 的损失汇总呢？也就是
+
+$$
+\mathcal L= \gamma CE-ELBO
+$$
+
+但是我们也可以换个视角，我们不将其看作是 CVAE 的魔改，而是一个 CNN 的魔改：对一个 CNN 接了个 CVAE 的支线，这样 $-ELBO$ 就是对 CNN 原有交叉熵损失函数的正则化项！而这样的正则化极其有道理——我们并不是像 $L_2$ 正则化一样约束参数大小，而是基于其图像本身和预测类别，来进一步约束特征提取器。当然，我们可以通过调节 $\beta$ 和 $\gamma$ 来控制正则化惩罚的强度。
+
+这是目前三种尝试里面最好的效果，能够达到分类准确率 82% 以上，这还只是一个简单的 3 层 CNN，效果就已经接近之前从零训练的 ResNet-18 了。
 
 |  | β = 0.1 | β = 1 | β = 10|
 |--|:--:|:--:|:--:|
 |训练指标曲线| ![alt text](image-24.png) | ![alt text](image-20.png) | ![alt text](image-14.png) |
 |生成图像|![alt text](image-25.png)|![alt text](image-21.png)|![alt text](image-15.png) |
+
+<details>
+
+<summary> 带分类头的 CVAE 的训练代码 </summary>
+
+```python
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+from torchvision import datasets, transforms
+from torch.utils.data import DataLoader
+
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.manifold import TSNE
+from tqdm import tqdm
+import os
+
+# --- 1. 配置参数 ---
+config = {
+    "METHOD_NAME": "CVAE_Classifier",
+    "LATENT_DIM": 128,
+    "NUM_CLASSES": 10,
+    "BATCH_SIZE": 128,
+    "EPOCHS": 30,
+    "LR": 1e-3,
+    "BETA": 0.1,
+    "GAMMA": 50,
+    "DEVICE": "cuda" if torch.cuda.is_available() else "cpu",
+    "DATA_PATH": "./data",
+    "OUTPUT_PATH": "./output"
+}
+
+output_dir = os.path.join(config["OUTPUT_PATH"], config["METHOD_NAME"])
+os.makedirs(output_dir, exist_ok=True)
+print(f"Using device: {config['DEVICE']}")
+print(f"Running with Beta = {config['BETA']}, Gamma = {config['GAMMA']}")
+
+# --- 2. 数据加载 ---
+transform = transforms.Compose([transforms.ToTensor()])
+train_dataset = datasets.CIFAR10(root=config["DATA_PATH"], train=True, transform=transform, download=True)
+test_dataset = datasets.CIFAR10(root=config["DATA_PATH"], train=False, transform=transform, download=True)
+train_loader = DataLoader(train_dataset, batch_size=config["BATCH_SIZE"], shuffle=True, pin_memory=True, num_workers=4)
+test_loader = DataLoader(test_dataset, batch_size=config["BATCH_SIZE"], shuffle=False)
+classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
+
+# --- 3. 模型定义: CVAE + 分类器 ---
+class CVAE(nn.Module):
+    def __init__(self, latent_dim, num_classes):
+        super(CVAE, self).__init__()
+        self.latent_dim = latent_dim
+        self.num_classes = num_classes
+        
+        # 编码器
+        self.encoder_features = nn.Sequential(
+            nn.Conv2d(3, 64, 3, 1, 1), nn.BatchNorm2d(64), nn.ReLU(True), nn.MaxPool2d(2, 2),
+            nn.Conv2d(64, 128, 3, 1, 1), nn.BatchNorm2d(128), nn.ReLU(True), nn.MaxPool2d(2, 2),
+            nn.Conv2d(128, 256, 3, 1, 1), nn.BatchNorm2d(256), nn.ReLU(True), nn.MaxPool2d(2, 2)
+        )
+        
+        # 分类头从图像特征直接进行分类
+        self.classifier = nn.Linear(256 * 4 * 4, num_classes)
+        
+        # VAE部分
+        self.fc_mu = nn.Linear(256 * 4 * 4 + num_classes, latent_dim)
+        self.fc_log_var = nn.Linear(256 * 4 * 4 + num_classes, latent_dim)
+        
+        # 解码器
+        self.decoder_fc = nn.Linear(latent_dim + num_classes, 256 * 4 * 4)
+        self.decoder_conv = nn.Sequential(
+            nn.ConvTranspose2d(256, 128, 4, 2, 1), nn.BatchNorm2d(128), nn.ReLU(True),
+            nn.ConvTranspose2d(128, 64, 4, 2, 1), nn.BatchNorm2d(64), nn.ReLU(True),
+            nn.ConvTranspose2d(64, 3, 4, 2, 1), nn.Sigmoid()
+        )
+
+    def encode(self, x, y_onehot):
+        # 提取图像特征
+        h = self.encoder_features(x)
+        h_flat = h.view(h.size(0), -1)
+        
+        # --- 分类预测 ---
+        logits = self.classifier(h_flat)
+        
+        # 将图像特征与标签信息拼接用于VAE
+        h_combined = torch.cat([h_flat, y_onehot], dim=1)
+        mu, log_var = self.fc_mu(h_combined), self.fc_log_var(h_combined)
+        return mu, log_var, logits
+
+    def reparameterize(self, mu, log_var):
+        std = torch.exp(0.5 * log_var)
+        eps = torch.randn_like(std)
+        return mu + eps * std
+
+    def decode(self, z, y_onehot):
+        # 将潜在变量与标签信息拼接
+        z_combined = torch.cat([z, y_onehot], dim=1)
+        h = self.decoder_fc(z_combined)
+        h = h.view(h.size(0), 256, 4, 4)
+        return self.decoder_conv(h)
+
+    def forward(self, x, y_onehot):
+        mu, log_var, logits = self.encode(x, y_onehot)
+        z = self.reparameterize(mu, log_var)
+        recon_x = self.decode(z, y_onehot)
+        return recon_x, x, mu, log_var, logits
+
+# --- 4. 损失函数 ---
+def loss_function(recon_x, x, mu, log_var, logits, labels):
+    # VAE损失
+    MSE = F.mse_loss(recon_x, x, reduction='sum')
+    KLD = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+    vae_loss = MSE + config["BETA"] * KLD
+    
+    # 分类损失
+    class_loss = F.cross_entropy(logits, labels, reduction='sum')
+    
+    # 总损失
+    total_loss = vae_loss + config["GAMMA"] * class_loss
+    
+    return total_loss, vae_loss, class_loss
+
+# --- 5. 训练与测试循环 ---
+def train(model, train_loader, optimizer, epoch):
+    model.train()
+    total_loss, total_vae_loss, total_class_loss = 0, 0, 0
+    correct = 0
+    total_samples = 0
+    
+    pbar = tqdm(train_loader, desc=f"Train Epoch {epoch+1}/{config['EPOCHS']}")
+    for data, labels in pbar:
+        data, labels = data.to(config["DEVICE"]), labels.to(config["DEVICE"])
+        
+        # 创建one-hot标签
+        labels_onehot = F.one_hot(labels, num_classes=config["NUM_CLASSES"]).float()
+        
+        optimizer.zero_grad()
+        recon_batch, _, mu, log_var, logits = model(data, labels_onehot)
+        
+        # 计算损失
+        t_loss, v_loss, c_loss = loss_function(recon_batch, data, mu, log_var, logits, labels)
+        
+        t_loss.backward()
+        optimizer.step()
+        
+        # 累加损失和正确分类数
+        total_loss += t_loss.item()
+        total_vae_loss += v_loss.item()
+        total_class_loss += c_loss.item()
+        
+        pred = logits.argmax(dim=1, keepdim=True)
+        correct += pred.eq(labels.view_as(pred)).sum().item()
+        total_samples += len(data)
+        
+        pbar.set_postfix(
+            loss=t_loss.item() / len(data), 
+            acc=f"{100. * correct / total_samples:.2f}%"
+        )
+        
+    avg_loss = total_loss / len(train_loader.dataset)
+    avg_vae_loss = total_vae_loss / len(train_loader.dataset)
+    avg_class_loss = total_class_loss / len(train_loader.dataset)
+    accuracy = 100. * correct / len(train_loader.dataset)
+    
+    print(f'====> Train Epoch: {epoch+1} | Avg Loss: {avg_loss:.4f} | VAE Loss: {avg_vae_loss:.4f} | Class Loss: {avg_class_loss:.4f} | Accuracy: {accuracy:.2f}%')
+    return avg_loss, accuracy
+
+def test(model, test_loader, epoch):
+    model.eval()
+    total_loss, total_vae_loss, total_class_loss = 0, 0, 0
+    correct = 0
+    
+    with torch.no_grad():
+        for data, labels in test_loader:
+            data, labels = data.to(config["DEVICE"]), labels.to(config["DEVICE"])
+            labels_onehot = F.one_hot(labels, num_classes=config["NUM_CLASSES"]).float()
+            
+            recon_batch, _, mu, log_var, logits = model(data, labels_onehot)
+            t_loss, v_loss, c_loss = loss_function(recon_batch, data, mu, log_var, logits, labels)
+
+            total_loss += t_loss.item()
+            total_vae_loss += v_loss.item()
+            total_class_loss += c_loss.item()
+            
+            pred = logits.argmax(dim=1, keepdim=True)
+            correct += pred.eq(labels.view_as(pred)).sum().item()
+
+    avg_loss = total_loss / len(test_loader.dataset)
+    avg_vae_loss = total_vae_loss / len(test_loader.dataset)
+    avg_class_loss = total_class_loss / len(test_loader.dataset)
+    accuracy = 100. * correct / len(test_loader.dataset)
+    
+    print(f'====> Test set | Avg Loss: {avg_loss:.4f} | VAE Loss: {avg_vae_loss:.4f} | Class Loss: {avg_class_loss:.4f} | Accuracy: {accuracy:.2f}%')
+    return avg_loss, accuracy
+
+# --- 6. 可视化函数 ---
+def visualize_latent_space(model, data_loader):
+    model.eval()
+    all_latents, all_labels, all_preds = [], [], []
+    with torch.no_grad():
+        for data, labels in tqdm(data_loader, desc="Encoding data for visualization"):
+            data = data.to(config["DEVICE"])
+            labels_onehot = F.one_hot(labels, num_classes=config["NUM_CLASSES"]).float().to(config["DEVICE"])
+            
+            mu, _, logits = model.encode(data, labels_onehot)
+            
+            all_latents.append(mu.cpu().numpy())
+            all_labels.append(labels.numpy())
+            all_preds.append(logits.argmax(dim=1).cpu().numpy())
+    
+    all_latents = np.concatenate(all_latents, axis=0)
+    all_labels = np.concatenate(all_labels, axis=0)
+    all_preds = np.concatenate(all_preds, axis=0)
+    
+    print("Performing t-SNE...")
+    tsne = TSNE(n_components=2, random_state=42, n_iter=300, n_jobs=-1)
+    latents_2d = tsne.fit_transform(all_latents)
+    
+    # 按真实标签可视化
+    plt.figure(figsize=(12, 10))
+    scatter = plt.scatter(latents_2d[:, 0], latents_2d[:, 1], c=all_labels, cmap='tab10', s=10)
+    plt.colorbar(scatter, ticks=range(10))
+    plt.title('t-SNE of Latent Space (Colored by True Class)')
+    plt.savefig(os.path.join(output_dir, "latent_space_true_labels.png"))
+    plt.show()
+
+    # 按预测标签可视化
+    plt.figure(figsize=(12, 10))
+    scatter = plt.scatter(latents_2d[:, 0], latents_2d[:, 1], c=all_preds, cmap='tab10', s=10)
+    plt.colorbar(scatter, ticks=range(10))
+    plt.title('t-SNE of Latent Space (Colored by Predicted Class)')
+    plt.savefig(os.path.join(output_dir, "latent_space_predicted_labels.png"))
+    plt.show()
+    
+def generate_images_by_class(model, n_samples=5):
+    model.eval()
+    fig, axes = plt.subplots(n_samples, config["NUM_CLASSES"], figsize=(15, 8))
+    fig.suptitle("Generated Samples by Class", fontsize=16)
+    
+    with torch.no_grad():
+        for class_idx in range(config["NUM_CLASSES"]):
+            class_onehot = F.one_hot(torch.tensor([class_idx]), num_classes=config["NUM_CLASSES"]).float()
+            class_onehot = class_onehot.repeat(n_samples, 1).to(config["DEVICE"])
+            
+            z = torch.randn(n_samples, config["LATENT_DIM"]).to(config["DEVICE"])
+            generated_images = model.decode(z, class_onehot).cpu()
+            
+            axes[0, class_idx].set_title(f"'{classes[class_idx]}'")
+            
+            for sample_idx in range(n_samples):
+                img = generated_images[sample_idx].permute(1, 2, 0).numpy()
+                axes[sample_idx, class_idx].imshow(img)
+                axes[sample_idx, class_idx].axis("off")
+    
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
+    plt.savefig(os.path.join(output_dir, "generated_images_by_class.png"))
+    plt.show()
+
+# --- 绘制训练曲线的函数 ---
+def plot_curves(train_losses, test_losses, train_accuracies, test_accuracies):
+    epochs = range(1, len(train_losses) + 1)
+    
+    # 创建一个figure，包含两个子图
+    plt.figure(figsize=(14, 6))
+
+    # 子图1: 损失曲线
+    plt.subplot(1, 2, 1)
+    plt.plot(epochs, train_losses, 'bo-', label='Training Loss')
+    plt.plot(epochs, test_losses, 'ro-', label='Test Loss')
+    plt.title('Training and Test Loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.grid(True)
+
+    # 子图2: 准确率曲线
+    plt.subplot(1, 2, 2)
+    plt.plot(epochs, train_accuracies, 'bo-', label='Training Accuracy')
+    plt.plot(epochs, test_accuracies, 'ro-', label='Test Accuracy')
+    plt.title('Training and Test Accuracy')
+    plt.xlabel('Epochs')
+    plt.ylabel('Accuracy (%)')
+    plt.legend()
+    plt.grid(True)
+    
+    plt.suptitle('Training Metrics', fontsize=16)
+    plt.tight_layout(rect=[0, 0, 1, 0.95])
+    plt.savefig(os.path.join(output_dir, "training_curves.png"))
+    plt.show()
+
+if __name__ == "__main__":
+    model = CVAE(latent_dim=config["LATENT_DIM"], num_classes=config["NUM_CLASSES"]).to(config["DEVICE"])
+    optimizer = optim.Adam(model.parameters(), lr=config["LR"])
+    
+    # 用于记录历史数据
+    train_losses, test_losses = [], []
+    train_accuracies, test_accuracies = [], []
+
+    print("--- Training CVAE with Classifier ---")
+    for epoch in range(config["EPOCHS"]):
+        train_loss, train_acc = train(model, train_loader, optimizer, epoch)
+        test_loss, test_acc = test(model, test_loader, epoch)
+        
+        # 记录数据
+        train_losses.append(train_loss)
+        train_accuracies.append(train_acc)
+        test_losses.append(test_loss)
+        test_accuracies.append(test_acc)
+        print("-" * 50)
+    
+    print("\n--- Plotting Training Curves ---")
+    plot_curves(train_losses, test_losses, train_accuracies, test_accuracies)
+
+    print("\n--- Visualizing Latent Space ---")
+    visualize_latent_space(model, test_loader)
+
+    print("\n--- Generating Images by Class ---")
+    generate_images_by_class(model)
+```
+
+</details>
 
 ## GAN
 
