@@ -1883,7 +1883,7 @@ graph LR
     Add2 --> Output[("T×192")]
 ```
 
-下面是多头自注意力每一个头的计算过程。其实我认为这里的头数类似于 conv2d 的通道数，衡量获取特征的多少；但是另一方面又被嵌入维度所限制，因为头数一多，分给每个头的投影维度就少了，信息也变少了。图上面的头数为 8 是我随意设置的，不过苏剑林有一个维度公式 [n > 8.33 log N](https://kexue.fm/archives/8711) 对于注意力机制而言，N 就是预训练的序列长度 T 也就是 256，n 就是每个注意力头的维度，算出来要大于 $8.33 \times \log_2 256\approx 66.64$ 才能够在每个头里面有效定位 token，所以这里的 num_heads 设置成 3 理论上看似会好一点。实际上回到之前的讨论，虽然维度够了，但是提取的特征不够，所以还是差一点，loss = 0.9111 而 acc 很遗憾地只有 69.17%。所以回过头来，如果我们综合刚刚的讨论把 num_heads 设置到 8 而每个头的维度设置成 64……诶，这不就是 ViT-B-16 使用的嵌入维度 768 嘛！
+下面是多头自注意力每一个头的计算过程。其实我认为这里的头数类似于 conv2d 的通道数，衡量获取特征的多少；但是另一方面又被嵌入维度所限制，因为头数一多，分给每个头的投影维度就少了，信息也变少了。图上面的头数为 8 是我随意设置的，不过苏剑林有一个维度公式 [n > 8.33 log N](https://kexue.fm/archives/8711) 对于注意力机制而言，N 就是预训练的序列长度 T 也就是 256，n 就是每个注意力头的维度，算出来要大于 $8.33 \times \log_2 256\approx 66.64$ 才能够在每个头里面有效定位 token，所以这里的 num_heads 设置成 3 理论上看似会好一点。实际上回到之前的讨论，虽然维度够了，但是提取的特征不够，所以还是差一点，训练出来 loss = 0.9111 而 acc 很遗憾地只有 69.17%。所以回过头来，如果我们综合刚刚的讨论把 num_heads 设置到 8 而每个头的维度设置成 64……诶，这不就接近 ViT-B-16 使用的嵌入维度 768 嘛！
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313244', 'tertiaryColor': '#181825'}}}%%
@@ -2795,7 +2795,7 @@ if __name__ == "__main__":
 
 </details>
 
-这是 VAE 的总的架构：
+这是 VAE 的总的架构，这里把 KL 取了个负号所以最后是加法：
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313244', 'tertiaryColor': '#181825'}}}%%
@@ -3018,4 +3018,89 @@ graph LR
 
 ### 无监督聚类
 
+第一个想法是，
+
+```text
+Clustering Accuracy: 25.28%
+
+Cluster to Label Mapping:
+  Cluster 0 -> 'ship'
+  Cluster 1 -> 'truck'
+  Cluster 2 -> 'car'
+  Cluster 3 -> 'ship'
+  Cluster 4 -> 'dog'
+  Cluster 5 -> 'bird'
+  Cluster 6 -> 'truck'
+  Cluster 7 -> 'car'
+  Cluster 8 -> 'plane'
+  Cluster 9 -> 'deer'
+```
+
+![alt text](image-8.png)
+![alt text](image-9.png)
+
+```text
+Clustering Accuracy: 24.64%
+
+Cluster to Label Mapping:
+  Cluster 0 -> 'dog'
+  Cluster 1 -> 'plane'
+  Cluster 2 -> 'plane'
+  Cluster 3 -> 'ship'
+  Cluster 4 -> 'car'
+  Cluster 5 -> 'cat'
+  Cluster 6 -> 'horse'
+  Cluster 7 -> 'deer'
+  Cluster 8 -> 'deer'
+  Cluster 9 -> 'truck'
+```
+
+![alt text](image-16.png)
+![alt text](image-17.png)
+
+```text
+Clustering Accuracy: 24.01%
+
+Cluster to Label Mapping:
+  Cluster 0 -> 'dog'
+  Cluster 1 -> 'bird'
+  Cluster 2 -> 'truck'
+  Cluster 3 -> 'deer'
+  Cluster 4 -> 'plane'
+  Cluster 5 -> 'plane'
+  Cluster 6 -> 'truck'
+  Cluster 7 -> 'ship'
+  Cluster 8 -> 'frog'
+  Cluster 9 -> 'frog'
+```
+
+![alt text](image-10.png)
+![alt text](image-11.png)
+
+
+![alt text](image-22.png)
+![alt text](image-23.png)
+
+![alt text](image-18.png)
+![alt text](image-19.png)
+
+![alt text](image-12.png)
+![alt text](image-13.png)
+
+
+![alt text](image-24.png)
+![alt text](image-25.png)
+
+![alt text](image-20.png)
+![alt text](image-21.png)
+
+![alt text](image-14.png)
+![alt text](image-15.png)
+
+|  | β = 0.1 | β = 1 | β = 10|
+|--|--|--|--|
+|曲线| ![alt text](image-24.png) | ![alt text](image-20.png) | ![alt text](image-14.png) |
+|图像|![alt text](image-25.png)|![alt text](image-21.png)|![alt text](image-15.png) |
+
 ## ACGAN
+
