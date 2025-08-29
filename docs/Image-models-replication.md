@@ -415,7 +415,9 @@ print("\n" + "="*50)
 
 ### MLP 模型的训练结果展示
 
-![MLP result](./Image-models-replication-assets/training_curves_MLP.png)
+<details>
+
+<summary> MLP 的训练结果 </summary>
 
 ```text
 ==================================================
@@ -452,6 +454,10 @@ MLP(
 
 ==================================================
 ```
+
+</details>
+
+训练代码已经放在前面了，这里就不给出了。
 
 ### 对 MLP 模型的解读和评述
 
@@ -607,7 +613,9 @@ def get_model_on_device():
 
 </details>
 
-![CNN Result](./Image-models-replication-assets/training_curves_CNN.png)
+<details>
+
+<summary> CNN 的训练结果 </summary>
 
 ```text
 ==================================================
@@ -656,6 +664,9 @@ CNN(
 
 ==================================================
 ```
+
+</details>
+
 
 ### 对 CNN 模型的解读和评述
 
