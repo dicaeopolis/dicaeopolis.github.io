@@ -3020,87 +3020,25 @@ graph LR
 
 第一个想法是，
 
-```text
-Clustering Accuracy: 25.28%
+|  | β = 0.1 | β = 1 | β = 10|
+|--|:--:|:--:|:--:|
+|准确率|23.59%|24.64%|24.01%|
+|t-SNE可视化|![alt text](image-8.png)|![alt text](image-16.png)|![alt text](image-10.png)|
+|生成图像|![alt text](image-9.png)|![alt text](image-17.png)|![alt text](image-11.png)|
 
-Cluster to Label Mapping:
-  Cluster 0 -> 'ship'
-  Cluster 1 -> 'truck'
-  Cluster 2 -> 'car'
-  Cluster 3 -> 'ship'
-  Cluster 4 -> 'dog'
-  Cluster 5 -> 'bird'
-  Cluster 6 -> 'truck'
-  Cluster 7 -> 'car'
-  Cluster 8 -> 'plane'
-  Cluster 9 -> 'deer'
-```
-
-![alt text](image-8.png)
-![alt text](image-9.png)
-
-```text
-Clustering Accuracy: 24.64%
-
-Cluster to Label Mapping:
-  Cluster 0 -> 'dog'
-  Cluster 1 -> 'plane'
-  Cluster 2 -> 'plane'
-  Cluster 3 -> 'ship'
-  Cluster 4 -> 'car'
-  Cluster 5 -> 'cat'
-  Cluster 6 -> 'horse'
-  Cluster 7 -> 'deer'
-  Cluster 8 -> 'deer'
-  Cluster 9 -> 'truck'
-```
-
-![alt text](image-16.png)
-![alt text](image-17.png)
-
-```text
-Clustering Accuracy: 24.01%
-
-Cluster to Label Mapping:
-  Cluster 0 -> 'dog'
-  Cluster 1 -> 'bird'
-  Cluster 2 -> 'truck'
-  Cluster 3 -> 'deer'
-  Cluster 4 -> 'plane'
-  Cluster 5 -> 'plane'
-  Cluster 6 -> 'truck'
-  Cluster 7 -> 'ship'
-  Cluster 8 -> 'frog'
-  Cluster 9 -> 'frog'
-```
-
-![alt text](image-10.png)
-![alt text](image-11.png)
-
-
-![alt text](image-22.png)
-![alt text](image-23.png)
-
-![alt text](image-18.png)
-![alt text](image-19.png)
-
-![alt text](image-12.png)
-![alt text](image-13.png)
-
-
-![alt text](image-24.png)
-![alt text](image-25.png)
-
-![alt text](image-20.png)
-![alt text](image-21.png)
-
-![alt text](image-14.png)
-![alt text](image-15.png)
+### CVAE
 
 |  | β = 0.1 | β = 1 | β = 10|
-|--|--|--|--|
-|曲线| ![alt text](image-24.png) | ![alt text](image-20.png) | ![alt text](image-14.png) |
-|图像|![alt text](image-25.png)|![alt text](image-21.png)|![alt text](image-15.png) |
+|--|:--:|:--:|:--:|
+|准确率变化|![alt text](image-22.png)|![alt text](image-18.png)|![alt text](image-12.png)|
+|生成图像|![alt text](image-23.png)|![alt text](image-19.png)|![alt text](image-13.png)|
+
+### CVAE 接分类头
+
+|  | β = 0.1 | β = 1 | β = 10|
+|--|:--:|:--:|:--:|
+|训练指标曲线| ![alt text](image-24.png) | ![alt text](image-20.png) | ![alt text](image-14.png) |
+|生成图像|![alt text](image-25.png)|![alt text](image-21.png)|![alt text](image-15.png) |
 
 ## ACGAN
 
