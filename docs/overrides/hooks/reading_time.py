@@ -98,12 +98,11 @@ def on_page_markdown(markdown, **kwargs):
         return markdown
     
     # 生成阅读信息
-    
     reading_info = f"""!!! info "📖 阅读信息"
-阅读时间约 **{reading_time}** 分钟　|　约 **{chinese_chars}** 字"""
+    阅读时间约 **{reading_time}** 分钟　|　约 **{chinese_chars}** 字"""
     
     if chinese_chars > 10000:
-        reading_info += f"""　⚠️⚠️⚠️万字长文，请慢慢阅读"""
+        reading_info += f"""　⚠️ 万字长文，请慢慢阅读"""
 
     if code_lines > 0:
         reading_info += f"""　|　约 **{code_lines}** 行代码
