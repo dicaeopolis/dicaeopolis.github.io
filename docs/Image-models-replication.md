@@ -2518,7 +2518,7 @@ $$
 \end{align*}
 $$
 
-这里的 $\mu'$ 即解码的均值其实就是输出的图像。如果取 $\sigma'$ 是固定的向量，那就得到 MSE 了。事实上，这里 $\sigma'$ 的大小估计就和 β-VAE 的思想等价，都是来调控两种损失的比例的。因此我们就估计出了最终的损失函数：
+这里的 $\mu'$ 即解码的均值其实就是输出的图像的均值。如果取 $\sigma'$ 是固定的向量，那就得到 MSE 了。事实上，这里 $\sigma'$ 的大小估计就和 β-VAE 的思想等价，都是来调控两种损失的比例的。因此我们就估计出了最终的损失函数：
 
 $$
 \begin{align*}
@@ -2530,7 +2530,7 @@ $$
 \end{align*}
 $$
 
-最后一步，就是通过采样近似期望。实际上我们进行的是批量训练，因此，每次只需要采样一个输入 $x$ 即可。也就是说最终我们得到了可以计算的损失函数！
+最后一步，就是通过采样近似期望。实际上我们进行的是批量训练，因此，每次只需要对输入采样一个隐变量 $z$ 即可。也就是说最终我们得到了可以计算的损失函数！
 
 $$
 \mathcal{L(x)}=MSE_{x}-\beta KLD_{x}
@@ -2548,5 +2548,474 @@ $$
 - 根据 $\mu$、$\sigma$ 和 $x$ 以及 $x'$，使用损失函数 $\mathcal{L(x)}=MSE_{x}-\beta KLD_{x}$ 计算梯度并反向传播更新参数。
 
 如此，通往 VAE 的道路已经铺好，让我们编写代码吧。
+
+<details>
+
+<summary> 加载数据集使用的代码 </summary>
+
+```python
+import os
+import torch
+from torch.utils.data import Dataset, DataLoader
+from torchvision import transforms
+from PIL import Image
+import matplotlib.pyplot as plt
+import torchvision.utils as vutils
+import numpy as np
+
+# 数据集所在的路径
+DATA_DIR = '/kaggle/input/animefacedataset/images/'
+
+# 定义超参数
+IMAGE_SIZE = 64    # 图像将被调整到的大小
+BATCH_SIZE = 256   # 每个批次加载的图像数量，最好和下面训练的 bs 一致
+NUM_WORKERS = 6    # 加载数据的工作进程数，虽然 Kaggle 会报 warning 但是实测 6 比 4 好。
+
+# 定义图像预处理/变换
+# 1. Resize: 缩放到 IMAGE_SIZE
+# 2. ToTensor: 转换为 PyTorch Tensor，并将像素值从 [0, 255] 归一化到 [0.0, 1.0]
+# 3. Normalize: 将 [0.0, 1.0] 的数据标准化到 [-1.0, 1.0]，这是训练 GAN 的标准做法
+transform = transforms.Compose([
+    transforms.Resize(IMAGE_SIZE),
+    transforms.CenterCrop(IMAGE_SIZE),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
+])
+
+class AnimeFaceDataset(Dataset):
+    """自定义动漫人脸数据集"""
+    def __init__(self, root_dir, transform=None):
+        self.root_dir = root_dir
+        self.transform = transform
+        self.image_files = [f for f in os.listdir(root_dir)]
+
+    def __len__(self):
+        return len(self.image_files)
+
+    def __getitem__(self, idx):
+        img_path = os.path.join(self.root_dir, self.image_files[idx])
+        image = Image.open(img_path).convert('RGB')
+        
+        if self.transform:
+            image = self.transform(image)
+            
+        return image
+
+print("loading dataset")
+# 实例化数据集
+anime_dataset = AnimeFaceDataset(root_dir=DATA_DIR, transform=transform)
+print(f"Dataset size: {len(anime_dataset)} pictures.")
+
+# 实例化 DataLoader
+dataloader = DataLoader(
+    dataset=anime_dataset,
+    batch_size=BATCH_SIZE,
+    shuffle=True,
+    num_workers=NUM_WORKERS,
+    pin_memory=True
+)
+real_batch = next(iter(dataloader))
+
+# 设置绘图
+plt.figure(figsize=(8, 8))
+plt.axis("off")
+plt.title("Training Images")
+
+grid = vutils.make_grid(real_batch[:64], padding=2, normalize=True)
+plt.imshow(np.transpose(grid.cpu(), (1, 2, 0))) # 从 (C, H, W) 转为 (H, W, C)
+plt.show()
+```
+
+</details>
+
+默认一发 64 抽，可以看看抽出来的有没有认识的（）
+
+下面就可以愉快训练了。
+
+<details>
+
+<summary> 训练使用的代码</summary>
+
+```python
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+from torch.utils.data import DataLoader
+from torchvision.utils import make_grid
+import numpy as np
+import matplotlib.pyplot as plt
+from tqdm import tqdm
+import os
+
+config = {
+"METHOD_NAME": "VAE",
+"LATENT_DIM": 128,
+"BATCH_SIZE": 256,
+"EPOCHS": 30,
+"LR": 1e-4,
+"BETA": 1.5,
+"DEVICE": "cuda" if torch.cuda.is_available() else "cpu",
+"DATA_PATH": "./data",
+"OUTPUT_PATH": "./output"
+}
+output_dir = os.path.join(config["OUTPUT_PATH"], config["METHOD_NAME"])
+os.makedirs(output_dir, exist_ok=True)
+print(f"Using device: {config['DEVICE']}")
+print(f"Running with Beta = {config['BETA']}")
+
+train_loader = dataloader
+
+# --- 2. 模型定义 ---
+class VAE(nn.Module):
+    def __init__(self, latent_dim):
+        super(VAE, self).__init__()
+        self.latent_dim = latent_dim
+        
+        # Encoder (64x64 -> 8x8)
+        self.encoder_features = nn.Sequential(
+            nn.Conv2d(3, 64, 3, 1, 1), nn.BatchNorm2d(64), nn.ReLU(True), nn.MaxPool2d(2, 2),
+            nn.Conv2d(64, 128, 3, 1, 1), nn.BatchNorm2d(128), nn.ReLU(True), nn.MaxPool2d(2, 2),
+            nn.Conv2d(128, 256, 3, 1, 1), nn.BatchNorm2d(256), nn.ReLU(True), nn.MaxPool2d(2, 2)
+        )
+        self.fc_mu = nn.Linear(256 * 8 * 8, latent_dim)
+        self.fc_log_var = nn.Linear(256 * 8 * 8, latent_dim)
+        
+        # Decoder (latent_dim -> 64x64)
+        self.decoder_fc = nn.Linear(latent_dim, 256 * 8 * 8)
+        self.decoder_conv = nn.Sequential(
+            nn.ConvTranspose2d(256, 128, 4, 2, 1), nn.BatchNorm2d(128), nn.ReLU(True),
+            nn.ConvTranspose2d(128, 64, 4, 2, 1), nn.BatchNorm2d(64), nn.ReLU(True),
+            nn.ConvTranspose2d(64, 3, 4, 2, 1),
+            nn.Tanh() # 输出范围 [-1, 1]，匹配数据归一化
+        )
+
+    def encode(self, x):
+        h = self.encoder_features(x)
+        h = h.view(h.size(0), -1)
+        return self.fc_mu(h), self.fc_log_var(h)
+
+    def reparameterize(self, mu, log_var):
+        std = torch.exp(0.5 * log_var)
+        eps = torch.randn_like(std)
+        return mu + eps * std
+
+    def decode(self, z):
+        h = self.decoder_fc(z)
+        h = h.view(h.size(0), 256, 8, 8)
+        return self.decoder_conv(h)
+
+    def forward(self, x):
+        mu, log_var = self.encode(x)
+        z = self.reparameterize(mu, log_var)
+        return self.decode(z), mu, log_var
+
+# --- 3. 损失函数 ---
+def vae_loss_function(recon_x, x, mu, log_var):
+    MSE = F.mse_loss(recon_x, x, reduction='sum')
+    KLD = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+    return MSE, KLD
+
+# 用于存储指标的字典
+metrics = {
+    'MSE loss': [],
+    'KLD loss': [],
+    'Total loss': [],
+}
+
+# --- 4. 训练循环 ---
+def train(model, train_loader, optimizer, epoch):
+    model.train()
+    total_loss, tot_mse, tot_kld = 0, 0, 0
+    pbar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{config['EPOCHS']}")
+    for data in pbar:
+        data = data.to(config["DEVICE"])
+        optimizer.zero_grad()
+        recon_batch, mu, log_var = model(data)
+        mse_loss, kld_loss = vae_loss_function(recon_batch, data, mu, log_var)
+        loss = mse_loss + config["BETA"] * kld_loss
+        loss.backward()
+        optimizer.step()
+        total_loss += loss.item()
+        tot_mse += mse_loss.item()
+        tot_kld += kld_loss.item()
+        pbar.set_postfix(loss=loss.item() / len(data))
+    avg_loss = total_loss / len(train_loader.dataset)
+    avg_mse = tot_mse / len(train_loader.dataset)
+    avg_kld = tot_kld / len(train_loader.dataset)
+    metrics["Total loss"].append(avg_loss)
+    metrics["MSE loss"].append(avg_mse)
+    metrics["KLD loss"].append(avg_kld)
+    print(f'====> Epoch: {epoch+1} Average MSE loss:{avg_mse:.4f}, KLD loss:{avg_kld:.4f}, total loss: {avg_loss:.4f}')
+
+# --- 5. 生成函数  ---
+def generate_and_save_images(model, save_path, n_samples=64):
+    model.eval()
+    with torch.no_grad():
+        noise = torch.randn(n_samples, config["LATENT_DIM"]).to(config["DEVICE"])
+        generated_images = model.decode(noise).cpu()
+        grid = make_grid(generated_images, nrow=8, padding=2, normalize=True)
+        plt.figure(figsize=(8, 8))
+        plt.imshow(grid.permute(1, 2, 0))
+        plt.axis("off")
+        plt.title("Generated Images from VAE")
+        plt.savefig(save_path)
+        plt.show()
+
+# --- 6. 训练指标绘图 ---
+def loss_visualization():
+    # 训练完成后绘制指标图表
+    plt.figure(figsize=(10, 6))
+
+    plt.plot(metrics['MSE loss'], label='MSE Loss', color='blue')
+    plt.plot(metrics['KLD loss'], label='KL Divergence Loss', color='red')
+    plt.plot(metrics['Total loss'], label='Total Loss', color='green')
+    
+    plt.title(f'MSE, KLD and total Loss, beta = {config["BETA"]}')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+
+    plt.legend()
+    plt.show()
+
+# --- 主程序 ---
+if __name__ == "__main__":
+    model = VAE(latent_dim=config["LATENT_DIM"]).to(config["DEVICE"])
+    optimizer = optim.Adam(model.parameters(), lr=config["LR"])
+    
+    print("--- Training VAE Model ---")
+    for epoch in range(config["EPOCHS"]):
+        train(model, train_loader, optimizer, epoch)
+    
+    print("\n--- Generating Images from Trained VAE ---")
+    gen_save_path = os.path.join(output_dir, "generated_images.png")
+    generate_and_save_images(model, gen_save_path)
+    loss_visualization()
+```
+
+</details>
+
+这是 VAE 的总的架构：
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313244', 'tertiaryColor': '#181825'}}}%%
+graph LR
+    %% Styling definitions
+    classDef box fill:#313244,stroke:#cdd6f4,stroke-width:2px,color:#cdd6f4,radius:8px;
+    classDef input fill:#585b70,stroke:#89b4fa,stroke-width:2px,color:#cdd6f4;
+    classDef output fill:#313244,stroke:#f38ba8,stroke-width:2px,color:#cdd6f4;
+    classDef conv fill:#313244,stroke:#74c7ec,stroke-width:2px,color:#cdd6f4;
+    classDef latent fill:#313244,stroke:#f5c2e7,stroke-width:2px,color:#cdd6f4;
+    classDef loss fill:#313244,stroke:#f2cdcd,stroke-width:2px,color:#cdd6f4;
+
+    %% Input
+    subgraph InputGraph["Input"]
+        A[("Image<br>3@64x64")]
+    end
+    class InputGraph input;
+
+    %% Encoder
+    subgraph Encoder["Encoder"]
+        B["Feature Extractor<br>map: 3@64x64→latent dim"]
+    end
+    A --> B
+    class Encoder conv;
+
+    %% Latent Space Distribution
+    subgraph LatentDistribution["Latent Distribution"]
+        mu["μ <br>latent dim"]
+        logvar["log(σ²)<br>latent dim"]
+    end
+    B -->|latent dim vector| mu
+    B -->|latent dim vector| logvar
+    class LatentDistribution latent;
+    
+    %% Reparameterization Trick
+    subgraph ReparamTrick["Reparameterization"]
+        C["z = μ + ε * σ<br>ε~N(0,I)"]
+    end
+    mu --> C
+    logvar --> C
+    class ReparamTrick latent;
+    
+    %% Decoder
+    subgraph Decoder["Decoder"]
+        D["Latent vector decoder"]
+    end
+    C --> |sample vector z<br>latent dim| D
+    class Decoder conv;
+
+    %% Output
+    subgraph OutputGraph["Output"]
+        E[("Reconstructed Image<br>3@64x64")]
+    end
+    D --> E
+    class OutputGraph output;
+
+    %% Loss Calculation
+    subgraph LossCalc["Loss Calculation"]
+        L["Loss = MSE + β * KLD"]
+        M["MSE"]
+        N["KLD"]
+    end
+    E --> |Reconstruction| M
+    A --> |Original| M
+    mu --> |Distribution| N
+    logvar --> |Distribution| N
+    M --> L
+    N --> L
+    class LossCalc loss;
+```
+
+其中，编码器使用三层的卷积神经网络：
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313244', 'tertiaryColor': '#181825'}}}%%
+graph LR
+    %% Styling definitions
+    classDef box fill:#313244,stroke:#cdd6f4,stroke-width:2px,color:#cdd6f4,radius:8px;
+    classDef input fill:#585b70,stroke:#89b4fa,stroke-width:2px,color:#cdd6f4;
+    classDef latent fill:#313244,stroke:#f5c2e7,stroke-width:2px,color:#cdd6f4;
+    classDef fc fill:#313244,stroke:#cba6f7,stroke-width:2px,color:#cdd6f4;
+    classDef convBlock fill:#1e1e2e,stroke:#89dceb,stroke-width:1px,color:#89dceb;
+
+    %% Input
+    Input[("Input Image<br>3@64x64")]
+    class Input input;
+    
+    %% Encoder Block 1
+    subgraph EncoderBlock1 ["Encoder Block 1"]
+        Conv1["Conv2d <br> 3x64 x 3x3 /1"]
+        BN1["BatchNorm2d<br>64"]
+        ReLU1["ReLU"]
+        Pool1["MaxPool2d<br>2x2 /2"]
+        Conv1 --> BN1 --> ReLU1 --> Pool1
+    end
+    
+    %% Encoder Block 2
+    subgraph EncoderBlock2 ["Encoder Block 2"]
+        Conv2["Conv2d <br> 64x128 x 3x3 /1"]
+        BN2["BatchNorm2d<br>128"]
+        ReLU2["ReLU"]
+        Pool2["MaxPool2d<br>2x2 /2"]
+        Conv2 --> BN2 --> ReLU2 --> Pool2
+    end
+    
+    %% Encoder Block 3
+    subgraph EncoderBlock3 ["Encoder Block 3"]
+        Conv3["Conv2d <br> 128x256 x 3x3 /1"]
+        BN3["BatchNorm2d<br>256"]
+        ReLU3["ReLU"]
+        Pool3["MaxPool2d<br>2x2 /2"]
+        Conv3 --> BN3 --> ReLU3 --> Pool3
+    end
+    
+    %% Flatten and FC layers
+    Flatten["Flatten"]
+    FC_mu["Linear<br>16384 x latent dim"]
+    FC_logvar["Linear<br>16384 x latent dim"]
+    
+    %% Outputs
+    mu["μ<br>latent dim"]
+    logvar["log(σ²)<br>latent dim"]
+    
+    %% Connections
+    Input --> EncoderBlock1
+    EncoderBlock1 --> |64 @ 32x32| EncoderBlock2
+    EncoderBlock2 --> |128 @ 16x16| EncoderBlock3
+    EncoderBlock3 --> |256 @ 8x8| Flatten
+    Flatten --> |16384| FC_mu --> mu
+    Flatten --> |16384| FC_logvar --> logvar
+    
+    %% Styling
+    class EncoderBlock1,EncoderBlock2,EncoderBlock3 convBlock;
+    class FC_mu,FC_logvar fc;
+    class mu,logvar latent;
+```
+
+解码器和编码器的配置基本上一致，只不过使用了反卷积。
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313244', 'tertiaryColor': '#181825'}}}%%
+graph LR
+    %% Styling definitions
+    classDef box fill:#313244,stroke:#cdd6f4,stroke-width:2px,color:#cdd6f4,radius:8px;
+    classDef input fill:#585b70,stroke:#f5c2e7,stroke-width:2px,color:#cdd6f4;
+    classDef output fill:#313244,stroke:#f38ba8,stroke-width:2px,color:#cdd6f4;
+    classDef fc fill:#313244,stroke:#cba6f7,stroke-width:2px,color:#cdd6f4;
+    classDef deconvBlock fill:#1e1e2e,stroke:#a6e3a1,stroke-width:1px,color:#a6e3a1;
+
+    %% Input
+    Input[("Sample z<br>latent dim")]
+    class Input input;
+    
+    %% FC and Reshape
+    FC_dec["Linear<br>latent_dim x 16384"]
+    Reshape["Reshape"]
+    
+    %% Decoder Block 1
+    subgraph DecoderBlock1 ["Decoder Block 1"]
+        ConvT1["ConvTranspose2d<br>256x128 x 4x4 x 2"]
+        BN1["BatchNorm2d"]
+        ReLU1["ReLU"]
+        ConvT1 --> BN1 --> ReLU1
+    end
+    
+    %% Decoder Block 2
+    subgraph DecoderBlock2 ["Decoder Block 2"]
+        ConvT2["ConvTranspose2d<br>128x64 x 4x4 x 2"]
+        BN2["BatchNorm2d"]
+        ReLU2["ReLU"]
+        ConvT2 --> BN2 --> ReLU2
+    end
+    
+    %% Final Conv and Activation
+    ConvT3["ConvTranspose2d<br>64x3 x 4x4 x 2"]
+    Tanh["Tanh"]
+    
+    %% Output
+    Output[("Reconstructed Image<br>3@64x64")]
+    
+    %% Connections
+    Input --> FC_dec
+    FC_dec --> |16384| Reshape
+    Reshape --> |256 @ 8x8| DecoderBlock1
+    DecoderBlock1 --> |128 @ 16x16| DecoderBlock2
+    DecoderBlock2 --> |64 @ 32x32| ConvT3
+    ConvT3 --> Tanh --> Output
+    
+    %% Styling
+    class FC_dec fc;
+    class DecoderBlock1,DecoderBlock2 deconvBlock;
+    class Output output;
+```
+
+经过一段时间的等待之后，就可以看到生成的图像了，有的还是挺像模像样的。让我们调整 β 多试几次：
+
+![alt text](image-2.png)
+![alt text](image-3.png)
+
+可以看到其实 MSE 和 KLD 是按下葫芦浮起瓢的关系，因为 MSE 对应解码器的重构误差，KLD 对应编码器的建模误差，因此两边都能得到有效的训练。
+
+![alt text](image-4.png)
+![alt text](image-5.png)
+
+确实有一点点更清晰了，但是图片更脏了。对比上面，β = 1.5 的情况，这里 β = 1。网上很多讨论说降低 β 可以提升清晰度，其实这并不一定对。事实上我降低了 β 貌似可以进一步改善 MSE 损失提升重建相似度，但其实在这个训练数据下 MSE 损失相比于 KLD 损失更容易下降，所以可以看到 β = 1 相比 β = 1.5，MSE 虽然略有下降但是 KLD 涨了一大截。具体的 β 的作用我们马上就来细讲。下面我们再调小 β 来看看还能怎么样。
+
+![alt text](image-6.png)
+![alt text](image-7.png)
+
+可以看到，当 β 比较大的时候，图像倒是有鼻子有眼，就是很糊；β 比较小，图像又开始脏起来了，变得不可名状。
+
+我们思考 β 的作用：β 可以衡量输出图像的方差，β 越大则 KL 散度项占比越大，这就对应增大重构误差的方差估计，也就是说大 β 会让编码器的输出尽可能平滑，从而导致图像能够找到所有人脸的共同特征，但是没法生成具体的精细特征，简单说就是糊；而小 β 对应的就是不那么糊的图片，但是一直被重构误差牵着走，虽然重构误差小能够让图像更清晰，但却也没法对输入进行特别有效的编码，从而导致特征混起来了，输出就会比较脏。
+
+所以说朴素的 VAE 糊，主要还是因为这些原因：
+
+- 对隐变量、编码器和解码器的建模太武断，既然为了推导使用了正态分布，就要吃这个带来的后果。
+- 压缩太严重。建模时极其容易平滑掉图像的高频信息。
+
+介绍了 VAE 的本门功夫——图像生成之后，我们来看看怎么拿 VAE 进行邪修，也就是做图像分类。
+
+### 无监督聚类
 
 ## ACGAN
