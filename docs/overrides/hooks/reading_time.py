@@ -70,16 +70,33 @@ def calculate_reading_stats(markdown):
     
     return reading_time, chinese_chars, code_lines
 
+def get_git_revision_date(path):
+    """获取文件的最后 Git 提交时间"""
+    import subprocess
+    import os
+    from datetime import datetime
+    try:
+        result = subprocess.run(
+            ['git', 'log', '-1', '--format=%at', path],
+            capture_output=True,
+            text=True,
+            cwd=os.path.dirname(path)
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            timestamp = int(result.stdout.strip())
+            return datetime.fromtimestamp(timestamp)
+    except Exception:
+        pass
+    return None
+
 def get_file_modification_time(file_path):
     """获取文件的最后修改时间"""
-    try:
-        # 获取文件的修改时间
-        mod_time = os.path.getmtime(file_path)
-        # 转换为datetime对象
-        return datetime.fromtimestamp(mod_time), True
-    except (OSError, FileNotFoundError):
-        # 如果无法获取文件修改时间，返回当前时间
-        return datetime.now(), False
+    last_modified = get_git_revision_date(file_path)
+    if not last_modified and os.path.exists(file_path):
+        mtime = os.path.getmtime(file_path)
+        last_modified = datetime.fromtimestamp(mtime)
+
+    return last_modified, bool(last_modified)
 
 def generate_citation(page, config):
     """生成引用指引"""
@@ -111,7 +128,7 @@ def generate_citation(page, config):
     # 生成引用文本
     citation = f"""
 !!! info "📝 如果您需要引用本文"
-    {author}. ({date_display}, {state}). {title} [Blog post]. Retrieved from {full_url}
+    {author}. ({date_display}). {title} [Blog post]. Retrieved from {full_url}
 
     在 BibTeX 格式中：
     ```text
