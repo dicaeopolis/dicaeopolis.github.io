@@ -76,10 +76,10 @@ def get_file_modification_time(file_path):
         # 获取文件的修改时间
         mod_time = os.path.getmtime(file_path)
         # 转换为datetime对象
-        return datetime.fromtimestamp(mod_time)
+        return datetime.fromtimestamp(mod_time), True
     except (OSError, FileNotFoundError):
         # 如果无法获取文件修改时间，返回当前时间
-        return datetime.now()
+        return datetime.now(), False
 
 def generate_citation(page, config):
     """生成引用指引"""
@@ -91,7 +91,7 @@ def generate_citation(page, config):
     file_path = page.file.abs_src_path
     
     # 获取文件修改时间
-    mod_time = get_file_modification_time(file_path)
+    mod_time, state = get_file_modification_time(file_path)
     
     # 处理日期
     year = mod_time.year
@@ -103,17 +103,15 @@ def generate_citation(page, config):
     # 获取页面URL
     site_url = 'https://dicaeopolis.github.io/'.rstrip('/')
     page_url = page.url.rstrip('/')
-    full_url = f"{site_url}{page_url}"
+    full_url = f"{site_url}/{page_url}"
     
     # 生成页面标识符（使用URL的最后一部分）
     page_id = page_url.split('/')[-1] or 'index'
     
     # 生成引用文本
     citation = f"""
-!!! info "📝 引用"
-    如果您需要引用本文，请参考：
-
-    {author}. ({date_display}). 《{title}》[Blog post]. Retrieved from {full_url}
+!!! info "📝 如果您需要引用本文"
+    {author}. ({date_display}, {state}). {title} [Blog post]. Retrieved from {full_url}
 
     在 BibTeX 格式中：
     ```text
