@@ -2992,18 +2992,14 @@ graph LR
 
 经过一段时间的等待之后，就可以看到生成的图像了，有的还是挺像模像样的。让我们调整 β 多试几次：
 
-![alt text](image-2.png)
-![alt text](image-3.png)
+|| β = 1.5 | β = 1 | β = 0.5 |
+|:--:|:--:|:--:|:--:|
+|生成图像|![alt text](image-2.png)|![alt text](image-4.png)|![alt text](image-6.png)|
+|损失变化|![alt text](image-3.png)|![alt text](image-5.png)|![alt text](image-7.png)|
 
 可以看到其实 MSE 和 KLD 是按下葫芦浮起瓢的关系，因为 MSE 对应解码器的重构误差，KLD 对应编码器的建模误差，因此两边都能得到有效的训练。
 
-![alt text](image-4.png)
-![alt text](image-5.png)
-
-确实有一点点更清晰了，但是图片更脏了。对比上面，β = 1.5 的情况，这里 β = 1。网上很多讨论说降低 β 可以提升清晰度，其实这并不一定对。事实上我降低了 β 貌似可以进一步改善 MSE 损失提升重建相似度，但其实在这个训练数据下 MSE 损失相比于 KLD 损失更容易下降，所以可以看到 β = 1 相比 β = 1.5，MSE 虽然略有下降但是 KLD 涨了一大截。具体的 β 的作用我们马上就来细讲。下面我们再调小 β 来看看还能怎么样。
-
-![alt text](image-6.png)
-![alt text](image-7.png)
+对比 β = 1.5 的情况，β = 1 时确实有一点点更清晰了，但是图片更脏了。网上很多讨论说降低 β 可以提升清晰度，其实这并不一定对。事实上我降低了 β 貌似可以进一步改善 MSE 损失提升重建相似度，但其实在这个训练数据下 MSE 损失相比于 KLD 损失更容易下降，所以可以看到 β = 1 相比 β = 1.5，MSE 虽然略有下降但是 KLD 涨了一大截。而 β = 0.5 的时候，KLD 直接就翻倍了。
 
 可以看到，当 β 比较大的时候，图像倒是有鼻子有眼，就是很糊；β 比较小，图像又开始脏起来了，变得不可名状。
 
@@ -3040,5 +3036,8 @@ graph LR
 |训练指标曲线| ![alt text](image-24.png) | ![alt text](image-20.png) | ![alt text](image-14.png) |
 |生成图像|![alt text](image-25.png)|![alt text](image-21.png)|![alt text](image-15.png) |
 
-## ACGAN
+## GAN
 
+### 拿 DC-GAN 画老婆
+
+### AC-GAN 分类
