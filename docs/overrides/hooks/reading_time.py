@@ -85,7 +85,7 @@ def generate_citation(page, config):
     """生成引用指引"""
     # 获取页面元数据
     title = page.meta.get('title', page.title)
-    author = 'Dicaeopolis'
+    author = 'Yan Li'
     
     # 获取文件的绝对路径
     file_path = page.file.abs_src_path
@@ -98,10 +98,10 @@ def generate_citation(page, config):
     month_en = mod_time.strftime('%b')
     month_cn = mod_time.strftime('%-m')  # 中文格式的月份（不带前导零）
     day = mod_time.day
-    date_display = f"{year}年{month_cn}月{day}日"
+    date_display = f"{month_en}. {day}, {year}"
     
     # 获取页面URL
-    site_url = 'https://dicaeopolis.github.io'.rstrip('/')
+    site_url = 'https://dicaeopolis.github.io/'.rstrip('/')
     page_url = page.url.rstrip('/')
     full_url = f"{site_url}{page_url}"
     
@@ -115,6 +115,8 @@ def generate_citation(page, config):
 
     {author}. ({date_display}). 《{title}》[Blog post]. Retrieved from {full_url}
 
+    在 BibTeX 格式中：
+    ```text
     @online{{{page_id},
         title={{{title}}},
         author={{{author}}},
@@ -122,6 +124,7 @@ def generate_citation(page, config):
         month={{{month_en}}},
         url={{\\url{{{full_url}}}}},
     }}
+    ```
 """
     return citation
 
