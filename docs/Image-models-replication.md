@@ -3024,6 +3024,8 @@ graph LR
 |t-SNE可视化|![alt text](image-8.png)|![alt text](image-16.png)|![alt text](image-10.png)|
 |生成图像|![alt text](image-9.png)|![alt text](image-17.png)|![alt text](image-11.png)|
 
+准确率大概是 24% 左右，还是很合理的，因为标签信息只占了图像语义信息的一小部分，因此聚类得到的边界基本上是多种语义特征的混合（举例：我不仅可以按物体类别聚类，还可以按照背景色调聚类，既然没有标签带来的分类惩罚，我就可以随心所欲），自然不能和标签信息完全对应。
+
 可以看到，β 基本上对准确率没有影响，因为我们是不带标签信息完全无监督地进行训练的，但是越大的 β 可视化出来的簇越集中，这就意味着增大 KL 散度项的权重，相当有利于数据降维压缩，但是对应图像也越糊，因为这一压缩过程是不可逆的，输出也被过度平滑了。
 
 <details>
@@ -3239,7 +3241,7 @@ CVAE 利用标签的效率好不好呢？让我们看看下面的结果。
 |准确率变化|![alt text](image-22.png)|![alt text](image-18.png)|![alt text](image-12.png)|
 |生成图像|![alt text](image-23.png)|![alt text](image-19.png)|![alt text](image-13.png)|
 
-可以看到不管 β 调多少，基本上只能比随机基线的 10% 高一丢丢，说明标签在其中的贡献相当小！这说明模型基本上忽略了条件信息，基本上没有将其参与进图像重构中。
+可以看到不管 β 调多少，基本上只能比随机基线的 10% 高一丢丢，说明标签在其中的贡献相当小！这说明模型基本上忽略了条件信息，基本上没有将其参与进图像重构中。换句话说，就是原来的 VAE 提供的信息和损失已经足够丰富，使得模型可以基本上直接无视分类的条件。
 
 <details>
 
@@ -3851,5 +3853,13 @@ if __name__ == "__main__":
 ## GAN
 
 ### 拿 DC-GAN 画老婆
+
+![loss curve](./Image-models-replication-assets/training_loss.png)
+
+|Epoch|5|10|20|30|40|50|
+|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+|生成图像|![image](./Image-models-replication-assets/generated_images_epoch_5.png)|![image](./Image-models-replication-assets/generated_images_epoch_10.png)|![image](./Image-models-replication-assets/generated_images_epoch_20.png)|![image](./Image-models-replication-assets/generated_images_epoch_30.png)|![image](./Image-models-replication-assets/generated_images_epoch_40.png)|![image](./Image-models-replication-assets/generated_images_epoch_50.png)|
+
+![image](./Image-models-replication-assets/generated_images_epoch_50.png)
 
 ### AC-GAN 分类
