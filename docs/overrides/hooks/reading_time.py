@@ -97,6 +97,9 @@ def on_page_markdown(markdown, **kwargs):
     if chinese_chars < 50:
         return markdown
     
+    # 检查是否有创作声明
+    creation_statement = page.meta.get('statement', '')
+    
     # 生成阅读信息
     reading_info = f"""!!! info "📖 阅读信息"
     阅读时间约 **{reading_time}** 分钟　|　约 **{chinese_chars}** 字"""
@@ -112,6 +115,10 @@ def on_page_markdown(markdown, **kwargs):
         reading_info += f"""　|　没有代码，请放心食用
 
 """
+    
+    # 如果有创作声明，添加到阅读信息下方
+    if creation_statement:
+        reading_info += f"    创作声明：{creation_statement}\n\n"
 
     # 用正则找到第一个一级标题，并在其后插入阅读信息
     pattern = r'(^# .*\n)'
