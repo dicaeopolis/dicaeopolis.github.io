@@ -101,7 +101,7 @@ def generate_citation(page, config):
     date_display = f"{year}年{month_cn}月{day}日"
     
     # 获取页面URL
-    site_url = config.get('site_url', '').rstrip('/')
+    site_url = 'https://dicaeopolis.github.io'.rstrip('/')
     page_url = page.url.rstrip('/')
     full_url = f"{site_url}{page_url}"
     
