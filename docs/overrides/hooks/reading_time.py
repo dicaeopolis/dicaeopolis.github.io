@@ -70,6 +70,8 @@ def calculate_reading_stats(markdown):
     
     return reading_time, chinese_chars, code_lines
 
+probe = ""
+
 def get_git_revision_date(path):
     """获取文件的最后 Git 提交时间"""
     import subprocess
@@ -82,6 +84,7 @@ def get_git_revision_date(path):
             text=True,
             cwd=os.path.dirname(path)
         )
+        probe = result
         if result.returncode == 0 and result.stdout.strip():
             timestamp = int(result.stdout.strip())
             return datetime.fromtimestamp(timestamp)
@@ -128,7 +131,7 @@ def generate_citation(page, config):
     # 生成引用文本
     citation = f"""
 !!! info "📝 如果您需要引用本文"
-    {author}. ({date_display}). {title} [Blog post]. Retrieved from {full_url}
+    {author}. ({date_display}, probe = {probe}). {title} [Blog post]. Retrieved from {full_url}
 
     在 BibTeX 格式中：
     ```text
