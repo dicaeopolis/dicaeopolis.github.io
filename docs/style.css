@@ -14,9 +14,17 @@ body {
     padding: 30px 40px;
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    max-width: 600px;
+    width: 90%;
 }
 h1 {
     color: #1a1a1a;
+    margin-bottom: 10px;
+}
+h3 {
+    margin-bottom: 8px;
+    color: #444;
+    font-size: 1em;
 }
 #generateBtn {
     font-size: 1.1em;
@@ -39,6 +47,34 @@ h1 {
 #generateBtn:not(:disabled):active {
     transform: scale(0.98);
 }
+.progress-container {
+    margin: 20px 0;
+    text-align: left;
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.progress-bar {
+    width: 100%;
+    height: 20px;
+    background-color: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 10px 0;
+}
+.progress-fill {
+    height: 100%;
+    background-color: #28a745;
+    width: 0%;
+    transition: width 0.3s ease;
+    border-radius: 4px;
+}
+.time-display {
+    font-size: 0.85em;
+    color: #6c757d;
+    margin-top: 5px;
+}
 .canvas-wrapper {
     margin-top: 25px;
     border: 1px solid #ddd;
@@ -49,12 +85,13 @@ h1 {
 }
 canvas {
     display: block;
-    image-rendering: pixelated; /* 让低分辨率图像看起来更清晰 */
-    width: 256px;  /* 放大显示 */
+    image-rendering: pixelated;
+    width: 256px;
     height: 256px;
 }
 #status {
     margin-top: 15px;
     color: #666;
     min-height: 1.2em;
+    font-weight: 500;
 }

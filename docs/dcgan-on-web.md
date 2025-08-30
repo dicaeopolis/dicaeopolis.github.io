@@ -13,11 +13,29 @@
         
         <button id="generateBtn" disabled>正在加载模型...</button>
         
+        <div class="progress-container">
+            <h3>模型加载进度</h3>
+            <div class="progress-bar">
+                <div id="modelLoadProgress" class="progress-fill"></div>
+            </div>
+            <span id="modelLoadPercent">0%</span>
+            <div id="modelLoadTime" class="time-display">耗时: -</div>
+        </div>
+        
+        <div class="progress-container">
+            <h3>图像生成进度</h3>
+            <div class="progress-bar">
+                <div id="imageGenProgress" class="progress-fill"></div>
+            </div>
+            <span id="imageGenPercent">0%</span>
+            <div id="imageGenTime" class="time-display">耗时: -</div>
+        </div>
+        
         <div class="canvas-wrapper">
             <canvas id="ganCanvas" width="64" height="64"></canvas>
         </div>
         
-        <p id="status">模型初始化中，请稍候...</p>
+        <div id="status">模型初始化中，请稍候...</div>
     </div>
 
     <!-- 引入 TensorFlow.js -->
