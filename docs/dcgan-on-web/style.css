@@ -6,7 +6,8 @@
     background-color: #007bff;
     cursor: pointer;
     transition: background-color 0.3s, transform 0.1s;
-    margin: 20px 0;
+    display: block; /* 确保按钮是块级元素 */
+    margin: 5px auto; /* 上下5px，左右自动（水平居中） */
 }
 #generateBtn:disabled {
     background-color: #223355;
@@ -53,6 +54,8 @@
     padding: 5px;
     background-color: #f9f9f9;
     border-radius: 8px;
+    display: block; /* 改为块级元素 */
+    margin: 5px auto 0; /* 上外边距5px，水平居中，下外边距0 */
 }
 canvas {
     display: block;

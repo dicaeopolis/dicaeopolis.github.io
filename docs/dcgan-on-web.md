@@ -1,3 +1,7 @@
+---
+comments: true
+noinfo: true
+---
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -16,7 +20,7 @@
         </div>
 
         <div class="progress-container">
-            <h3>模型加载进度</h3>
+            <h3>模型加载进度（这个进度条逗你玩的哈哈，反正等着就对了）</h3>
             <div class="progress-bar">
                 <div id="modelLoadProgress" class="progress-fill"></div>
             </div>
