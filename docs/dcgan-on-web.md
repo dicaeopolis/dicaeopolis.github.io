@@ -1,27 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DCGAN in Browser</title>
-    <style>
-        body { font-family: sans-serif; text-align: center; margin-top: 50px; }
-        #generateBtn { font-size: 1.2em; padding: 10px 20px; cursor: pointer; }
-        #imageContainer { margin-top: 20px; border: 1px solid #ccc; display: inline-block; }
-        #status { color: #888; }
-        canvas { display: block; }
-    </style>
+    <title>浏览器中的 DC-GAN</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>DCGAN Image Generator</h1>
-    <p>点击按钮，在浏览器中生成一张新图片！</p>
-    <button id="generateBtn">生成新图片</button>
-    <p id="status">正在加载模型...</p>
-    <div id="imageContainer">
-        <canvas id="ganCanvas" width="64" height="64"></canvas>
+    <div class="container">
+        <h1>DC-GAN 图像生成器</h1>
+        <p>所有计算都在你的浏览器中完成！点击下面的按钮生成一张新的图片。</p>
+        
+        <button id="generateBtn" disabled>正在加载模型...</button>
+        
+        <div class="canvas-wrapper">
+            <canvas id="ganCanvas" width="64" height="64"></canvas>
+        </div>
+        
+        <p id="status">模型初始化中，请稍候...</p>
     </div>
 
-    <!-- 引入 TensorFlow.js 库 -->
+    <!-- 引入 TensorFlow.js -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
     
     <!-- 引入我们自己的脚本 -->
