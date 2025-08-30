@@ -56,7 +56,7 @@ async function loadModel() {
                     modelLoadStartTime
                 );
             }
-        }, 6000);
+        }, 500);
         
         model = await tf.loadGraphModel(MODEL_URL, {
             onProgress: (fraction) => {
