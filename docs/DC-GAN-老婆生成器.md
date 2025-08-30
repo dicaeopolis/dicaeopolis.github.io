@@ -16,7 +16,7 @@ title: DC-GAN 老婆生成器
     <div class="container">
         <h1>DC-GAN 老婆生成器</h1>
         
-        <p>使用 PyTorch 在 Anime Face Dataset 上训练的 DC-GAN，并迁移到 TensorFlow.js 上（这个迁移任务会遇到依赖地狱，可费了我一番功夫），实现网页端推理。向 Gwern 的 <a href = "https://gwern.net/twdne">This Waifu Does Not Exist</a> 项目致敬，虽然我的这个生成器只是一个拙劣的模仿。</p>
+        <p>使用 PyTorch 在 Anime Face Dataset 上训练的 DC-GAN，并迁移到 TensorFlow.js 上（这个迁移任务会遇到依赖地狱，可费了我一番功夫），实现网页端的实时推理。向 Gwern 的 <a href = "https://gwern.net/twdne">This Waifu Does Not Exist</a> 项目致敬。生成的图片有概率很歪瓜裂枣，请务必多抽几发。</p>
 
         <div class="canvases-container">
             <div class="canvas-wrapper">
