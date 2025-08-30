@@ -7,6 +7,9 @@
     cursor: pointer;
     transition: background-color 0.3s, transform 0.1s;
     margin: 20px 0;
+    align-self: center;
+    align-items: center;
+    align-content: center;
 }
 #generateBtn:disabled {
     background-color: #223355;

@@ -11,6 +11,8 @@
         <h1>DC-GAN 图像生成器</h1>
 
         <button id="generateBtn" disabled>正在加载模型...</button>
+        
+        <br>        
 
         <div class="canvas-wrapper">
             <canvas id="ganCanvas" width="64" height="64"></canvas>
@@ -24,7 +26,8 @@
             <span id="modelLoadPercent">0%</span>
             <div id="modelLoadTime" class="time-display">耗时: -</div>
         </div>
-        
+
+        <div id="status">模型初始化中，请稍候...</div>
     </div>
 
     <!-- 引入 TensorFlow.js -->
