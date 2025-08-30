@@ -6,9 +6,13 @@ const MODEL_URL = './web_model/model.json'; // 相对路径指向模型文件
 
 // --- 获取DOM元素 ---
 const generateBtn = document.getElementById('generateBtn');
-const canvas = document.getElementById('ganCanvas');
+const canvases = [
+    document.getElementById('ganCanvas1'),
+    document.getElementById('ganCanvas2'),
+    document.getElementById('ganCanvas3')
+];
+const ctxs = canvases.map(canvas => canvas.getContext('2d'));
 const statusDiv = document.getElementById('status');
-const ctx = canvas.getContext('2d');
 
 // 进度条元素
 const modelLoadProgress = document.getElementById('modelLoadProgress');
@@ -85,7 +89,7 @@ async function loadModel() {
         // 预热模型，让第一次生成更快
         statusDiv.textContent = '模型预热中...';
         tf.tidy(() => {
-            model.predict(tf.zeros([1, LATENT_DIM, 1, 1]));
+            model.predict(tf.zeros([3, LATENT_DIM, 1, 1]));
         });
         
         console.log("模型加载并预热成功！");
@@ -136,25 +140,31 @@ async function generateImage() {
         tf.tidy(() => {
             // 1. 生成随机噪声输入张量
             // 形状为 [batch_size, latent_dim, 1, 1]
-            const noise = tf.randomNormal([1, LATENT_DIM, 1, 1]);
+            const noise = tf.randomNormal([3, LATENT_DIM, 1, 1]);
 
             // 2. 模型推理
-            // outputTensor 的形状是 [1, 3, 64, 64] (batch, channels, height, width)
+            // outputTensor 的形状是 [3, 3, 64, 64] (batch, channels, height, width)
             const outputTensor = model.predict(noise);
 
             // 3. 处理输出张量
             // a. 将数值范围从 [-1, 1] (Tanh 输出) 转换到 [0, 1]
             const normalizedTensor = outputTensor.add(1).div(2);
 
-            // b. 调整维度顺序以适配浏览器渲染
-            // tf.browser.toPixels 需要的格式是 [height, width, channels]
-            // 所以我们需要从 [1, 3, 64, 64] -> [3, 64, 64] -> [64, 64, 3]
-            const imageTensor = normalizedTensor.squeeze([0]).transpose([1, 2, 0]);
+            // 4. 将三张图片分别绘制到三个canvas上
+            for (let i = 0; i < 3; i++) {
+                // b. 获取单张图片张量
+                const singleImageTensor = normalizedTensor.slice([i, 0, 0, 0], [1, -1, -1, -1]);
+                
+                // c. 调整维度顺序以适配浏览器渲染
+                // tf.browser.toPixels 需要的格式是 [height, width, channels]
+                // 所以我们需要从 [1, 3, 64, 64] -> [3, 64, 64] -> [64, 64, 3]
+                const imageTensor = singleImageTensor.squeeze([0]).transpose([1, 2, 0]);
 
-            // 4. 将张量绘制到 Canvas
-            tf.browser.toPixels(imageTensor, canvas);
+                // d. 将张量绘制到对应的 Canvas
+                tf.browser.toPixels(imageTensor, canvases[i]);
+            }
             
-            console.log("图片生成完毕！");
+            console.log("三张图片生成完毕！");
         });
         
         // 更新进度到100%

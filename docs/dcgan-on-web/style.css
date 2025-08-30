@@ -7,7 +7,7 @@
     cursor: pointer;
     transition: background-color 0.3s, transform 0.1s;
     display: block; /* 确保按钮是块级元素 */
-    margin: 5px auto; /* 上下5px，左右自动（水平居中） */
+    margin: 1px auto; /* 上下1px，左右自动（水平居中） */
 }
 #generateBtn:disabled {
     background-color: #223355;
@@ -47,15 +47,18 @@
     color: #6c757d;
     margin-top: 5px;
 }
-.canvas-wrapper {
+.canvases-container {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
     margin-top: 25px;
+    flex-wrap: wrap;
+}
+.canvas-wrapper {
     border: 1px solid #ddd;
-    display: inline-block;
     padding: 5px;
     background-color: #f9f9f9;
     border-radius: 8px;
-    display: block; /* 改为块级元素 */
-    margin: 5px auto 0; /* 上外边距5px，水平居中，下外边距0 */
 }
 canvas {
     display: block;

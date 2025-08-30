@@ -15,8 +15,16 @@ noinfo: true
         <h1>DC-GAN 图像生成器</h1>
         <button id="generateBtn" disabled>正在加载模型...</button>
         <br>
-        <div class="canvas-wrapper">
-            <canvas id="ganCanvas" width="64" height="64"></canvas>
+        <div class="canvases-container">
+            <div class="canvas-wrapper">
+                <canvas id="ganCanvas1" width="64" height="64"></canvas>
+            </div>
+            <div class="canvas-wrapper">
+                <canvas id="ganCanvas2" width="64" height="64"></canvas>
+            </div>
+            <div class="canvas-wrapper">
+                <canvas id="ganCanvas3" width="64" height="64"></canvas>
+            </div>
         </div>
 
         <div class="progress-container">
