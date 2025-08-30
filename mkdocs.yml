@@ -97,9 +97,6 @@ markdown_extensions:
   - pymdownx.tasklist:
       custom_checkbox: true
 
-nav:
-  - DC-GAN 老婆生成器: dcgan-on-web.md
-
 plugins:
   - search
   - mermaid2

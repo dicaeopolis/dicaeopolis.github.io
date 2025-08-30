@@ -1,3 +1,9 @@
+.md-typeset h1 {
+    color: var(--md-default-fg-color--light);
+    font-size: 2em;
+    line-height: 1.3;
+    margin: 0 0 0.5em;
+}
 #generateBtn {
     font-size: 1.1em;
     padding: 12px 24px;
@@ -51,7 +57,7 @@
     display: flex;
     justify-content: center;
     gap: 20px;
-    margin-top: 25px;
+    margin-top: 5px;
     flex-wrap: wrap;
 }
 .canvas-wrapper {

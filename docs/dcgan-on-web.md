@@ -1,6 +1,7 @@
 ---
 comments: true
 noinfo: true
+short_title: DC-GAN 老婆生成器
 ---
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -14,7 +15,7 @@ noinfo: true
     <div class="container">
         <h1>DC-GAN 老婆生成器</h1>
         
-        <p>使用 PyTorch 在 Anime Face Dataset 上训练的 DC-GAN，并迁移到 TensorFlow.js 上，实现网页端推理。向 Gwern 的 <a href = "https://gwern.net/twdne">This Waifu Does Not Exist</a> 项目致敬，虽然我的这个生成器只是一个拙劣的模仿。</p>
+        <p>使用 PyTorch 在 Anime Face Dataset 上训练的 DC-GAN，并（这个迁移任务会遇到依赖地狱，可费了我一番功夫）迁移到 TensorFlow.js 上，实现网页端推理。向 Gwern 的 <a href = "https://gwern.net/twdne">This Waifu Does Not Exist</a> 项目致敬，虽然我的这个生成器只是一个拙劣的模仿。</p>
 
         <div class="canvases-container">
             <div class="canvas-wrapper">
@@ -38,7 +39,7 @@ noinfo: true
         </div>
         
         <div class="progress-container">
-            <h3>图像生成进度</h3>
+            <h3>图像生成进度（没错这个进度条也是逗你玩的，不过出图还是很快的）</h3>
             <div class="progress-bar">
                 <div id="imageGenProgress" class="progress-fill"></div>
             </div>
@@ -46,7 +47,7 @@ noinfo: true
             <div id="imageGenTime" class="time-display">耗时: -</div>
         </div>
         
-        <div id="status">模型初始化中，请稍候...</div>
+        <div id="status">模型初始化中，也就只能等着咯...</div>
     </div>
 
     <!-- 引入 TensorFlow.js -->
