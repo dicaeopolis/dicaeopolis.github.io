@@ -89,7 +89,7 @@ async function loadModel() {
         // 预热模型，让第一次生成更快
         statusDiv.textContent = '模型预热中...';
         tf.tidy(() => {
-            model.predict(tf.zeros([3, LATENT_DIM, 1, 1]));
+            model.predict(tf.zeros([2, LATENT_DIM, 1, 1]));
         });
         
         console.log("模型加载并预热成功！");
@@ -140,18 +140,18 @@ async function generateImage() {
         tf.tidy(() => {
             // 1. 生成随机噪声输入张量
             // 形状为 [batch_size, latent_dim, 1, 1]
-            const noise = tf.randomNormal([3, LATENT_DIM, 1, 1]);
+            const noise = tf.randomNormal([2, LATENT_DIM, 1, 1]);
 
             // 2. 模型推理
-            // outputTensor 的形状是 [3, 3, 64, 64] (batch, channels, height, width)
+            // outputTensor 的形状是 [2, 3, 64, 64] (batch, channels, height, width)
             const outputTensor = model.predict(noise);
 
             // 3. 处理输出张量
             // a. 将数值范围从 [-1, 1] (Tanh 输出) 转换到 [0, 1]
             const normalizedTensor = outputTensor.add(1).div(2);
 
-            // 4. 将三张图片分别绘制到三个canvas上
-            for (let i = 0; i < 3; i++) {
+            // 4. 将两张图片分别绘制到两个canvas上
+            for (let i = 0; i < 2; i++) {
                 // b. 获取单张图片张量
                 const singleImageTensor = normalizedTensor.slice([i, 0, 0, 0], [1, -1, -1, -1]);
                 
@@ -163,8 +163,8 @@ async function generateImage() {
                 // d. 将张量绘制到对应的 Canvas
                 tf.browser.toPixels(imageTensor, canvases[i]);
             }
-            
-            console.log("三张图片生成完毕！");
+
+            console.log("两张图片生成完毕！");
         });
         
         // 更新进度到100%
