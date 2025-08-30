@@ -85,7 +85,7 @@ def get_git_revision_date(path):
             text=True,
             cwd=os.path.dirname(path)
         )
-        probe = result.returncode
+        probe = result.stdout.strip()  # 调试输出
         if result.returncode == 0 and result.stdout.strip():
             timestamp = int(result.stdout.strip())
             return datetime.fromtimestamp(timestamp)
