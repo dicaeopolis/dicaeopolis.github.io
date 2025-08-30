@@ -13,6 +13,7 @@ noinfo: true
 <body>
     <div class="container">
         <h1>DC-GAN 图像生成器</h1>
+        
         <div class="canvases-container">
             <div class="canvas-wrapper">
                 <canvas id="ganCanvas1" width="64" height="64"></canvas>
@@ -21,23 +22,28 @@ noinfo: true
                 <canvas id="ganCanvas2" width="64" height="64"></canvas>
             </div>
         </div>
+        
         <button id="generateBtn" disabled>正在加载模型...</button>
+        <br>
+
         <div class="progress-container">
-            <h4>模型加载进度（这个进度条逗你玩的哈哈，反正等着就对了）</h4>
+            <h3>模型加载进度（这个进度条逗你玩的哈哈，反正等着就对了）</h3>
             <div class="progress-bar">
                 <div id="modelLoadProgress" class="progress-fill"></div>
             </div>
             <span id="modelLoadPercent">0%</span>
             <div id="modelLoadTime" class="time-display">耗时: -</div>
         </div>
+        
         <div class="progress-container">
-            <h4>图像生成进度</h4>
+            <h3>图像生成进度</h3>
             <div class="progress-bar">
                 <div id="imageGenProgress" class="progress-fill"></div>
             </div>
             <span id="imageGenPercent">0%</span>
             <div id="imageGenTime" class="time-display">耗时: -</div>
         </div>
+        
         <div id="status">模型初始化中，请稍候...</div>
     </div>
 

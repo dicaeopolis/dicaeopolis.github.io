@@ -8,8 +8,7 @@ const MODEL_URL = './web_model/model.json'; // 相对路径指向模型文件
 const generateBtn = document.getElementById('generateBtn');
 const canvases = [
     document.getElementById('ganCanvas1'),
-    document.getElementById('ganCanvas2'),
-    document.getElementById('ganCanvas3')
+    document.getElementById('ganCanvas2')
 ];
 const ctxs = canvases.map(canvas => canvas.getContext('2d'));
 const statusDiv = document.getElementById('status');
@@ -163,7 +162,7 @@ async function generateImage() {
                 // d. 将张量绘制到对应的 Canvas
                 tf.browser.toPixels(imageTensor, canvases[i]);
             }
-
+            
             console.log("两张图片生成完毕！");
         });
         

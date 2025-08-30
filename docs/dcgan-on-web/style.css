@@ -7,7 +7,7 @@
     cursor: pointer;
     transition: background-color 0.3s, transform 0.1s;
     display: block; /* 确保按钮是块级元素 */
-    margin: 5px auto; /* 上下5px，左右自动（水平居中） */
+    margin: 20px auto; /* 上下20px，左右自动（水平居中） */
 }
 #generateBtn:disabled {
     background-color: #223355;
@@ -19,22 +19,11 @@
 #generateBtn:not(:disabled):active {
     transform: scale(0.98);
 }
-.md-typeset h4 {
-    font-weight: 700;
-    letter-spacing: -.01em;
-    margin: 5px 0;
-}
-.md-typeset h1 {
-    color: var(--md-default-fg-color--light);
-    font-size: 2em;
-    line-height: 1.3;
-    margin: 0 0 0.3em;
-}
 .progress-container {
-    margin: 5px 0;
+    margin: 20px 0;
     text-align: left;
     background: #223355;
-    padding: 10px;
+    padding: 15px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
@@ -61,8 +50,8 @@
 .canvases-container {
     display: flex;
     justify-content: center;
-    gap: 5px;
-    margin-top: 5px;
+    gap: 20px;
+    margin-top: 25px;
     flex-wrap: wrap;
 }
 .canvas-wrapper {
