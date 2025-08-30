@@ -75,20 +75,16 @@ probe = None  # 用于调试输出 Git 提交时间的变量
 def get_git_revision_date(path):
     """获取文件的最后 Git 提交时间"""
     global probe
-    import subprocess
+    import json
     import os
     from datetime import datetime
     try:
-        result = subprocess.run(
-            ['git', 'log', '-1', '--format=%at', path],
-            capture_output=True,
-            text=True,
-            cwd=os.path.dirname(path)
-        )
-        probe = result.stdout.strip()  # 调试输出
-        if result.returncode == 0 and result.stdout.strip():
-            timestamp = int(result.stdout.strip())
-            return datetime.fromtimestamp(timestamp)
+        filename = os.path.basename(path)
+        cwd=os.path.dirname(path)
+        with open(f'{cwd}/timestamps.json', 'r', encoding='utf-8') as f:
+            timestamps = json.load(f)
+        if filename in timestamps:
+            return datetime.fromtimestamp(timestamps[filename])
     except Exception:
         pass
     return None
@@ -132,7 +128,7 @@ def generate_citation(page, config):
     # 生成引用文本
     citation = f"""
 !!! info "📝 如果您需要引用本文"
-    {author}. ({date_display}, probe = {probe}). {title} [Blog post]. Retrieved from {full_url}
+    {author}. ({date_display}). {title} [Blog post]. Retrieved from {full_url}
 
     在 BibTeX 格式中：
     ```text
