@@ -70,7 +70,7 @@ def calculate_reading_stats(markdown):
     
     return reading_time, chinese_chars, code_lines
 
-probe = ""
+probe = None  # 用于调试输出 Git 提交时间的变量
 
 def get_git_revision_date(path):
     """获取文件的最后 Git 提交时间"""
@@ -84,7 +84,7 @@ def get_git_revision_date(path):
             text=True,
             cwd=os.path.dirname(path)
         )
-        probe = result
+        probe = (['git', 'log', '-1', '--format=%at', path], os.path.dirname(path))
         if result.returncode == 0 and result.stdout.strip():
             timestamp = int(result.stdout.strip())
             return datetime.fromtimestamp(timestamp)
