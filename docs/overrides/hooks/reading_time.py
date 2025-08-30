@@ -74,6 +74,7 @@ probe = None  # 用于调试输出 Git 提交时间的变量
 
 def get_git_revision_date(path):
     """获取文件的最后 Git 提交时间"""
+    global probe
     import subprocess
     import os
     from datetime import datetime
