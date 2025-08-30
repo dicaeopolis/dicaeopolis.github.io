@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>浏览器中的 DC-GAN</title>
+    <title>DC-GAN</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -21,6 +21,10 @@
             <span id="modelLoadPercent">0%</span>
             <div id="modelLoadTime" class="time-display">耗时: -</div>
         </div>
+
+        <div class="canvas-wrapper">
+            <canvas id="ganCanvas" width="64" height="64"></canvas>
+        </div>
         
         <div class="progress-container">
             <h3>图像生成进度</h3>
@@ -31,9 +35,7 @@
             <div id="imageGenTime" class="time-display">耗时: -</div>
         </div>
         
-        <div class="canvas-wrapper">
-            <canvas id="ganCanvas" width="64" height="64"></canvas>
-        </div>
+        
         
         <div id="status">模型初始化中，请稍候...</div>
     </div>
