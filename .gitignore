@@ -1,3 +1,7 @@
 ./.venv/*
 ./site/*
 .DS_Store
+.gitignore
+./get_last_edition_time.py
+./upgrade.sh
+./auto_nav.py

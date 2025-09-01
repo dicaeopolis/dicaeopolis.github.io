@@ -4,6 +4,7 @@ theme:
   name: material
   custom_dir: docs/overrides
   custom_dir: overrides
+  favicon: favicon.png
   features:
     - content.code.copy
     - content.code.select
