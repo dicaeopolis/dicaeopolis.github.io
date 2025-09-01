@@ -148,9 +148,18 @@ nav:
   - 深度神经网络:
     - 深度神经网络:
       - 'DNN/index.md'
-      - 图像分类相关模型复现手记: 'DNN/Image-models-replication.md'
-      - DC-GAN 老婆生成器: 'DNN/DC-GAN-老婆生成器.md'
-      - 神经网络优化器概述: 'DNN/Optimizer.md'
+      - 复现记录:
+        - 复现记录:
+          - 'DNN/model-expr/index.md'
+          - DC-GAN 老婆生成器: 'DNN/model-expr/DC-GAN-老婆生成器.md'
+          - 图像分类相关模型复现手记: 'DNN/model-expr/Image-models-replication.md'
+      - 优化器:
+        - 优化器:
+          - 'DNN/optimizer/index.md'
+          - 自适应学习率改进策略: 'DNN/optimizer/Adaptive.md'
+          - 后续的写作计划: 'DNN/optimizer/misc.md'
+          - SGD 系列算法: 'DNN/optimizer/SGD.md'
+          - 符号梯度下降: 'DNN/optimizer/SignGD.md'
   - 配置和杂谈笔记:
     - 配置和杂谈笔记:
       - 'misc/index.md'
