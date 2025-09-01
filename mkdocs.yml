@@ -9,6 +9,7 @@ theme:
     - content.code.select
     - navigation.titles
     - navigation.tabs
+    - navigation.indexes
   palette: 
     # Palette toggle for automatic mode
     - media: "(prefers-color-scheme)"
