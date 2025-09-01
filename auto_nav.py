@@ -86,35 +86,52 @@ def get_category_name(dir_path: Path) -> str:
             continue
     return dir_path.name.replace('_', ' ').replace('-', ' ').title()
 
+# ... 其他函数保持不变 ...
+
 def generate_nav_tree(current_path: Path, file_timestamps: dict, folder_timestamps: dict) -> list:
-    nav_items = []
+    """
+    递归生成导航树。
+    这个函数现在总是返回一个代表当前目录内容的扁平列表。
+    列表的元素可以是：
+    - 字符串（代表 index.md 文件路径）
+    - 字典（代表单个 .md 文件，如 {'标题': '路径'}）
+    - 字典（代表一个子目录，如 {'子目录名': [子目录内容...]}）
+    """
     
-    # 检查当前目录是否有index.md（除了docs根目录）
+    # 1. 检查当前目录是否有 index.md
     index_page = None
+    # 根目录的 index.md 由 mkdocs 自动处理，我们不需要在这里特别处理
     if current_path != DOCS_DIR:
         index_path = current_path / 'index.md'
         if index_path.exists() and index_path.is_file():
             info = parse_md_file(index_path)
             relative_path = index_path.relative_to(DOCS_DIR)
+            # 处理 urlname 元数据
             final_path = relative_path.with_name(f"{info['urlname']}.md") if info.get('urlname') else relative_path
             index_page = final_path.as_posix()
     
-    # 收集所有文件和子目录
+    # 2. 收集所有文件和子目录
     pages_with_ts = []
     categories_with_ts = []
     
     for child in current_path.iterdir():
         if child.is_dir():
-            sub_nav = generate_nav_tree(child, file_timestamps, folder_timestamps)
-            if sub_nav:
+            # 递归调用，获取子目录的内容列表
+            sub_nav_contents = generate_nav_tree(child, file_timestamps, folder_timestamps)
+            # 如果子目录有内容，才将其加入导航
+            if sub_nav_contents:
+                # 【核心修改】由父级负责包装子目录
                 category_name = get_category_name(child)
                 timestamp = folder_timestamps.get(child, 0)
-                nav_item = {category_name: sub_nav}
+                # 将子目录内容列表包装成字典，格式为 {目录名: [内容...]}
+                nav_item = {category_name: sub_nav_contents}
                 categories_with_ts.append((nav_item, timestamp))
+
         elif child.is_file() and child.suffix == '.md':
-            # 跳过已经处理的index.md文件
-            if child.name.lower() == 'index.md' and index_page is not None:
+            # 跳过已经作为 index_page 处理的 index.md 文件
+            if child.name.lower() == 'index.md':
                 continue
+            
             info = parse_md_file(child)
             relative_path = child.relative_to(DOCS_DIR)
             final_path = relative_path.with_name(f"{info['urlname']}.md") if info.get('urlname') else relative_path
@@ -122,27 +139,27 @@ def generate_nav_tree(current_path: Path, file_timestamps: dict, folder_timestam
             nav_item = {info['title']: final_path.as_posix()}
             pages_with_ts.append((nav_item, timestamp))
     
-    # 排序页面和分类
+    # 3. 排序页面和分类
     sorted_pages = sorted(pages_with_ts, key=lambda item: item[1], reverse=True)
     sorted_categories = sorted(categories_with_ts, key=lambda item: item[1], reverse=True)
     
-    # 构建最终结果
+    # 4. 构建并返回最终的内容列表
     final_pages = [item[0] for item in sorted_pages]
     final_categories = [item[0] for item in sorted_categories]
     
-    # 如果有index.md，将其作为单独的键值对添加到导航中
-    if index_page is not None:
-        # 获取目录名称
-        category_name = get_category_name(current_path)
-        # 创建导航项：目录名称作为键，包含index.md的列表作为值
-        nav_item = {category_name: [index_page] + final_pages + final_categories}
-        nav_items.append(nav_item)
-    else:
-        # 如果没有index.md，直接将页面和分类添加到导航
-        nav_items.extend(final_pages)
-        nav_items.extend(final_categories)
+    # 【核心修改】始终返回一个扁平的列表，代表当前目录的内容
+    nav_items = []
+    
+    # 如果有 index.md，它应该在列表的最前面
+    # 注意：这里只添加路径字符串，而不是字典
+    if index_page:
+        nav_items.append(index_page)
+        
+    nav_items.extend(final_pages)
+    nav_items.extend(final_categories)
     
     return nav_items
+
 
 def format_nav_to_yaml_string(nav_items: list, level=0) -> str:
     lines = []
