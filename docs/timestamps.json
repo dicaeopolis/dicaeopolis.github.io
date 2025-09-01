@@ -1,4 +1,8 @@
 {
+  "DNN/DC-GAN-\u8001\u5a46\u751f\u6210\u5668.md": 1756570798,
+  "DNN/Image-models-replication.md": 1756734262,
+  "DNN/Optimizer.md": 1754754557,
+  "DNN/index.md": 1756735050,
   "algorithm/benchmark-on-stl.md": 1754206639,
   "algorithm/index.md": 1756734953,
   "algorithm/stl-wheels.md": 1754206639,
@@ -9,8 +13,5 @@
   "campus-sources/index.md": 1756728203,
   "index.md": 1748332256,
   "misc/index.md": 1756734963,
-  "misc/test.md": 1755347380,
-  "\u6df1\u5ea6\u795e\u7ecf\u7f51\u7edc/DC-GAN-\u8001\u5a46\u751f\u6210\u5668.md": 1756570798,
-  "\u6df1\u5ea6\u795e\u7ecf\u7f51\u7edc/Image-models-replication.md": 1756734262,
-  "\u6df1\u5ea6\u795e\u7ecf\u7f51\u7edc/Optimizer.md": 1754754557
+  "misc/test.md": 1755347380
 }
