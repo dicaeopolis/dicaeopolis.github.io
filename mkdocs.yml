@@ -144,6 +144,8 @@ extra_javascript:
 
 nav:
   - 欢迎来到Dicaeopolis' Wiki.: 'index.md'
+  - 配置和杂谈笔记:
+    - 功能测试页面: 'misc/test.md'
   - 传统算法与性能:
     - STL的一些性能测试: 'algorithm/benchmark-on-stl.md'
     - 嗯造轮子: 'algorithm/stl-wheels.md'
@@ -156,5 +158,3 @@ nav:
     - 《数据结构》划重点笔记: 'campus-sources/ds-keynote.md'
     - 《数据结构》期末复习题题解: 'campus-sources/ds-write-up.md'
     - 自动签到脚本: 'campus-sources/autosignin.md'
-  - 配置和杂谈笔记:
-    - 功能测试页面: '配置和杂谈笔记/test.md'
