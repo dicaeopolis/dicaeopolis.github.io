@@ -3,8 +3,8 @@ echo "[+]Starting update process..."
 echo "[+]Constructing navigation automatically..."
 python3 ./auto_nav.py
 
-echo "[+]Updating last edited time..."
-python3 ./get_last_edition_time.py
+echo "[+]Please update the last edition time in Windows."
+# python3 ./get_last_edition_time.py
 
 echo "[+]Adding all changes..."
 git add .
