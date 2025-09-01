@@ -12,8 +12,8 @@ python3 ./auto_nav.py
 echo "[+]Please update the last edition time in Windows."
 python3 ./get_last_edition_time.py
 
-echo "[+]Adding generated navigation..."
-git add mkdocs.yml
+echo "[+]Adding generated navigation and timestamps..."
+git add mkdocs.yml docs/timestamps.json
 
 echo "[+]Committing changes..."
 echo "  [+]Common update for mkdocs.yml by update.sh"

@@ -129,33 +129,20 @@ def format_nav_to_yaml_string(nav_items: list, level=0) -> str:
 
 # ----------------- main 函数已添加调试打印功能 -----------------
 def main():
-    print("开始为 mkdocs.yml 生成导航 (文件优先，内部分组时间排序模式)...")
+    print("Generating navigation...")
     if not DOCS_DIR.is_dir() or not CONFIG_FILE.is_file():
-        print(f"错误: '{DOCS_DIR}' 或 '{CONFIG_FILE}' 未找到。")
+        print(f"FATAL: '{DOCS_DIR}' or '{CONFIG_FILE}' not found.")
         return
-    
-    print(f"正在加载时间戳文件 '{TIMESTAMPS_FILE}'...")
+
+    print(f"Loading timestamp file '{TIMESTAMPS_FILE}'...")
     file_timestamps = load_timestamps(TIMESTAMPS_FILE)
     folder_timestamps = calculate_folder_timestamps(file_timestamps)
 
-    # --- DEBUG: 打印计算出的文件夹时间戳 ---
-    print("\n--- 调试: 计算出的文件夹时间戳 ---")
-    if folder_timestamps:
-        # 按路径字母顺序打印，方便查看
-        for folder_path, timestamp in sorted(folder_timestamps.items(), key=lambda item: str(item[0])):
-            # 为了可读性，只打印相对于 DOCS_DIR 的路径
-            relative_folder = folder_path.relative_to(DOCS_DIR) if folder_path != DOCS_DIR else Path('.')
-            print(f"  - {relative_folder.as_posix()}: {timestamp}")
-    else:
-        print("  (未计算出任何文件夹时间戳)")
-    print("-------------------------------------\n")
-    # --- DEBUG END ---
-
-    print(f"正在扫描 '{DOCS_DIR}' 并构建导航...")
+    print(f"Scanning '{DOCS_DIR}' and building navigation...")
     nav_structure = generate_nav_tree(DOCS_DIR, file_timestamps, folder_timestamps)
     
     if not nav_structure:
-        print("警告: 未生成任何导航条目。")
+        print("Warning: No markdown files found to generate navigation.")
         nav_yaml_str = "nav: []"
     else:
         nav_yaml_str = "nav:\n" + format_nav_to_yaml_string(nav_structure, level=1)
@@ -163,22 +150,22 @@ def main():
     try:
         original_content = CONFIG_FILE.read_text(encoding='utf-8')
     except Exception as e:
-        print(f"错误: 无法读取 '{CONFIG_FILE}': {e}")
+        print(f"FATAL: Unable to read '{CONFIG_FILE}': {e}")
         return
         
     nav_pattern = re.compile(r"^nav:.*?(?=\n^\S|\Z)", re.DOTALL | re.MULTILINE)
     if nav_pattern.search(original_content):
-        print("找到现有的 'nav' 部分，正在替换...")
+        print("Found existing 'nav' section, replacing...")
         new_content, _ = nav_pattern.subn(nav_yaml_str, original_content, count=1)
     else:
-        print("未找到 'nav' 部分，正在追加到文件末尾...")
+        print("'nav' section not found, appending it to file...")
         new_content = original_content.rstrip() + '\n\n' + nav_yaml_str + '\n'
         
     try:
         CONFIG_FILE.write_text(new_content, encoding='utf-8')
-        print(f"'{CONFIG_FILE}' 更新成功。")
+        print(f"'{CONFIG_FILE}' successfully updated.")
     except Exception as e:
-        print(f"错误: 无法写入 '{CONFIG_FILE}': {e}")
+        print(f"FATAL: Unable to write '{CONFIG_FILE}': {e}")
 
 if __name__ == "__main__":
     main()
