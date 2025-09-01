@@ -8,7 +8,7 @@ CONFIG_FILE = Path('mkdocs.yml')
 
 
 def get_md_meta(content: str) -> dict:
-    # 使用简单的 regex 来提取 front matter，避免 YAML 库
+    # (此函数无需修改)
     meta_match = re.search(r'^\s*---\s*\n(.*?)\n---\s*\n', content, re.DOTALL)
     if not meta_match:
         return {}
@@ -19,12 +19,12 @@ def get_md_meta(content: str) -> dict:
             key, val = line.split(':', 1)
             key = key.strip()
             val = val.strip()
-            # 简单处理，不涵盖所有 YAML 复杂性，但对元数据足够
             if key in ['class', 'title', 'short_title', 'urlname']:
                  meta[key] = val.strip("'\"")
     return meta
 
 def get_md_title(content: str, meta: dict, fallback_name: str) -> str:
+    # (此函数无需修改)
     if meta.get('short_title'):
         return meta['short_title']
     if meta.get('title'):
@@ -38,6 +38,7 @@ def get_md_title(content: str, meta: dict, fallback_name: str) -> str:
     return fallback_name
 
 def parse_md_file(md_path: Path) -> dict:
+    # (此函数无需修改)
     try:
         content = md_path.read_text(encoding='utf-8')
     except (IOError, UnicodeDecodeError) as e:
@@ -47,62 +48,88 @@ def parse_md_file(md_path: Path) -> dict:
     meta = get_md_meta(content)
     title = get_md_title(content, meta, md_path.stem)
     
-    # 同样只做简单处理
     doc_class_str = meta.get('class', '').strip('[]')
     first_class = doc_class_str.split(',')[0].strip() if doc_class_str else None
 
     return {'title': title, 'class': first_class, 'urlname': meta.get('urlname')}
 
+# ----------------- 核心逻辑: 文件夹结构 + 元数据命名 -----------------
+
 def get_category_name(dir_path: Path) -> str:
+    """
+    确定目录的显示名称。
+    它会查找目录中第一个定义了 'class' 元数据的文件，并使用该值。
+    如果找不到，则使用格式化的目录名作为后备。
+    """
+    # 按名称排序以确保每次运行结果一致
     for md_file in sorted(dir_path.glob('*.md')):
         try:
             content = md_file.read_text(encoding='utf-8')
             meta = get_md_meta(content)
             doc_class_str = meta.get('class', '').strip('[]')
             if doc_class_str:
+                # 找到第一个就立即返回
                 return doc_class_str.split(',')[0].strip()
         except Exception:
+            # 如果文件读取失败，跳过
             continue
+    # 如果循环结束都没找到，使用目录名作为后备
     return dir_path.name.replace('_', ' ').replace('-', ' ').title()
 
 def generate_nav_tree(current_path: Path) -> list:
+    """
+    递归地根据文件系统结构生成导航树。
+    - 结构由文件夹决定。
+    - 分类名由 get_category_name 决定。
+    - 页面按字母顺序排列。
+    """
     nav_items = []
-    children = sorted(list(current_path.iterdir()), key=lambda p: (not p.is_dir(), p.name.lower()))
     
+    # 按名称字母顺序对所有子项（文件和目录）进行排序
+    children = sorted(list(current_path.iterdir()), key=lambda p: p.name.lower())
+    
+    # 使用单一循环处理所有子项
     for child in children:
+        # 情况A：如果子项是目录，递归处理
         if child.is_dir():
             sub_nav = generate_nav_tree(child)
             if sub_nav:
                 category_name = get_category_name(child)
                 nav_items.append({category_name: sub_nav})
+        
+        # 情况B：如果子项是 Markdown 文件
+        elif child.is_file() and child.suffix == '.md':
+            # 关键：只忽略子目录中的 index.md，不忽略根目录的
+            if child.name.lower() == 'index.md' and child.parent != DOCS_DIR:
+                continue
 
-    for child in children:
-        if child.is_file() and child.suffix == '.md' and child.name.lower() != 'index.md':
             info = parse_md_file(child)
             relative_path = child.relative_to(DOCS_DIR)
             final_path = relative_path.with_name(f"{info['urlname']}.md") if info.get('urlname') else relative_path
             path_str = final_path.as_posix()
             nav_items.append({info['title']: path_str})
+            
     return nav_items
 
+# ----------------- 结束核心逻辑 -----------------
+
 def format_nav_to_yaml_string(nav_items: list, level=0) -> str:
-    """将导航数据结构递归地格式化为YAML字符串。"""
+    # (此函数无需修改)
     lines = []
     indent = '  ' * level
     for item in nav_items:
         key, value = list(item.items())[0]
-        # 为包含特殊字符的键添加引号
         safe_key = f"'{key}'" if ':' in key or '#' in key else key
 
-        if isinstance(value, str):  # 是一个文件条目
+        if isinstance(value, str):
             lines.append(f"{indent}- {safe_key}: '{value}'")
-        elif isinstance(value, list):  # 是一个目录/分类
+        elif isinstance(value, list):
             lines.append(f"{indent}- {safe_key}:")
             lines.append(format_nav_to_yaml_string(value, level + 1))
     return "\n".join(lines)
 
 def main():
-    print("开始为 mkdocs.yml 生成导航 (纯文本模式)...")
+    print("开始为 mkdocs.yml 生成导航 (混合模式)...")
 
     if not DOCS_DIR.is_dir():
         print(f"错误: '{DOCS_DIR}' 文件夹未找到。")
@@ -126,8 +153,6 @@ def main():
         print(f"错误: 无法读取 '{CONFIG_FILE}': {e}")
         return
 
-    # 正则表达式，匹配从行首 'nav:' 开始，直到下一个非空白字符开头的行或文件末尾
-    # re.DOTALL 使 '.' 匹配换行符; re.MULTILINE 使 '^' 匹配每行开头
     nav_pattern = re.compile(r"^nav:.*?(?=\n^\S|\Z)", re.DOTALL | re.MULTILINE)
 
     if nav_pattern.search(original_content):
@@ -135,7 +160,6 @@ def main():
         new_content, count = nav_pattern.subn(nav_yaml_str, original_content, count=1)
     else:
         print("未找到 'nav' 部分，正在追加到文件末尾...")
-        # 确保文件末尾有换行符
         if not original_content.endswith('\n'):
             original_content += '\n'
         new_content = original_content + '\n' + nav_yaml_str + '\n'
