@@ -1,14 +1,16 @@
 import re
+import json
 from pathlib import Path
+from collections import defaultdict
 
 # --- 配置 ---
 DOCS_DIR = Path('docs')
 CONFIG_FILE = Path('mkdocs.yml')
+TIMESTAMPS_FILE = DOCS_DIR / 'timestamps.json'
 # --- 结束配置 ---
 
-
+# ... (所有辅助函数 get_md_meta, get_md_title, parse_md_file, load_timestamps, calculate_folder_timestamps, get_category_name 保持不变) ...
 def get_md_meta(content: str) -> dict:
-    # (此函数无需修改)
     meta_match = re.search(r'^\s*---\s*\n(.*?)\n---\s*\n', content, re.DOTALL)
     if not meta_match:
         return {}
@@ -24,7 +26,6 @@ def get_md_meta(content: str) -> dict:
     return meta
 
 def get_md_title(content: str, meta: dict, fallback_name: str) -> str:
-    # (此函数无需修改)
     if meta.get('short_title'):
         return meta['short_title']
     if meta.get('title'):
@@ -38,89 +39,86 @@ def get_md_title(content: str, meta: dict, fallback_name: str) -> str:
     return fallback_name
 
 def parse_md_file(md_path: Path) -> dict:
-    # (此函数无需修改)
     try:
         content = md_path.read_text(encoding='utf-8')
     except (IOError, UnicodeDecodeError) as e:
         print(f"警告: 无法读取文件 {md_path}: {e}")
         return {'title': md_path.stem, 'class': None, 'urlname': None}
-
     meta = get_md_meta(content)
     title = get_md_title(content, meta, md_path.stem)
-    
-    doc_class_str = meta.get('class', '').strip('[]')
-    first_class = doc_class_str.split(',')[0].strip() if doc_class_str else None
+    return {'title': title, 'urlname': meta.get('urlname')}
 
-    return {'title': title, 'class': first_class, 'urlname': meta.get('urlname')}
+def load_timestamps(file_path: Path) -> dict:
+    if not file_path.is_file():
+        print(f"警告: 时间戳文件 '{file_path}' 未找到，将按字母顺序排序。")
+        return {}
+    try:
+        with file_path.open('r', encoding='utf-8') as f:
+            data = json.load(f)
+        return {DOCS_DIR / k: v for k, v in data.items()}
+    except (json.JSONDecodeError, IOError) as e:
+        print(f"警告: 无法读取或解析时间戳文件 '{file_path}': {e}。将按字母顺序排序。")
+        return {}
 
-# ----------------- 核心逻辑: 文件夹结构 + 元数据命名 -----------------
+def calculate_folder_timestamps(file_timestamps: dict) -> dict:
+    folder_stamps = defaultdict(float)
+    if not file_timestamps:
+        return {}
+    for file_path, timestamp in file_timestamps.items():
+        # 从文件自身所在的目录开始，向上回溯
+        for parent in file_path.parents:
+            # 只要父目录在 DOCS_DIR 内部或就是 DOCS_DIR 本身，就更新
+            if parent == DOCS_DIR or DOCS_DIR in parent.parents:
+                 folder_stamps[parent] = max(folder_stamps.get(parent, 0.0), timestamp)
+            else:
+                # 一旦路径超出了 DOCS_DIR，就停止向上回溯
+                break
+    return dict(folder_stamps)
 
 def get_category_name(dir_path: Path) -> str:
-    """
-    确定目录的显示名称。
-    它会查找目录中第一个定义了 'class' 元数据的文件，并使用该值。
-    如果找不到，则使用格式化的目录名作为后备。
-    """
-    # 按名称排序以确保每次运行结果一致
     for md_file in sorted(dir_path.glob('*.md')):
         try:
             content = md_file.read_text(encoding='utf-8')
             meta = get_md_meta(content)
             doc_class_str = meta.get('class', '').strip('[]')
             if doc_class_str:
-                # 找到第一个就立即返回
                 return doc_class_str.split(',')[0].strip()
         except Exception:
-            # 如果文件读取失败，跳过
             continue
-    # 如果循环结束都没找到，使用目录名作为后备
     return dir_path.name.replace('_', ' ').replace('-', ' ').title()
 
-def generate_nav_tree(current_path: Path) -> list:
-    """
-    递归地根据文件系统结构生成导航树。
-    - 结构由文件夹决定。
-    - 分类名由 get_category_name 决定。
-    - 页面按字母顺序排列。
-    """
-    nav_items = []
-    
-    # 按名称字母顺序对所有子项（文件和目录）进行排序
-    children = sorted(list(current_path.iterdir()), key=lambda p: p.name.lower())
-    
-    # 使用单一循环处理所有子项
-    for child in children:
-        # 情况A：如果子项是目录，递归处理
+def generate_nav_tree(current_path: Path, file_timestamps: dict, folder_timestamps: dict) -> list:
+    pages_with_ts = []
+    categories_with_ts = []
+    for child in current_path.iterdir():
         if child.is_dir():
-            sub_nav = generate_nav_tree(child)
+            sub_nav = generate_nav_tree(child, file_timestamps, folder_timestamps)
             if sub_nav:
                 category_name = get_category_name(child)
-                nav_items.append({category_name: sub_nav})
-        
-        # 情况B：如果子项是 Markdown 文件
+                timestamp = folder_timestamps.get(child, 0)
+                nav_item = {category_name: sub_nav}
+                categories_with_ts.append((nav_item, timestamp))
         elif child.is_file() and child.suffix == '.md':
-            # 关键：只忽略子目录中的 index.md，不忽略根目录的
             if child.name.lower() == 'index.md' and child.parent != DOCS_DIR:
                 continue
-
             info = parse_md_file(child)
             relative_path = child.relative_to(DOCS_DIR)
             final_path = relative_path.with_name(f"{info['urlname']}.md") if info.get('urlname') else relative_path
-            path_str = final_path.as_posix()
-            nav_items.append({info['title']: path_str})
-            
-    return nav_items
-
-# ----------------- 结束核心逻辑 -----------------
+            timestamp = file_timestamps.get(child, 0)
+            nav_item = {info['title']: final_path.as_posix()}
+            pages_with_ts.append((nav_item, timestamp))
+    sorted_pages = sorted(pages_with_ts, key=lambda item: item[1], reverse=True)
+    sorted_categories = sorted(categories_with_ts, key=lambda item: item[1], reverse=True)
+    final_pages = [item[0] for item in sorted_pages]
+    final_categories = [item[0] for item in sorted_categories]
+    return final_pages + final_categories
 
 def format_nav_to_yaml_string(nav_items: list, level=0) -> str:
-    # (此函数无需修改)
     lines = []
     indent = '  ' * level
     for item in nav_items:
         key, value = list(item.items())[0]
         safe_key = f"'{key}'" if ':' in key or '#' in key else key
-
         if isinstance(value, str):
             lines.append(f"{indent}- {safe_key}: '{value}'")
         elif isinstance(value, list):
@@ -128,18 +126,33 @@ def format_nav_to_yaml_string(nav_items: list, level=0) -> str:
             lines.append(format_nav_to_yaml_string(value, level + 1))
     return "\n".join(lines)
 
+
+# ----------------- main 函数已添加调试打印功能 -----------------
 def main():
-    print("开始为 mkdocs.yml 生成导航 (混合模式)...")
-
-    if not DOCS_DIR.is_dir():
-        print(f"错误: '{DOCS_DIR}' 文件夹未找到。")
+    print("开始为 mkdocs.yml 生成导航 (文件优先，内部分组时间排序模式)...")
+    if not DOCS_DIR.is_dir() or not CONFIG_FILE.is_file():
+        print(f"错误: '{DOCS_DIR}' 或 '{CONFIG_FILE}' 未找到。")
         return
-    if not CONFIG_FILE.is_file():
-        print(f"错误: '{CONFIG_FILE}' 文件未找到。")
-        return
+    
+    print(f"正在加载时间戳文件 '{TIMESTAMPS_FILE}'...")
+    file_timestamps = load_timestamps(TIMESTAMPS_FILE)
+    folder_timestamps = calculate_folder_timestamps(file_timestamps)
 
-    print(f"正在扫描 '{DOCS_DIR}'...")
-    nav_structure = generate_nav_tree(DOCS_DIR)
+    # --- DEBUG: 打印计算出的文件夹时间戳 ---
+    print("\n--- 调试: 计算出的文件夹时间戳 ---")
+    if folder_timestamps:
+        # 按路径字母顺序打印，方便查看
+        for folder_path, timestamp in sorted(folder_timestamps.items(), key=lambda item: str(item[0])):
+            # 为了可读性，只打印相对于 DOCS_DIR 的路径
+            relative_folder = folder_path.relative_to(DOCS_DIR) if folder_path != DOCS_DIR else Path('.')
+            print(f"  - {relative_folder.as_posix()}: {timestamp}")
+    else:
+        print("  (未计算出任何文件夹时间戳)")
+    print("-------------------------------------\n")
+    # --- DEBUG END ---
+
+    print(f"正在扫描 '{DOCS_DIR}' 并构建导航...")
+    nav_structure = generate_nav_tree(DOCS_DIR, file_timestamps, folder_timestamps)
     
     if not nav_structure:
         print("警告: 未生成任何导航条目。")
@@ -152,18 +165,15 @@ def main():
     except Exception as e:
         print(f"错误: 无法读取 '{CONFIG_FILE}': {e}")
         return
-
+        
     nav_pattern = re.compile(r"^nav:.*?(?=\n^\S|\Z)", re.DOTALL | re.MULTILINE)
-
     if nav_pattern.search(original_content):
         print("找到现有的 'nav' 部分，正在替换...")
-        new_content, count = nav_pattern.subn(nav_yaml_str, original_content, count=1)
+        new_content, _ = nav_pattern.subn(nav_yaml_str, original_content, count=1)
     else:
         print("未找到 'nav' 部分，正在追加到文件末尾...")
-        if not original_content.endswith('\n'):
-            original_content += '\n'
-        new_content = original_content + '\n' + nav_yaml_str + '\n'
-
+        new_content = original_content.rstrip() + '\n\n' + nav_yaml_str + '\n'
+        
     try:
         CONFIG_FILE.write_text(new_content, encoding='utf-8')
         print(f"'{CONFIG_FILE}' 更新成功。")
