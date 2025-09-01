@@ -144,17 +144,17 @@ extra_javascript:
 
 nav:
   - 欢迎来到Dicaeopolis' Wiki.: 'index.md'
-  - 校内课程知识:
-    - 《数据结构》划重点笔记: 'campus-sources/ds-keynote.md'
-    - 《数据结构》期末复习题题解: 'campus-sources/ds-write-up.md'
-    - 自动签到脚本: 'campus-sources/autosignin.md'
+  - 传统算法与性能:
+    - STL的一些性能测试: 'algorithm/benchmark-on-stl.md'
+    - 嗯造轮子: 'algorithm/stl-wheels.md'
+    - 整数环取模模板: 'algorithm/template-on-numeric-ring.md'
   - 深度神经网络:
     - 图像分类相关模型复现手记: '深度神经网络/Image-models-replication.md'
     - DC-GAN 老婆生成器: '深度神经网络/DC-GAN-老婆生成器.md'
     - 神经网络优化器概述: '深度神经网络/Optimizer.md'
+  - 校内课程知识:
+    - 《数据结构》划重点笔记: 'campus-sources/ds-keynote.md'
+    - 《数据结构》期末复习题题解: 'campus-sources/ds-write-up.md'
+    - 自动签到脚本: 'campus-sources/autosignin.md'
   - 配置和杂谈笔记:
     - 功能测试页面: '配置和杂谈笔记/test.md'
-  - 传统算法与性能:
-    - STL的一些性能测试: '传统算法与性能/benchmark-on-stl.md'
-    - 嗯造轮子: '传统算法与性能/stl-wheels.md'
-    - 整数环取模模板: '传统算法与性能/template-on-numeric-ring.md'

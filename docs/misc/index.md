@@ -1,5 +1,5 @@
 ---
-class: 传统算法与性能
+class: 配置和杂谈笔记
 comments: true
 ---
 
