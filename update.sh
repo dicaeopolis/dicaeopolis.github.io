@@ -1,12 +1,17 @@
-echo "Updating last edited time..."
+echo "[+]Starting update process..."
+
+echo "[+]Constructing navigation automatically..."
+python3 ./auto_nav.py
+
+echo "[+]Updating last edited time..."
 python3 ./get_last_edition_time.py
 
-echo "add all changes..."
+echo "[+]Adding all changes..."
 git add .
 
-echo "commit changes..."
-echo "Common update triggered at $(date +"%Y-%m-%d %H:%M:%S") by update.sh"
+echo "[+]Committing changes..."
+echo "  [+]Common update triggered at $(date +"%Y-%m-%d %H:%M:%S") by update.sh"
 git commit -m "Common update triggered at $(date +"%Y-%m-%d %H:%M:%S") by update.sh"
 
-echo "push to remote repo..."
+echo "[+]Pushing to remote repo..."
 git push origin main
