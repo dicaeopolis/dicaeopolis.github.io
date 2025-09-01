@@ -35,7 +35,7 @@ def main():
         try:
             # 获取最后一次提交时间
             result = subprocess.run(
-                ['git', 'log', '-1', '--format=%ct', '--', git_path], # 增加 '--' 提高文件名处理的安全性
+                ['git', 'log', '-1', '--format=%ct', '--follow', '--', git_path], # 增加 '--' 提高文件名处理的安全性
                 cwd=project_root,
                 capture_output=True,
                 text=True,
