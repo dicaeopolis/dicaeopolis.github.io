@@ -21,7 +21,7 @@ def main():
     # 2. 使用 tqdm 遍历文件列表以显示进度
     for full_path in tqdm(md_files_to_process, desc="Generating Timestamps"):
         # 相对于 docs/ 目录的路径
-        rel_path_from_docs = os.path.relpath(full_path, docs_dir)
+        rel_path_from_docs = os.path.relpath(full_path, docs_dir).replace(os.path.sep, '/')
         # Git 路径（相对于项目根目录）
         git_path = os.path.join('docs', rel_path_from_docs)
 
