@@ -9,7 +9,6 @@ CONFIG_FILE = Path('mkdocs.yml')
 TIMESTAMPS_FILE = DOCS_DIR / 'timestamps.json'
 # --- 结束配置 ---
 
-# ... (所有辅助函数 get_md_meta, get_md_title, parse_md_file, load_timestamps, calculate_folder_timestamps, get_category_name 保持不变) ...
 def get_md_meta(content: str) -> dict:
     meta_match = re.search(r'^\s*---\s*\n(.*?)\n---\s*\n', content, re.DOTALL)
     if not meta_match:
@@ -88,8 +87,22 @@ def get_category_name(dir_path: Path) -> str:
     return dir_path.name.replace('_', ' ').replace('-', ' ').title()
 
 def generate_nav_tree(current_path: Path, file_timestamps: dict, folder_timestamps: dict) -> list:
+    nav_items = []
+    
+    # 检查当前目录是否有index.md（除了docs根目录）
+    index_page = None
+    if current_path != DOCS_DIR:
+        index_path = current_path / 'index.md'
+        if index_path.exists() and index_path.is_file():
+            info = parse_md_file(index_path)
+            relative_path = index_path.relative_to(DOCS_DIR)
+            final_path = relative_path.with_name(f"{info['urlname']}.md") if info.get('urlname') else relative_path
+            index_page = final_path.as_posix()
+    
+    # 收集所有文件和子目录
     pages_with_ts = []
     categories_with_ts = []
+    
     for child in current_path.iterdir():
         if child.is_dir():
             sub_nav = generate_nav_tree(child, file_timestamps, folder_timestamps)
@@ -99,7 +112,8 @@ def generate_nav_tree(current_path: Path, file_timestamps: dict, folder_timestam
                 nav_item = {category_name: sub_nav}
                 categories_with_ts.append((nav_item, timestamp))
         elif child.is_file() and child.suffix == '.md':
-            if child.name.lower() == 'index.md' and child.parent != DOCS_DIR:
+            # 跳过已经处理的index.md文件
+            if child.name.lower() == 'index.md' and index_page is not None:
                 continue
             info = parse_md_file(child)
             relative_path = child.relative_to(DOCS_DIR)
@@ -107,27 +121,50 @@ def generate_nav_tree(current_path: Path, file_timestamps: dict, folder_timestam
             timestamp = file_timestamps.get(child, 0)
             nav_item = {info['title']: final_path.as_posix()}
             pages_with_ts.append((nav_item, timestamp))
+    
+    # 排序页面和分类
     sorted_pages = sorted(pages_with_ts, key=lambda item: item[1], reverse=True)
     sorted_categories = sorted(categories_with_ts, key=lambda item: item[1], reverse=True)
+    
+    # 构建最终结果
     final_pages = [item[0] for item in sorted_pages]
     final_categories = [item[0] for item in sorted_categories]
-    return final_pages + final_categories
+    
+    # 如果有index.md，将其作为单独的键值对添加到导航中
+    if index_page is not None:
+        # 获取目录名称
+        category_name = get_category_name(current_path)
+        # 创建导航项：目录名称作为键，包含index.md的列表作为值
+        nav_item = {category_name: [index_page] + final_pages + final_categories}
+        nav_items.append(nav_item)
+    else:
+        # 如果没有index.md，直接将页面和分类添加到导航
+        nav_items.extend(final_pages)
+        nav_items.extend(final_categories)
+    
+    return nav_items
 
 def format_nav_to_yaml_string(nav_items: list, level=0) -> str:
     lines = []
     indent = '  ' * level
+    
     for item in nav_items:
-        key, value = list(item.items())[0]
-        safe_key = f"'{key}'" if ':' in key or '#' in key else key
-        if isinstance(value, str):
-            lines.append(f"{indent}- {safe_key}: '{value}'")
-        elif isinstance(value, list):
-            lines.append(f"{indent}- {safe_key}:")
-            lines.append(format_nav_to_yaml_string(value, level + 1))
+        if isinstance(item, str):
+            # 处理字符串类型的项目（如index.md路径）
+            lines.append(f"{indent}- '{item}'")
+        else:
+            # 处理字典类型的项目
+            key, value = list(item.items())[0]
+            safe_key = f"'{key}'" if ':' in key or '#' in key else key
+            
+            if isinstance(value, str):
+                lines.append(f"{indent}- {safe_key}: '{value}'")
+            elif isinstance(value, list):
+                lines.append(f"{indent}- {safe_key}:")
+                lines.append(format_nav_to_yaml_string(value, level + 1))
+    
     return "\n".join(lines)
 
-
-# ----------------- main 函数已添加调试打印功能 -----------------
 def main():
     print("Generating navigation...")
     if not DOCS_DIR.is_dir() or not CONFIG_FILE.is_file():
