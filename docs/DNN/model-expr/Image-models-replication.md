@@ -3985,6 +3985,8 @@ $$
 - 计算判别器的损失并进行优化：$\mathcal L_D= - \mathbb E_{x\sim p(x)}[\log D(x)] - \mathbb E_{z\sim q(z)}[\log (1-D(G(z)))]$
 - 计算生成器的损失并进行优化：$\mathcal L_G=-\mathbb E_{z\sim q(z)}[\log D(G(z))]$
 
+下面就是整体的网络结构图了。
+
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313444', 'tertiaryColor': '#181825'}}}%%
 graph LR
@@ -4049,6 +4051,10 @@ graph LR
     class Loss_D_Real, Loss_D_Fake;
     class Step_D,Step_G,Backward_D,Backward_G step;
 ```
+
+需要注意的是，在对判别器计算损失并更新的时候，有一个 detach 的操作，这就是防止梯度回传到生成器。生成器有自己的损失函数用来更新。其他的部分和刚刚推导的无异。
+
+下面是生成器模块。
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313244', 'tertiaryColor': '#181825'}}}%%
@@ -4119,6 +4125,8 @@ graph LR
     class UpsampleBlock1,UpsampleBlock2,UpsampleBlock3,UpsampleBlock4 deconvBlock;
 ```
 
+下面是判别器模块。
+
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313244', 'tertiaryColor': '#181825'}}}%%
 graph LR
@@ -4184,6 +4192,8 @@ graph LR
     class Output output;
     class DownsampleBlock1,DownsampleBlock2,DownsampleBlock3,DownsampleBlock4 convBlock;
 ```
+
+可见，这里的生成器和判别器都是**全卷积网络**，并且都使用了 BatchNorm2d 来稳定梯度。全卷积的作用在于不会因为池化的降采样而损失细节。
 
 ![loss curve](./Image-models-replication-assets/training_loss.png)
 
