@@ -3879,6 +3879,108 @@ if __name__ == "__main__":
 
 ### 拿 DC-GAN 画老婆
 
+我个人更倾向于接着 VAE 的思路，用变分推断的框架去推导 GAN。
+
+书接上回，我们知道 VAE 假定目标分布 $p(x)$ 可以被两步拟合而成，也就是预期 $p(x)\approx\int q(x|z)q(z)\mathrm dz$。$q(z)$ 即为隐变量分布，而 $q(x|z)$ 是从采样生成图片的解码器——或者我们可以换个名字，叫做生成器，也就是 $G(z)$。
+
+但是由于 VAE 引入的正态分布先验过多，导致朴素 VAE 出图很糊，于是我们考虑，至少和出图直接相关的生成器，可以改成非正态分布。怎么改呢？GAN 认为，可以直接建立随机变量 $z$ 到 $x$ 的一一对应！
+
+$$
+q(x|z)=\delta(x-G(z))
+$$
+
+这里用到了 Dirac Delta 函数，就是要建立这种一一对应。由于我们没有强制假设正态性，所以现在也不好说 $z$ 是隐变量，同时后验分布 $p(z|x)$ 也不好推知了（在 VAE 里面，是一个正态分布）。至少我们没有强制用先验的正态分布，不会那么“糊”了。
+
+我们知道无论如何变分推断的目的，是将不好推导的 $KL(q(x)||p(x))$ 通过引入隐变量 $y$，转化成更强也更容易推导的 $KL(q(x,y)||p(x,y))$。
+
+GAN 认为，这个隐变量是一个**二元的标签向量**，也就是用来区分哪些是从 $q(x|z)q(z)$ 生成的，哪些是 $p(x)$ 本来的分布。也就是说：
+
+$$
+q(x,y)=\left\{
+  \begin{align*}
+    &\dfrac 12\ p(x),\ y = 1\\
+    &\dfrac 12\ q(x),\ y = 0
+  \end{align*}
+\right.
+$$
+
+以及
+
+$$
+p(x,y)=p(y|x)p(x)
+$$
+
+这里的 $\dfrac 12$ 主要是起一个归一化的作用。下面的式子是变分推断框架的一部分，我们在 VAE 的理论推导中就见过了，只不过，在 VAE 里面，它的意思是编码器，这里编的是什么码呢？是**对图像来源进行判别得到的标签编码**。也就是说，我们可以把 $p(1|x)$ 看作一个分辨图像是否服从原分布的**判别器**，记作 $D(x)$
+
+然后很机械地我们带入 KL 散度的计算式里面：
+
+$$
+\begin{align*}
+  KL(q(x,y)||p(x,y))&=\sum_y\int q(x,y) \log \dfrac{q(x,y)}{p(x,y)} \mathrm d x\\
+  &=\int q(x,1) \log \dfrac{q(x,1)}{p(x,1)} \mathrm d x+\int q(x,0) \log \dfrac{q(x,0)}{p(x,0)} \mathrm d x\\
+  &=\int \dfrac 12 p(x) \log \dfrac{\frac 12 p(x)}{p(1|x)p(x)}\mathrm dx+\int \dfrac 12 q(x) \log \dfrac{\frac 12 q(x)}{p(0|x)p(x)}\mathrm dx\\
+  &=-\log 2-\dfrac 12 \int p(x) \log p(1|x)\mathrm dx+\dfrac 12 \int q(x)\log \dfrac{q(x)}{p(0|x)p(x)}\mathrm dx\\
+  &=-\log 2-\dfrac 12 \int p(x) \log p(1|x)\mathrm dx+\dfrac 12 \int q(x)\log q(x)\mathrm dx-\dfrac 12 \int q(x)\log p(0|x)p(x)\mathrm dx
+\end{align*}
+$$
+
+丢掉常数和系数。由于里面既有生成器 $G$ 又有判别器 $D$，因此，我们每一次优化分两步进行，也就是 EM 算法。
+
+首先，固定生成器 $G$ 也就是说现在生成的分布 $q(x)$ 不变，同时真实分布 $q(x)$ 不可能变；我们优化判别器 $D$，写成期望形式:
+
+$$
+-\mathbb E_{x\sim p(x)}[\log D(x)]+\mathrm{Constant.}-\mathbb E_{x\sim q(x)}[\log (1-D(x))]-\int q(x) \log p(x) \mathrm dx
+$$
+
+第二项和第四项都是常数，我们由此得到了判别器的优化目标，也就是损失函数：
+
+$$
+\begin{align*}
+  \mathcal L_D&= - \mathbb E_{x\sim p(x)}[\log D(x)] - \mathbb E_{x\sim q(x)}[\log (1-D(x))]\\
+  &= - \mathbb E_{x\sim p(x)}[\log D(x)] - \mathbb E_{z\sim q(z)}[\log (1-D(G(Z)))]
+\end{align*}
+$$
+
+下面我们固定判别器，也就是 $p(1|x)$ 固定，上式就剩下下面两项不是常数：
+
+$$
+\int q(x)\log q(x)\mathrm dx-\int q(x)\log p(0|x)p(x)\mathrm dx
+$$
+
+这里 $p(x)$ 不知道，怎么办？事实上考虑一个好的判别器 $D=p(1|x)$ 应该能完美区分来自 $p(x)$ 的原始图像和来自 $q(x)$ 的伪造图像，也就是说：
+
+$$
+D(x)=\dfrac{p(x)}{p(x)+\hat q(x)}
+$$
+
+就可以表征在 $p(x)$ 和 $q(x)$ 的混合下精准识别出真实样本。这里使用 $\hat q(x)$ 是因为我们是分步进行的，这一步刚好要对生成器 $G(z)=q(x|z)$ 更新，所以出现的 $q(x)$ 必须是上一步的伪造分布。解出 $p(x)$ 可得：
+
+$$
+p(x)=\hat q(x)\dfrac{D(x)}{1-D(x)}
+$$
+
+代入即可：
+
+$$
+\begin{align*}
+  \mathcal L_G&=\int q(x)\log q(x)\mathrm dx-\int q(x)\log p(0|x)p(x)\mathrm dx\\
+  &=\int q(x)\log q(x)\mathrm dx-\int q(x)\log [(1-D(x))\hat q(x)\dfrac{D(x)}{1-D(x)}]\mathrm dx\\
+  &=\int q(x)\log q(x)\mathrm dx-\int q(x)\log \hat q(x)\mathrm dx-\int q(x)\log D(x)\mathrm dx\\
+  &=-\mathbb E_{x\sim q(x)}[\log D(x)]+\int q(x)\log \dfrac{q(x)}{\hat q(x)}\mathrm dx\\
+  &=-\mathbb E_{z\sim q(z)}[\log D(G(z))]+KL(q(x)||\hat q(x))
+\end{align*}
+$$
+
+事实上，$KL(q(x)||\hat q(x))$ 可以说是对参数更新幅度的正则化约束，它要求理想情况下，$q$ 的变动尽可能小。这其实就引出了各种操作，比如加上 BatchNorm，或者使用梯度惩罚等方法。当然本文的复现不涉及 WGAN，所以就不深挖了。
+
+这样我们就从变分推断框架和 EM 算法得到了 GAN 的训练过程：
+
+- 加载一批真实样本，计算 $\mathbb E_{x\sim p(x)}[\log D(x)]$
+- 生成一批随机种子，然后交给 $G$ 进行伪造生成后再判别，进而计算 $\mathbb E_{z\sim q(z)}[\log (1-D(G(z)))]$ 和 $\mathbb E_{z\sim q(z)}[\log D(G(z))]$
+- 计算判别器的损失并进行优化：$\mathcal L_D= - \mathbb E_{x\sim p(x)}[\log D(x)] - \mathbb E_{z\sim q(z)}[\log (1-D(G(z)))]$
+- 计算生成器的损失并进行优化：
+- $\mathcal L_G=-\mathbb E_{z\sim q(z)}[\log D(G(z))]$
+
 ![loss curve](./Image-models-replication-assets/training_loss.png)
 
 |Epoch|5|10|20|30|40|50|
