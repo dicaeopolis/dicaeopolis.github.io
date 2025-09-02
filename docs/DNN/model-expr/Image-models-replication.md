@@ -2900,6 +2900,7 @@ graph LR
     
     %% Encoder Block 1
     subgraph EncoderBlock1 ["Encoder Block 1"]
+        direction LR
         Conv1["Conv2d <br> 3x64 x 3x3 /1"]
         BN1["BatchNorm2d<br>64"]
         ReLU1["ReLU"]
@@ -2909,6 +2910,7 @@ graph LR
     
     %% Encoder Block 2
     subgraph EncoderBlock2 ["Encoder Block 2"]
+        direction LR
         Conv2["Conv2d <br> 64x128 x 3x3 /1"]
         BN2["BatchNorm2d<br>128"]
         ReLU2["ReLU"]
@@ -2918,6 +2920,7 @@ graph LR
     
     %% Encoder Block 3
     subgraph EncoderBlock3 ["Encoder Block 3"]
+        direction LR
         Conv3["Conv2d <br> 128x256 x 3x3 /1"]
         BN3["BatchNorm2d<br>256"]
         ReLU3["ReLU"]
@@ -2970,6 +2973,7 @@ graph LR
     
     %% Decoder Block 1
     subgraph DecoderBlock1 ["Decoder Block 1"]
+        direction LR
         ConvT1["ConvTranspose2d<br>256x128 x 4x4 x 2"]
         BN1["BatchNorm2d"]
         ReLU1["ReLU"]
@@ -2978,6 +2982,7 @@ graph LR
     
     %% Decoder Block 2
     subgraph DecoderBlock2 ["Decoder Block 2"]
+        direction LR
         ConvT2["ConvTranspose2d<br>128x64 x 4x4 x 2"]
         BN2["BatchNorm2d"]
         ReLU2["ReLU"]
@@ -3879,7 +3884,7 @@ if __name__ == "__main__":
 
 ### 拿 DC-GAN 画老婆
 
-我个人更倾向于接着 VAE 的思路，用变分推断的框架去推导 GAN。
+虽然推出 GAN 框架的方法有很多，比如博弈论（即一开始提出 GAN 的论文的思路）和能量视角等，不过，我个人更倾向于接着 VAE 的思路，用变分推断的框架去推导 GAN。
 
 书接上回，我们知道 VAE 假定目标分布 $p(x)$ 可以被两步拟合而成，也就是预期 $p(x)\approx\int q(x|z)q(z)\mathrm dz$。$q(z)$ 即为隐变量分布，而 $q(x|z)$ 是从采样生成图片的解码器——或者我们可以换个名字，叫做生成器，也就是 $G(z)$。
 
@@ -3889,7 +3894,7 @@ $$
 q(x|z)=\delta(x-G(z))
 $$
 
-这里用到了 Dirac Delta 函数，就是要建立这种一一对应。由于我们没有强制假设正态性，所以现在也不好说 $z$ 是隐变量，同时后验分布 $p(z|x)$ 也不好推知了（在 VAE 里面，是一个正态分布）。至少我们没有强制用先验的正态分布，不会那么“糊”了。
+这里用到了 Dirac's Delta 函数，就是要建立这种一一对应。由于我们没有强制假设正态性，所以现在也不好说 $z$ 是隐变量，同时后验分布 $p(z|x)$ 也不好推知了（在 VAE 里面，是一个正态分布）。至少我们没有强制用先验的正态分布，不会那么“糊”了。
 
 我们知道无论如何变分推断的目的，是将不好推导的 $KL(q(x)||p(x))$ 通过引入隐变量 $y$，转化成更强也更容易推导的 $KL(q(x,y)||p(x,y))$。
 
@@ -3978,8 +3983,207 @@ $$
 - 加载一批真实样本，计算 $\mathbb E_{x\sim p(x)}[\log D(x)]$
 - 生成一批随机种子，然后交给 $G$ 进行伪造生成后再判别，进而计算 $\mathbb E_{z\sim q(z)}[\log (1-D(G(z)))]$ 和 $\mathbb E_{z\sim q(z)}[\log D(G(z))]$
 - 计算判别器的损失并进行优化：$\mathcal L_D= - \mathbb E_{x\sim p(x)}[\log D(x)] - \mathbb E_{z\sim q(z)}[\log (1-D(G(z)))]$
-- 计算生成器的损失并进行优化：
-- $\mathcal L_G=-\mathbb E_{z\sim q(z)}[\log D(G(z))]$
+- 计算生成器的损失并进行优化：$\mathcal L_G=-\mathbb E_{z\sim q(z)}[\log D(G(z))]$
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313444', 'tertiaryColor': '#181825'}}}%%
+graph LR
+    %% Styling
+    classDef box fill:#313244,stroke:#cdd6f4,stroke-width:2px,color:#cdd6f4,radius:8px;
+    classDef input fill:#585b70,stroke:#89b4fa,stroke-width:2px,color:#cdd6f4;
+    classDef gen fill:#313244,stroke:#a6e3a1,stroke-width:2px,color:#cdd6f4;
+    classDef disc fill:#313244,stroke:#f9e2af,stroke-width:2px,color:#cdd6f4;
+    classDef loss fill:#313244,stroke:#f2cdcd,stroke-width:2px,color:#cdd6f4;
+    classDef op fill:#313244,stroke:#89dceb,stroke-width:2px,color:#cdd6f4;
+    classDef step fill:#45475a,stroke:#a6e3a1,stroke-width:2px,color:#cdd6f4,radius:16px;
+    classDef addOp fill:#45475a,stroke:#cdd6f4,stroke-width:1px,shape:circle;
+
+    %% --- Data Generation ---
+    subgraph DataGen [Data Generation]
+        direction LR
+        Noise[("Latent Noise<br>z")] --> |latent_dim| G[("Generator<br>G")] --> |3 @ 64x64| FakeImg[("Fake Image<br>G(z)")]
+        RealImg[("Real Image<br>x")]
+    end
+
+    %% --- Discriminator Update Phase ---
+    subgraph Phase1 [Update Discriminator]
+        direction LR
+        D1[("Discriminator<br>D")]
+        
+        subgraph LossCalcD [Loss Calculation]
+            Loss_D_Fake["Fake loss =<br>-E[log(1-D(G(z)))]"]
+            Loss_D_Real["Real loss =<br>-E[log D(x)]"]
+            Add_D_Loss[(+)]
+            Loss_D_Real --> Add_D_Loss
+            Loss_D_Fake --> Add_D_Loss
+        end
+        Add_D_Loss --> L_D["D loss =<br> Real loss + Fake loss"]
+    end
+    
+    %% --- Generator Update Phase ---
+    subgraph Phase2 [Update Generator]
+        direction LR
+        D2[("Discriminator<br>D")]
+        Loss_G["G loss =-E[log D(G(z))]"]
+    end
+
+    %% --- Connecting the Phases ---
+    %% Connections for Discriminator training
+    Detach["Detach<br>Gradient"]
+    FakeImg --> Detach --> |3 @ 64x64| D1 -- "Score D(G(z))" --> Loss_D_Fake
+    
+    FakeImg --> |3 @ 64x64| D2 -- "Score D(G(z))" --> Loss_G
+    RealImg --> |3 @ 64x64| D1 -- "Score D(x)" --> Loss_D_Real
+
+    %% Connection for Generator training
+    
+    %% Set flow from left to right
+
+
+    %% Styling
+    class G gen;
+    class D1,D2 disc;
+    class Detach op;
+    class Add_D_Loss addOp;
+    class Noise,RealImg input;
+    class Loss_D_Real, Loss_D_Fake;
+    class Step_D,Step_G,Backward_D,Backward_G step;
+```
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313244', 'tertiaryColor': '#181825'}}}%%
+graph LR
+    %% Styling definitions
+    classDef box fill:#313244,stroke:#cdd6f4,stroke-width:2px,color:#cdd6f4,radius:8px;
+    classDef input fill:#585b70,stroke:#f5c2e7,stroke-width:2px,color:#cdd6f4;
+    classDef output fill:#313244,stroke:#f38ba8,stroke-width:2px,color:#cdd6f4;
+    classDef deconvBlock fill:#1e1e2e,stroke:#a6e3a1,stroke-width:1px,color:#a6e3a1;
+
+    %% Input
+    Input[("Latent Vector z<br>latent_dim")]
+    Reshape["Reshape to<br>latent_dim@1x1"]
+    
+    %% Upsample Block 1
+    subgraph UpsampleBlock1 ["Upsample Block 1"]
+        direction LR
+        ConvTranspose2d1["ConvTranspose2d<br> latent_dim x 512 x 4x4 / 1"]
+        BN1["BatchNorm2d"]
+        ReLU1["ReLU"]
+        ConvTranspose2d1 --> BN1 --> ReLU1
+    end
+    
+    %% Upsample Block 2
+    subgraph UpsampleBlock2 ["Upsample Block 2"]
+        direction LR
+        ConvTranspose2d2["ConvTranspose2d<br>512x256 x 4x4 / 2"]
+        BN2["BatchNorm2d"]
+        ReLU2["ReLU"]
+        ConvTranspose2d2 --> BN2 --> ReLU2
+    end
+    
+    %% Upsample Block 3
+    subgraph UpsampleBlock3 ["Upsample Block 3"]
+        direction LR
+        ConvTranspose2d3["ConvTranspose2d<br>256x128 x 4x4 / 2"]
+        BN3["BatchNorm2d"]
+        ReLU3["ReLU"]
+        ConvTranspose2d3 --> BN3 --> ReLU3
+    end
+    
+    %% Upsample Block 4
+    subgraph UpsampleBlock4 ["Upsample Block 4"]
+        direction LR
+        ConvTranspose2d4["ConvTranspose2d<br>128x64 x 4x4 / 2"]
+        BN4["BatchNorm2d"]
+        ReLU4["ReLU"]
+        ConvTranspose2d4 --> BN4 --> ReLU4
+    end
+
+    %% Final Conv and Activation
+    ConvTranspose2d5["ConvTranspose2dranspose2d<br>64x3 x 4x4 / 2"]
+    Tanh["Tanh"]
+    Output[("Generated Image<br>3@64x64")]
+
+    %% Connections
+    Input --> Reshape
+    Reshape --> UpsampleBlock1
+    UpsampleBlock1 --> |512 @4x4| UpsampleBlock2
+    UpsampleBlock2 --> |256 @8x8| UpsampleBlock3
+    UpsampleBlock3 --> |128 @16x16| UpsampleBlock4
+    UpsampleBlock4 --> |64 @32x32| ConvTranspose2d5
+    ConvTranspose2d5 --> Tanh --> Output
+    
+    %% Styling
+    class Input input;
+    class Output output;
+    class UpsampleBlock1,UpsampleBlock2,UpsampleBlock3,UpsampleBlock4 deconvBlock;
+```
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313244', 'tertiaryColor': '#181825'}}}%%
+graph LR
+    %% Styling definitions
+    classDef box fill:#313244,stroke:#cdd6f4,stroke-width:2px,color:#cdd6f4,radius:8px;
+    classDef input fill:#585b70,stroke:#89b4fa,stroke-width:2px,color:#cdd6f4;
+    classDef output fill:#313244,stroke:#f38ba8,stroke-width:2px,color:#cdd6f4;
+    classDef convBlock fill:#1e1e2e,stroke:#f9e2af,stroke-width:1px,color:#f9e2af;
+
+    %% Input
+    Input[("Input Image<br>3@64x64")]
+    
+    %% Downsample Block 1
+    subgraph DownsampleBlock1 ["Downsample Block 1"]
+        direction LR
+        Conv1["Conv2d<br>3x64 x 4x4 / 2"]
+        LReLU1["LeakyReLU(0.2)"]
+        Conv1 --> LReLU1
+    end
+    
+    %% Downsample Block 2
+    subgraph DownsampleBlock2 ["Downsample Block 2"]
+        direction LR
+        Conv2["Conv2d<br>64x128 x 4x4 / 2"]
+        BN2["BatchNorm2d"]
+        LReLU2["LeakyReLU(0.2)"]
+        Conv2 --> BN2 --> LReLU2
+    end
+    
+    %% Downsample Block 3
+    subgraph DownsampleBlock3 ["Downsample Block 3"]
+        direction LR
+        Conv3["Conv2d<br>128x256 x 4x4 / 2"]
+        BN3["BatchNorm2d"]
+        LReLU3["LeakyReLU(0.2)"]
+        Conv3 --> BN3 --> LReLU3
+    end
+
+    %% Downsample Block 4
+    subgraph DownsampleBlock4 ["Downsample Block 4"]
+        direction LR
+        Conv4["Conv2d<br>256x512 x 4x4 / 2"]
+        BN4["BatchNorm2d"]
+        LReLU4["LeakyReLU(0.2)"]
+        Conv4 --> BN4 --> LReLU4
+    end
+
+    %% Final Conv and Activation
+    Conv5["Conv2d<br>512x1 x 4x4 / 4"]
+    Sigmoid["Sigmoid"]
+    Output[("Output Probability<br>Scalar")]
+
+    %% Connections
+    Input --> DownsampleBlock1
+    DownsampleBlock1 --> |64 @32x32| DownsampleBlock2
+    DownsampleBlock2 --> |128 @16x16| DownsampleBlock3
+    DownsampleBlock3 --> |256 @8x8| DownsampleBlock4
+    DownsampleBlock4 --> |512 @4x4| Conv5
+    Conv5 --> |1 @1x1| Sigmoid --> Output
+
+    %% Styling
+    class Input input;
+    class Output output;
+    class DownsampleBlock1,DownsampleBlock2,DownsampleBlock3,DownsampleBlock4 convBlock;
+```
 
 ![loss curve](./Image-models-replication-assets/training_loss.png)
 
