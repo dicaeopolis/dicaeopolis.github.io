@@ -4195,12 +4195,254 @@ graph LR
 
 可见，这里的生成器和判别器都是**全卷积网络**，并且都使用了 BatchNorm2d 来稳定梯度。全卷积的作用在于不会因为池化的降采样而损失细节。
 
+下面放出代码：
+
+<details>
+
+<summary> 训练 DC-GAN 使用的代码 </summary>
+
+```python
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+from torch.utils.data import DataLoader
+from torchvision.utils import make_grid, save_image
+import numpy as np
+import matplotlib.pyplot as plt
+from tqdm import tqdm
+import os
+
+torch.backends.cudnn.benchmark = True
+
+config = {
+    "METHOD_NAME": "DC-GAN",
+    "LATENT_DIM": 128,
+    "BATCH_SIZE": 256,
+    "EPOCHS": 50,
+    "LR": 2e-4,
+    "BETA1": 0.5,  # Adam优化器的beta1参数
+    "DEVICE": "cuda" if torch.cuda.is_available() else "cpu",
+    "DATA_PATH": "./data",
+    "OUTPUT_PATH": "./output"
+}
+output_dir = os.path.join(config["OUTPUT_PATH"], config["METHOD_NAME"])
+os.makedirs(output_dir, exist_ok=True)
+print(f"Using device: {config['DEVICE']}")
+
+train_loader = dataloader
+
+class Generator(nn.Module):
+    def __init__(self, latent_dim):
+        super(Generator, self).__init__()
+        self.latent_dim = latent_dim
+        
+        self.main = nn.Sequential(
+            nn.ConvTranspose2d(latent_dim, 512, 4, 1, 0, bias=False),
+            nn.BatchNorm2d(512),
+            nn.ReLU(True),
+            nn.ConvTranspose2d(512, 256, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(256),
+            nn.ReLU(True),
+            nn.ConvTranspose2d(256, 128, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(128),
+            nn.ReLU(True),
+            nn.ConvTranspose2d(128, 64, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(64),
+            nn.ReLU(True),
+            nn.ConvTranspose2d(64, 3, 4, 2, 1, bias=False),
+            nn.Tanh()
+        )
+
+    def forward(self, input):
+        input = input.view(-1, self.latent_dim, 1, 1)
+        return self.main(input)
+
+
+class Discriminator(nn.Module):
+    def __init__(self):
+        super(Discriminator, self).__init__()
+        
+        self.main = nn.Sequential(
+            nn.Conv2d(3, 64, 4, 2, 1, bias=False),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(64, 128, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(128),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(128, 256, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(256),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(256, 512, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(512),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(512, 1, 4, 1, 0, bias=False),
+            nn.Sigmoid()
+        )
+
+    def forward(self, input):
+        return self.main(input).view(-1, 1)
+
+# --- 3. 初始化模型和优化器 ---
+def weights_init(m):
+    classname = m.__class__.__name__
+    if classname.find('Conv') != -1:
+        nn.init.normal_(m.weight.data, 0.0, 0.02)
+    elif classname.find('BatchNorm') != -1:
+        nn.init.normal_(m.weight.data, 1.0, 0.02)
+        nn.init.constant_(m.bias.data, 0)
+
+# --- 4. 训练循环 ---
+def train(generator, discriminator, train_loader, g_optimizer, d_optimizer, epoch):
+    generator.train()
+    discriminator.train()
+    
+    real_label = 1.0
+    fake_label = 0.0
+    
+    pbar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{config['EPOCHS']}")
+    
+    d_losses = []
+    g_losses = []
+    
+    for i, data in enumerate(pbar):
+        # 训练判别器
+        # 使用真实图像
+        real_images = data.to(config["DEVICE"])
+        batch_size = real_images.size(0)
+        label = torch.full((batch_size, 1), real_label, dtype=torch.float, device=config["DEVICE"])
+        
+        discriminator.zero_grad()
+        output = discriminator(real_images)
+        errD_real = F.binary_cross_entropy(output, label)
+        errD_real.backward()
+        D_x = output.mean().item()
+        
+        # 使用生成图像
+        noise = torch.randn(batch_size, config["LATENT_DIM"], device=config["DEVICE"])
+        fake_images = generator(noise)
+        label.fill_(fake_label)
+        output = discriminator(fake_images.detach())
+        errD_fake = F.binary_cross_entropy(output, label)
+        errD_fake.backward()
+        D_G_z1 = output.mean().item()
+        errD = errD_real + errD_fake
+        d_optimizer.step()
+        
+        # 训练生成器
+        generator.zero_grad()
+        label.fill_(real_label)  # 生成器希望判别器将假图像判断为真
+        output = discriminator(fake_images)
+        errG = F.binary_cross_entropy(output, label)
+        errG.backward()
+        D_G_z2 = output.mean().item()
+        g_optimizer.step()
+        
+        # 记录损失
+        d_losses.append(errD.item())
+        g_losses.append(errG.item())
+        
+        # 更新进度条
+        if i % 50 == 0:
+            pbar.set_postfix({
+                'D_loss': errD.item(), 
+                'G_loss': errG.item(),
+                'D(x)': D_x,
+                'D(G(z))': f"{D_G_z1:.4f}/{D_G_z2:.4f}"
+            })
+    
+    return np.mean(d_losses), np.mean(g_losses)
+
+# --- 5. 生成函数 ---
+def generate_and_save_images(generator, save_path, n_samples=64):
+    generator.eval()
+    with torch.no_grad():
+        noise = torch.randn(n_samples, config["LATENT_DIM"], device=config["DEVICE"])
+        generated_images = generator(noise).cpu()
+        grid = make_grid(generated_images, nrow=8, padding=2, normalize=True)
+        plt.figure(figsize=(8, 8))
+        plt.imshow(grid.permute(1, 2, 0))
+        plt.axis("off")
+        plt.title("Generated Images from DC-GAN")
+        plt.savefig(save_path)
+        plt.close()
+        
+        # 同时保存图像文件
+        save_image(generated_images, os.path.join(output_dir, f"generated_samples.png"), nrow=8, normalize=True)
+
+# --- 6. 训练指标绘图 ---
+def loss_visualization(d_losses, g_losses):
+    plt.figure(figsize=(10, 6))
+    plt.plot(d_losses, label='Discriminator Loss', color='blue')
+    plt.plot(g_losses, label='Generator Loss', color='red')
+    plt.title('DC-GAN Training Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.savefig(os.path.join(output_dir, "training_loss.png"))
+    plt.close()
+
+# --- 主程序 ---
+if __name__ == "__main__":
+    # 初始化模型
+    generator = Generator(latent_dim=config["LATENT_DIM"]).to(config["DEVICE"])
+    discriminator = Discriminator().to(config["DEVICE"])
+    
+    # 应用权重初始化
+    generator.apply(weights_init)
+    discriminator.apply(weights_init)
+    
+    # 初始化优化器
+    g_optimizer = optim.Adam(generator.parameters(), lr=config["LR"], betas=(config["BETA1"], 0.999))
+    d_optimizer = optim.Adam(discriminator.parameters(), lr=config["LR"], betas=(config["BETA1"], 0.999))
+    
+    # 用于存储损失
+    d_losses = []
+    g_losses = []
+    
+    print("--- Training DC-GAN Model ---")
+    for epoch in range(config["EPOCHS"]):
+        d_loss, g_loss = train(generator, discriminator, train_loader, g_optimizer, d_optimizer, epoch)
+        d_losses.append(d_loss)
+        g_losses.append(g_loss)
+        
+        # 每5个epoch保存一次生成图像
+        if (epoch + 1) % 5 == 0:
+            gen_save_path = os.path.join(output_dir, f"generated_images_epoch_{epoch+1}.png")
+            generate_and_save_images(generator, gen_save_path)
+            torch.save(generator.state_dict(), os.path.join(output_dir, f"generator_{epoch+1}.pth"))
+    
+    print("\n--- Generating Images from Trained DC-GAN ---")
+    gen_save_path = os.path.join(output_dir, "final_generated_images.png")
+    generate_and_save_images(generator, gen_save_path)
+    
+    # 保存模型
+    torch.save(generator.state_dict(), os.path.join(output_dir, "generator.pth"))
+    torch.save(discriminator.state_dict(), os.path.join(output_dir, "discriminator.pth"))
+    
+    # 绘制损失曲线
+    loss_visualization(d_losses, g_losses)
+```
+
+</details>
+
+跑了 50 个 Epoch，损失曲线如下：
+
 ![loss curve](./Image-models-replication-assets/training_loss.png)
+
+生成的图像随着 Epoch 变化如下：
 
 |Epoch|5|10|20|30|40|50|
 |:--:|:--:|:--:|:--:|:--:|:--:|:--:|
 |生成图像|![image](./Image-models-replication-assets/generated_images_epoch_5.png)|![image](./Image-models-replication-assets/generated_images_epoch_10.png)|![image](./Image-models-replication-assets/generated_images_epoch_20.png)|![image](./Image-models-replication-assets/generated_images_epoch_30.png)|![image](./Image-models-replication-assets/generated_images_epoch_40.png)|![image](./Image-models-replication-assets/generated_images_epoch_50.png)|
 
+50 个 Epoch 后的图像：
+
 ![image](./Image-models-replication-assets/generated_images_epoch_50.png)
+
+可以看到损失下降的同时，图像也越来越有模有样，同时也不“糊”了。
+
+为了演示这个模型，我做了一个 demo，就部署在本博客上面：[老婆生成器](https://dicaeopolis.github.io/DNN/model-expr/DC-GAN-%E8%80%81%E5%A9%86%E7%94%9F%E6%88%90%E5%99%A8/)。推理使用的是 TensorFlow.js，完全在网页端进行的推理。加载模型需要一段时间，因为训练用图像都是 64x64 的，因此不会吃太多性能。
+
+下面让我们看看怎么用 GAN 做分类吧。
 
 ### AC-GAN 分类
