@@ -74,6 +74,7 @@ markdown_extensions:
   - pymdownx.mark
   - pymdownx.snippets
   - pymdownx.smartsymbols
+  - pymdownx.superfences
   - pymdownx.tilde
 
   - pymdownx.superfences:
