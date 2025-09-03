@@ -4465,8 +4465,19 @@ if __name__ == "__main__":
 
 AC-GAN 是我们遇到的第二个 T2I 模型。其核心思想和 CVAE 差不多：首先在采样生成的时候，同时拼接一个标签信息，最后在判别的时候，在输出真伪概率的同时，也输出分类结果。这样，通过人为控制标签，就可以实现条件生成。对于损失函数，加上分类损失即可。
 
-- 判别器的损失：$\mathcal L_D= - \mathbb E_{x\sim p(x)}[\log D_{\mathrm{score}}(x)] + CE(D_{\mathrm{tag}}(x)||\mathrm{real\ tag}) - \mathbb E_{z\sim q(z)}[\log (1-D_{\mathrm{score}}(G(z)))] + CE(D_{\mathrm{tag}}(G(z))||\mathrm{fake\ tag})$
-- 生成器的损失：$\mathcal L_G=-\mathbb E_{z\sim q(z)}[\log D_{\mathrm{score}}(G(z))]+ CE(D_{\mathrm{tag}}(G(z))||\mathrm{fake\ tag})$
+- 判别器的损失：
+
+$$
+\begin{align*}
+\mathcal L_D=& - \mathbb E_{x\sim p(x)}[\log D_{\mathrm{score}}(x)] + CE(D_{\mathrm{tag}}(x)||\mathrm{real\ tag}) \\&- \mathbb E_{z\sim q(z)}[\log (1-D_{\mathrm{score}}(G(z)))] + CE(D_{\mathrm{tag}}(G(z))||\mathrm{fake\ tag})
+\end{align*}
+$$
+
+- 生成器的损失：
+
+$$
+\mathcal L_G=-\mathbb E_{z\sim q(z)}[\log D_{\mathrm{score}}(G(z))]+ CE(D_{\mathrm{tag}}(G(z))||\mathrm{fake\ tag})
+$$
 
 其中 $D_{\mathrm{score}}$ 是输出真伪概率的判别器，$D_{\mathrm{tag}}$ 是输出分类信息的分类判别器，$CE$ 是交叉熵损失，分类任务的标配。在实现上，可以共用一个特征提取的骨干网络，替换不同维度的投影头即可。
 
