@@ -2882,7 +2882,7 @@ graph LR
     class LossCalc loss;
 ```
 
-其中，编码器使用三层的卷积神经网络：
+其中，编码器使用三层的卷积神经网络，并使用了池化来缩小特征图，这也是“糊”的一部分原因，在后面的 GAN 复现中，我们采用了全卷积的架构，因为缩小特征图必不一定非要池化，还可以改变步长。下面是编码器的具体架构：
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true, 'primaryColor': '#1e1e2e', 'edgeLabelBackground':'#313244', 'tertiaryColor': '#181825'}}}%%
@@ -3942,7 +3942,7 @@ $$
 $$
 \begin{align*}
   \mathcal L_D&= - \mathbb E_{x\sim p(x)}[\log D(x)] - \mathbb E_{x\sim q(x)}[\log (1-D(x))]\\
-  &= - \mathbb E_{x\sim p(x)}[\log D(x)] - \mathbb E_{z\sim q(z)}[\log (1-D(G(Z)))]
+  &= - \mathbb E_{x\sim p(x)}[\log D(x)] - \mathbb E_{z\sim q(z)}[\log (1-D(G(z)))]
 \end{align*}
 $$
 
@@ -3976,7 +3976,15 @@ $$
 \end{align*}
 $$
 
-事实上，$KL(q(x)||\hat q(x))$ 可以说是对参数更新幅度的正则化约束，它要求理想情况下，$q$ 的变动尽可能小。这其实就引出了各种操作，比如加上 BatchNorm，或者使用梯度惩罚等方法。当然本文的复现不涉及 WGAN，所以就不深挖了。
+事实上，$KL(q(x)||\hat q(x))$ 可以说是对参数更新幅度的正则化约束，它要求理想情况下，$q$ 的变动尽可能小。这其实就引出了各种操作，比如加上 BatchNorm，或者使用梯度惩罚等方法。当然本文的复现不涉及 WGAN，所以就不深挖，只讲一下后面会用到的谱归一化。
+
+为了不训炸，控制参数更新量，我们应该对网络结构做出一定的光滑性约束。这样就引入了 Lipschitz 连续性的条件，也就是对于 $f(x)$ 而言要求存在 $K$ 使得
+
+$$
+|f(x_1)-f(x_2)|\leq K|x_1-x_2|
+$$
+
+对于单个线性层 $f(x)=Wx$ 而言，$K$ 其实衡量的是 $W$ 能把 $x$ 映射多“远”的能力，显然从几何意义上，我们可以对 $W$ 做一个 SVD 也就是 $W=U\Sigma V^\top$，由于 $U$ 和 $V$ 都是正交阵，$K$ 其实就是对应缩放矩阵 $\Sigma$ 里面最大的那个奇异值（这被称作该矩阵的**谱范数**）。那这不就好办了：对于每一层，我们都强制限制矩阵参数除以谱范数，就可以把每一层的 Lipschitz 条件控制到 $K=1$ 因此整个网络的 $K$ 也就限制到 $1$ 了。这一操作称作**谱归一化**。
 
 这样我们就从变分推断框架和 EM 算法得到了 GAN 的训练过程：
 
@@ -4053,6 +4061,8 @@ graph LR
 ```
 
 需要注意的是，在对判别器计算损失并更新的时候，有一个 detach 的操作，这就是防止梯度回传到生成器。生成器有自己的损失函数用来更新。其他的部分和刚刚推导的无异。
+
+这个图还有一个值得一提的点：**生成器的梯度完全由判别器回传而来**，也就是说有可能会发生之前在 VAE 里面提到的**后验崩塌**问题，即判别器过于强大，导致无法向生成器回传梯度。有一个巧妙的训练策略可以缓解这个问题：TTUR (Two Time-scale Update Rule)，也就是给生成器更高的学习率，让它在判别器尚未充分强大的时候先变强。可以看到无论是 TTUR 还是谱归一化，抑或是理论里面推导到的 KL 散度项，都是在防止判别器太快地变得过强。
 
 下面是生成器模块。
 
@@ -4446,3 +4456,747 @@ if __name__ == "__main__":
 下面让我们看看怎么用 GAN 做分类吧。
 
 ### AC-GAN 分类
+
+AC-GAN 是我们遇到的第二个 T2I 模型。其核心思想和 CVAE 差不多：首先在采样生成的时候，同时拼接一个标签信息，最后在判别的时候，在输出真伪概率的同时，也输出分类结果。这样，通过人为控制标签，就可以实现条件生成。对于损失函数，加上分类损失即可。
+
+- 判别器的损失：$\mathcal L_D= - \mathbb E_{x\sim p(x)}[\log D_{\mathrm{score}}(x)] + CE(D_{\mathrm{tag}}(x)||\mathrm{real\ tag}) - \mathbb E_{z\sim q(z)}[\log (1-D_{\mathrm{score}}(G(z)))] + CE(D_{\mathrm{tag}}(G(z))||\mathrm{fake\ tag})$
+- 生成器的损失：$\mathcal L_G=-\mathbb E_{z\sim q(z)}[\log D_{\mathrm{score}}(G(z))]+ CE(D_{\mathrm{tag}}(G(z))||\mathrm{fake\ tag})$
+
+其中 $D_{\mathrm{score}}$ 是输出真伪概率的判别器，$D_{\mathrm{tag}}$ 是输出分类信息的分类判别器，$CE$ 是交叉熵损失，分类任务的标配。在实现上，可以共用一个特征提取的骨干网络，替换不同维度的投影头即可。
+
+下面看看代码：
+
+<details>
+
+<summary> AC-GAN 的初版训练代码 </summary>
+
+```python
+import random
+import contextlib
+import numpy as np
+import torch
+import torch.nn as nn
+import torch.backends.cudnn as cudnn
+import torchvision
+import torchvision.transforms as T
+from torchvision.utils import make_grid
+from torch.utils.data import DataLoader
+from tqdm.auto import tqdm
+import matplotlib.pyplot as plt
+
+# -------------------
+# Configs & utils
+# -------------------
+seed = 3407
+random.seed(seed); np.random.seed(seed); torch.manual_seed(seed)
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+# cuDNN 加速
+cudnn.enabled = True
+cudnn.benchmark = True
+
+# 显式禁用 TF32（P100 不支持；此设置在 P100 上为 no-op）
+try:
+    torch.backends.cuda.matmul.allow_tf32 = False
+    torch.backends.cudnn.allow_tf32 = False
+except Exception:
+    pass
+
+# Hyper-params
+num_classes = 10
+image_size = 32
+z_dim = 128
+g_embed_dim = 128
+batch_size = 256
+lr = 2e-4
+beta1, beta2 = 0.5, 0.999
+num_epochs = 250
+use_amp = (device.type == 'cuda')  # P100 支持 FP16（无 TensorCores）
+use_channels_last = (device.type == 'cuda')
+real_label_smooth = 0.9
+
+# Data transforms: 无训练增广；仅归一化到 [-1, 1]
+mean = (0.5, 0.5, 0.5)
+std  = (0.5, 0.5, 0.5)
+train_tfms = T.Compose([
+    T.ToTensor(),
+    T.Normalize(mean, std),
+])
+test_tfms = T.Compose([
+    T.ToTensor(),
+    T.Normalize(mean, std),
+])
+
+# Datasets & Dataloaders
+train_set = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=train_tfms)
+test_set  = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=test_tfms)
+
+loader_kwargs = dict(
+    batch_size=batch_size,
+    num_workers=6,
+    pin_memory=True,
+    persistent_workers=True,  # 若在 notebook 反复运行报错，可改为 False
+    prefetch_factor=4,
+)
+train_loader = DataLoader(train_set, shuffle=True, drop_last=True, **loader_kwargs)
+test_loader  = DataLoader(test_set, shuffle=False, drop_last=False, **loader_kwargs)
+
+classes = train_set.classes
+
+# AMP autocast context
+amp_ctx = torch.autocast(device_type='cuda', dtype=torch.float16) if use_amp else contextlib.nullcontext()
+
+def denorm(x):
+    # [-1, 1] -> [0, 1]
+    return (x * 0.5 + 0.5).clamp(0, 1)
+
+# -------------------
+# Models
+# -------------------
+class Generator(nn.Module):
+    def __init__(self, z_dim=128, num_classes=10, embed_dim=100, base_ch=256):
+        super().__init__()
+        self.embed = nn.Embedding(num_classes, embed_dim)
+        self.fc = nn.Linear(z_dim + embed_dim, 4 * 4 * base_ch)
+        self.net = nn.Sequential(
+            nn.BatchNorm2d(base_ch),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(base_ch, base_ch // 2, 4, 2, 1, bias=False),  # 8x8
+            nn.BatchNorm2d(base_ch // 2),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(base_ch // 2, base_ch // 4, 4, 2, 1, bias=False),  # 16x16
+            nn.BatchNorm2d(base_ch // 4),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(base_ch // 4, base_ch // 8, 4, 2, 1, bias=False),  # 32x32
+            nn.BatchNorm2d(base_ch // 8),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(base_ch // 8, 3, 3, 1, 1),
+            nn.Tanh()
+        )
+
+    def forward(self, z, y):
+        e = self.embed(y)
+        h = torch.cat([z, e], dim=1)
+        h = self.fc(h)
+        # 用 reshape（兼容 channels_last / 非连续内存）
+        h = h.reshape(h.size(0), -1, 4, 4)
+        return self.net(h)
+
+class Discriminator(nn.Module):
+    def __init__(self, num_classes=10, base_ch=64):
+        super().__init__()
+        sn = nn.utils.spectral_norm  # 稳定训练
+        self.features = nn.Sequential(
+            sn(nn.Conv2d(3, base_ch, 4, 2, 1, bias=False)),   # 16x16
+            nn.LeakyReLU(0.2, inplace=True),
+            sn(nn.Conv2d(base_ch, base_ch * 2, 4, 2, 1, bias=False)),  # 8x8
+            nn.LeakyReLU(0.2, inplace=True),
+            sn(nn.Conv2d(base_ch * 2, base_ch * 4, 4, 2, 1, bias=False)),  # 4x4
+            nn.LeakyReLU(0.2, inplace=True),
+            sn(nn.Conv2d(base_ch * 4, base_ch * 8, 4, 2, 1, bias=False)),  # 2x2
+            nn.LeakyReLU(0.2, inplace=True),
+        )
+        self.flatten_dim = base_ch * 8 * 2 * 2
+        self.src_head = sn(nn.Linear(self.flatten_dim, 1))            # real/fake
+        self.cls_head = sn(nn.Linear(self.flatten_dim, num_classes))  # class logits
+
+    def forward(self, x):
+        h = self.features(x)
+        # 用 flatten（兼容 channels_last）
+        h = torch.flatten(h, 1)
+        src = self.src_head(h)
+        cls = self.cls_head(h)
+        return src, cls
+
+def weights_init(m):
+    if isinstance(m, (nn.Conv2d, nn.ConvTranspose2d, nn.Linear)):
+        if getattr(m, 'weight', None) is not None:
+            nn.init.normal_(m.weight, 0.0, 0.02)
+        if getattr(m, 'bias', None) is not None:
+            nn.init.zeros_(m.bias)
+    elif isinstance(m, nn.BatchNorm2d):
+        nn.init.normal_(m.weight, 1.0, 0.02)
+        nn.init.zeros_(m.bias)
+
+G = Generator(z_dim, num_classes, g_embed_dim).to(device)
+D = Discriminator(num_classes).to(device)
+
+if use_channels_last:
+    G = G.to(memory_format=torch.channels_last)
+    D = D.to(memory_format=torch.channels_last)
+
+G.apply(weights_init)
+D.apply(weights_init)
+
+# -------------------
+# Optimizers & Losses
+# -------------------
+opt_G = torch.optim.Adam(G.parameters(), lr=lr, betas=(beta1, beta2))
+opt_D = torch.optim.Adam(D.parameters(), lr=lr, betas=(beta1, beta2))
+
+bce = nn.BCEWithLogitsLoss()
+ce  = nn.CrossEntropyLoss()
+
+scaler_G = torch.cuda.amp.GradScaler(enabled=use_amp)
+scaler_D = torch.cuda.amp.GradScaler(enabled=use_amp)
+
+# -------------------
+# Eval: classifier accuracy on test set
+# -------------------
+@torch.no_grad()
+def eval_test_accuracy():
+    D.eval()
+    total, correct = 0, 0
+    for x, y in test_loader:
+        x = x.to(device, non_blocking=True)
+        if use_channels_last:
+            x = x.to(memory_format=torch.channels_last)
+        y = y.to(device, non_blocking=True)
+        with amp_ctx:
+            _, logits = D(x)
+        pred = logits.argmax(dim=1)
+        correct += (pred == y).sum().item()
+        total += y.size(0)
+    acc = 100.0 * correct / total
+    return acc
+
+# -------------------
+# Training loop
+# -------------------
+def train():
+    G.train(); D.train()
+    hist_loss_D, hist_loss_G, hist_acc = [], [], []
+
+    for epoch in range(1, num_epochs + 1):
+        pbar = tqdm(train_loader, desc=f'Epoch {epoch}/{num_epochs}', leave=True)
+        running_D, running_G = 0.0, 0.0
+
+        for i, (x_real, y_real) in enumerate(pbar):
+            x_real = x_real.to(device, non_blocking=True)
+            if use_channels_last:
+                x_real = x_real.to(memory_format=torch.channels_last)
+            y_real = y_real.to(device, non_blocking=True)
+
+            bsz = x_real.size(0)
+            valid = torch.full((bsz, 1), real_label_smooth, device=device)
+            fake  = torch.zeros(bsz, 1, device=device)
+
+            # -----------------
+            # Train Discriminator
+            # -----------------
+            z = torch.randn(bsz, z_dim, device=device)
+            y_fake = torch.randint(0, num_classes, (bsz,), device=device)
+
+            with amp_ctx:
+                x_fake = G(z, y_fake).detach()
+                d_src_real, d_cls_real = D(x_real)
+                d_src_fake, d_cls_fake = D(x_fake)
+                d_loss_real = bce(d_src_real, valid) + ce(d_cls_real, y_real)
+                d_loss_fake = bce(d_src_fake, fake)  + ce(d_cls_fake, y_fake)
+                d_loss = d_loss_real + d_loss_fake
+
+            opt_D.zero_grad(set_to_none=True)
+            scaler_D.scale(d_loss).backward()
+            scaler_D.step(opt_D)
+            scaler_D.update()
+
+            # -----------------
+            # Train Generator
+            # -----------------
+            z = torch.randn(bsz, z_dim, device=device)
+            y_fake = torch.randint(0, num_classes, (bsz,), device=device)
+            with amp_ctx:
+                gen = G(z, y_fake)
+                g_src, g_cls = D(gen)
+                g_loss = bce(g_src, valid) + ce(g_cls, y_fake)
+
+            opt_G.zero_grad(set_to_none=True)
+            scaler_G.scale(g_loss).backward()
+            scaler_G.step(opt_G)
+            scaler_G.update()
+
+            running_D += d_loss.item()
+            running_G += g_loss.item()
+
+            if (i + 1) % 10 == 0:
+                pbar.set_postfix({
+                    'loss_D': f'{running_D / (i + 1):.4f}',
+                    'loss_G': f'{running_G / (i + 1):.4f}'
+                })
+
+        # epoch 平均损失
+        epoch_loss_D = running_D / len(train_loader)
+        epoch_loss_G = running_G / len(train_loader)
+        hist_loss_D.append(epoch_loss_D)
+        hist_loss_G.append(epoch_loss_G)
+
+        # 评估测试集准确率（判别器的辅助分类头）
+        acc = eval_test_accuracy()
+        hist_acc.append(acc)
+
+        print(f'[Epoch {epoch}] loss_D={epoch_loss_D:.4f} loss_G={epoch_loss_G:.4f} | Test Acc={acc:.2f}%')
+
+        # 继续训练模式
+        D.train(); G.train()
+
+    return hist_loss_D, hist_loss_G, hist_acc
+
+# -------------------
+# Plot: 损失曲线 + 准确率曲线
+# -------------------
+def plot_history(loss_D, loss_G, acc):
+    epochs = range(1, len(loss_D) + 1)
+    plt.figure(figsize=(12, 4))
+    # 损失
+    plt.subplot(1, 2, 1)
+    plt.plot(epochs, loss_D, label='D loss')
+    plt.plot(epochs, loss_G, label='G loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.title('AC-GAN Training Loss')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    # 准确率
+    plt.subplot(1, 2, 2)
+    plt.plot(epochs, acc, color='tab:green', label='Test Acc (%)')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy (%)')
+    plt.title('Aux Classifier Test Accuracy')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.show()
+
+# -------------------
+# Generate: 10 classes, 5 images each, grid 10x5
+# -------------------
+@torch.no_grad()
+def generate_grid_horizontal_labeled(n_per=5):
+    G.eval()
+    imgs_by_class = []
+    for c in range(num_classes):
+        z = torch.randn(n_per, z_dim, device=device)
+        y = torch.full((n_per,), c, dtype=torch.long, device=device)
+        # 关闭 autocast 或显示前转 float32，避免 matplotlib 不支持 float16
+        with torch.autocast(device_type='cuda', enabled=False) if use_amp else contextlib.nullcontext():
+            x = G(z, y)
+        imgs_by_class.append(x.detach().cpu().float())  # [n_per, 3, 32, 32]
+
+    # 画成 5 行 × 10 列
+    fig, axes = plt.subplots(n_per, num_classes, figsize=(num_classes * 1.8, n_per * 1.8))
+    if n_per == 1:
+        axes = np.expand_dims(axes, 0)  # 兼容 n_per=1 的索引
+
+    for col in range(num_classes):
+        # 顶部列标题（类别名）
+        axes[0, col].set_title(classes[col], fontsize=10)
+        for row in range(n_per):
+            img = denorm(imgs_by_class[col][row]).permute(1, 2, 0).numpy()  # HWC float32
+            ax = axes[row, col]
+            ax.imshow(img)
+            ax.axis('off')
+
+    plt.tight_layout(w_pad=0.1, h_pad=0.1)
+    plt.show()
+
+# -------------------
+# Run
+# -------------------
+loss_D_hist, loss_G_hist, acc_hist = train()
+plot_history(loss_D_hist, loss_G_hist, acc_hist)
+generate_grid_horizontal_labeled()
+```
+
+</details>
+
+![ver1_loss](./Image-models-replication-assets/ver1_loss.png)
+
+![ver1_gen](./Image-models-replication-assets/ver1_gen.png)
+
+出现了一个很大的问题。虽然 loss 一直很稳没有炸，但是同一类别下，不同种子生成的图像全都一个样。
+
+这意味着出现了**模式崩塌**，其实问题还是出在结构上面：生成器得到的梯度完全是从判别器回传得到的，这就说明我的生成器可以偷个懒，只打磨那么一个可以骗过判别器的输出，然后就可以专心去应对分类损失项了，这其实有点 reward hacking 的味道了，因此我们还需要加入一个改进，强迫生成器生成更多样化的样本。
+
+对样本的多样化程度该如何衡量？从统计学意义上讲，使用**标准差**即可。也就是说，我们可以将这个 batch 里面的所有样本计算一个标准差，再拼接到特征图后面。这样，判别器就可以根据这一线索来对生成器的偷懒行为做出反应。这个叫做 Mini-Batch StdDev 策略。另一方面，我们可以在训练一开始对样本加入少量噪声，这样一开始就可以强迫生成器输出更多样的内容（熵更高），后面再衰减。
+
+结合上之前稳定训练的 TTUR 和谱归一化，我们就可以写出下面的代码了：
+
+<details>
+
+<summary> 训练 AC-GAN 的代码 </summary>
+
+```python
+import random
+import contextlib
+import numpy as np
+import torch
+import torch.nn as nn
+import torch.backends.cudnn as cudnn
+import torchvision
+import torchvision.transforms as T
+from torchvision.utils import make_grid
+from torch.utils.data import DataLoader
+from tqdm.auto import tqdm
+import matplotlib.pyplot as plt
+
+# -------------------
+# Configs & utils
+# -------------------
+seed = 3407
+random.seed(seed); np.random.seed(seed); torch.manual_seed(seed)
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+# cuDNN 加速
+cudnn.enabled = True
+cudnn.benchmark = True
+
+# 显式禁用 TF32
+try:
+    torch.backends.cuda.matmul.allow_tf32 = False
+    torch.backends.cudnn.allow_tf32 = False
+except Exception:
+    pass
+
+# Hyper-params
+num_classes = 10
+image_size = 32
+z_dim = 128
+g_embed_dim = 128
+batch_size = 256
+beta1, beta2 = 0.5, 0.999
+num_epochs = 250
+use_amp = (device.type == 'cuda') 
+use_channels_last = (device.type == 'cuda')
+
+# 抑制模式崩塌的关键超参
+real_label_smooth = 0.9
+lambda_cls = 0.5                 # 分类损失权重（AC-GAN 的 CE）
+lr_G, lr_D = 1e-4, 2e-4          # TTUR
+inst_noise_start = 0.1           # instance noise 初始标准差
+inst_noise_stop_frac = 0.5       # 在前 50% epoch 线性衰减到 0
+
+# Data transforms: 无训练增广；仅归一化到 [-1, 1]
+mean = (0.5, 0.5, 0.5)
+std  = (0.5, 0.5, 0.5)
+train_tfms = T.Compose([
+    T.ToTensor(),
+    T.Normalize(mean, std),
+])
+test_tfms = T.Compose([
+    T.ToTensor(),
+    T.Normalize(mean, std),
+])
+
+# Datasets & Dataloaders
+train_set = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=train_tfms)
+test_set  = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=test_tfms)
+
+loader_kwargs = dict(
+    batch_size=batch_size,
+    num_workers=6,
+    pin_memory=True,
+    persistent_workers=True,  # 若在 notebook 反复运行报错，可改为 False
+    prefetch_factor=4,
+)
+train_loader = DataLoader(train_set, shuffle=True, drop_last=True, **loader_kwargs)
+test_loader  = DataLoader(test_set, shuffle=False, drop_last=False, **loader_kwargs)
+
+classes = train_set.classes
+
+# AMP autocast context
+amp_ctx = torch.autocast(device_type='cuda', dtype=torch.float16) if use_amp else contextlib.nullcontext()
+
+def denorm(x):
+    # [-1, 1] -> [0, 1]
+    return (x * 0.5 + 0.5).clamp(0, 1)
+
+# 训练用：在 D 输入侧加入 Instance Noise
+def add_instance_noise(x, epoch, num_epochs, start_std=0.1, stop_frac=0.5):
+    stop_epoch = int(num_epochs * stop_frac)
+    if epoch > stop_epoch or start_std <= 0:
+        return x
+    # 线性衰减
+    t = epoch / max(1, stop_epoch)
+    std = start_std * (1.0 - t)
+    noise = torch.randn_like(x) * std
+    return (x + noise).clamp(-1, 1)
+
+# -------------------
+# Models
+# -------------------
+class Generator(nn.Module):
+    def __init__(self, z_dim=128, num_classes=10, embed_dim=128, base_ch=256):
+        super().__init__()
+        self.embed = nn.Embedding(num_classes, embed_dim)
+        self.fc = nn.Linear(z_dim + embed_dim, 4 * 4 * base_ch)
+        self.net = nn.Sequential(
+            nn.BatchNorm2d(base_ch),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(base_ch, base_ch // 2, 4, 2, 1, bias=False),  # 8x8
+            nn.BatchNorm2d(base_ch // 2),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(base_ch // 2, base_ch // 4, 4, 2, 1, bias=False),  # 16x16
+            nn.BatchNorm2d(base_ch // 4),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(base_ch // 4, base_ch // 8, 4, 2, 1, bias=False),  # 32x32
+            nn.BatchNorm2d(base_ch // 8),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(base_ch // 8, 3, 3, 1, 1),
+            nn.Tanh()
+        )
+
+    def forward(self, z, y):
+        e = self.embed(y)
+        h = torch.cat([z, e], dim=1)
+        h = self.fc(h)
+        h = h.reshape(h.size(0), -1, 4, 4)  # 兼容 channels_last
+        return self.net(h)
+
+class MinibatchStdDev(nn.Module):
+    def __init__(self, eps=1e-8):
+        super().__init__()
+        self.eps = eps
+    def forward(self, x):
+        # 计算批内标准差的均值，作为1个额外通道
+        # x: [N, C, H, W]
+        std = torch.sqrt(x.var(dim=0, unbiased=False) + self.eps)  # [C, H, W]
+        mean_std = std.mean().view(1, 1, 1, 1).expand(x.size(0), 1, x.size(2), x.size(3))
+        return torch.cat([x, mean_std], dim=1)
+
+class Discriminator(nn.Module):
+    def __init__(self, num_classes=10, base_ch=64):
+        super().__init__()
+        sn = nn.utils.spectral_norm  # 稳定训练
+        self.features = nn.Sequential(
+            sn(nn.Conv2d(3, base_ch, 4, 2, 1, bias=False)),                  # 16x16
+            nn.LeakyReLU(0.2, inplace=True),
+            sn(nn.Conv2d(base_ch, base_ch * 2, 4, 2, 1, bias=False)),        # 8x8
+            nn.LeakyReLU(0.2, inplace=True),
+            sn(nn.Conv2d(base_ch * 2, base_ch * 4, 4, 2, 1, bias=False)),    # 4x4
+            nn.LeakyReLU(0.2, inplace=True),
+            sn(nn.Conv2d(base_ch * 4, base_ch * 8, 4, 2, 1, bias=False)),    # 2x2
+            nn.LeakyReLU(0.2, inplace=True),
+            MinibatchStdDev(),                                               # +1 通道
+        )
+        self.flatten_dim = (base_ch * 8 + 1) * 2 * 2
+        self.src_head = sn(nn.Linear(self.flatten_dim, 1))            # real/fake
+        self.cls_head = sn(nn.Linear(self.flatten_dim, num_classes))  # class logits
+
+    def forward(self, x):
+        h = self.features(x)
+        h = torch.flatten(h, 1)  # 兼容 channels_last
+        src = self.src_head(h)
+        cls = self.cls_head(h)
+        return src, cls
+
+def weights_init(m):
+    if isinstance(m, (nn.Conv2d, nn.ConvTranspose2d, nn.Linear)):
+        if getattr(m, 'weight', None) is not None:
+            nn.init.normal_(m.weight, 0.0, 0.02)
+        if getattr(m, 'bias', None) is not None:
+            nn.init.zeros_(m.bias)
+    elif isinstance(m, nn.BatchNorm2d):
+        nn.init.normal_(m.weight, 1.0, 0.02)
+        nn.init.zeros_(m.bias)
+
+G = Generator(z_dim, num_classes, g_embed_dim).to(device)
+D = Discriminator(num_classes).to(device)
+
+if use_channels_last:
+    G = G.to(memory_format=torch.channels_last)
+    D = D.to(memory_format=torch.channels_last)
+
+G.apply(weights_init)
+D.apply(weights_init)
+
+# -------------------
+# Optimizers & Losses
+# -------------------
+opt_G = torch.optim.Adam(G.parameters(), lr=lr_G, betas=(beta1, beta2))  # TTUR
+opt_D = torch.optim.Adam(D.parameters(), lr=lr_D, betas=(beta1, beta2))
+
+bce = nn.BCEWithLogitsLoss()
+ce  = nn.CrossEntropyLoss()
+
+scaler_G = torch.cuda.amp.GradScaler(enabled=use_amp)
+scaler_D = torch.cuda.amp.GradScaler(enabled=use_amp)
+
+# -------------------
+# Eval: classifier accuracy on test set
+# -------------------
+@torch.no_grad()
+def eval_test_accuracy():
+    D.eval()
+    total, correct = 0, 0
+    for x, y in test_loader:
+        x = x.to(device, non_blocking=True)
+        if use_channels_last:
+            x = x.to(memory_format=torch.channels_last)
+        y = y.to(device, non_blocking=True)
+        with amp_ctx:
+            _, logits = D(x)  # 评估时不加噪声
+        pred = logits.argmax(dim=1)
+        correct += (pred == y).sum().item()
+        total += y.size(0)
+    acc = 100.0 * correct / total
+    return acc
+
+# -------------------
+# Training loop
+# -------------------
+def train():
+    G.train(); D.train()
+    hist_loss_D, hist_loss_G, hist_acc = [], [], []
+
+    for epoch in range(1, num_epochs + 1):
+        pbar = tqdm(train_loader, desc=f'Epoch {epoch}/{num_epochs}', leave=True)
+        running_D, running_G = 0.0, 0.0
+
+        for i, (x_real, y_real) in enumerate(pbar):
+            x_real = x_real.to(device, non_blocking=True)
+            if use_channels_last:
+                x_real = x_real.to(memory_format=torch.channels_last)
+            y_real = y_real.to(device, non_blocking=True)
+
+            bsz = x_real.size(0)
+            valid = torch.full((bsz, 1), real_label_smooth, device=device)
+            fake  = torch.zeros(bsz, 1, device=device)
+
+            # -----------------
+            # Train Discriminator
+            # -----------------
+            z = torch.randn(bsz, z_dim, device=device)
+            y_fake = torch.randint(0, num_classes, (bsz,), device=device)
+
+            with amp_ctx:
+                x_fake = G(z, y_fake).detach()
+
+                # Instance noise（仅训练使用）
+                x_real_in = add_instance_noise(x_real, epoch, num_epochs, inst_noise_start, inst_noise_stop_frac)
+                x_fake_in = add_instance_noise(x_fake, epoch, num_epochs, inst_noise_start, inst_noise_stop_frac)
+
+                d_src_real, d_cls_real = D(x_real_in)
+                d_src_fake, d_cls_fake = D(x_fake_in)
+
+                d_loss_real = bce(d_src_real, valid) + lambda_cls * ce(d_cls_real, y_real)
+                d_loss_fake = bce(d_src_fake, fake)  + lambda_cls * ce(d_cls_fake, y_fake)
+                d_loss = d_loss_real + d_loss_fake
+
+            opt_D.zero_grad(set_to_none=True)
+            scaler_D.scale(d_loss).backward()
+            scaler_D.step(opt_D)
+            scaler_D.update()
+
+            # -----------------
+            # Train Generator
+            # -----------------
+            z = torch.randn(bsz, z_dim, device=device)
+            y_fake = torch.randint(0, num_classes, (bsz,), device=device)
+            with amp_ctx:
+                gen = G(z, y_fake)
+                # G 反传路径也加同样的 instance noise
+                gen_in = add_instance_noise(gen, epoch, num_epochs, inst_noise_start, inst_noise_stop_frac)
+                g_src, g_cls = D(gen_in)
+                g_loss = bce(g_src, valid) + lambda_cls * ce(g_cls, y_fake)
+
+            opt_G.zero_grad(set_to_none=True)
+            scaler_G.scale(g_loss).backward()
+            scaler_G.step(opt_G)
+            scaler_G.update()
+
+            running_D += d_loss.item()
+            running_G += g_loss.item()
+
+            if (i + 1) % 10 == 0:
+                pbar.set_postfix({
+                    'loss_D': f'{running_D / (i + 1):.4f}',
+                    'loss_G': f'{running_G / (i + 1):.4f}'
+                })
+
+        # epoch 平均损失
+        epoch_loss_D = running_D / len(train_loader)
+        epoch_loss_G = running_G / len(train_loader)
+        hist_loss_D.append(epoch_loss_D)
+        hist_loss_G.append(epoch_loss_G)
+
+        # 评估测试集准确率（判别器的辅助分类头）
+        acc = eval_test_accuracy()
+        hist_acc.append(acc)
+
+        print(f'[Epoch {epoch}] loss_D={epoch_loss_D:.4f} loss_G={epoch_loss_G:.4f} | Test Acc={acc:.2f}%')
+
+        # 继续训练模式
+        D.train(); G.train()
+
+    return hist_loss_D, hist_loss_G, hist_acc
+
+# -------------------
+# Plot: 损失曲线 + 准确率曲线
+# -------------------
+def plot_history(loss_D, loss_G, acc):
+    epochs = range(1, len(loss_D) + 1)
+    plt.figure(figsize=(12, 4))
+    # 损失
+    plt.subplot(1, 2, 1)
+    plt.plot(epochs, loss_D, label='D loss')
+    plt.plot(epochs, loss_G, label='G loss')
+    plt.xlabel('Epoch'); plt.ylabel('Loss'); plt.title('AC-GAN Training Loss')
+    plt.legend(); plt.grid(True, alpha=0.3)
+    # 准确率
+    plt.subplot(1, 2, 2)
+    plt.plot(epochs, acc, color='tab:green', label='Test Acc (%)')
+    plt.xlabel('Epoch'); plt.ylabel('Accuracy (%)'); plt.title('Aux Classifier Test Accuracy')
+    plt.legend(); plt.grid(True, alpha=0.3)
+    plt.tight_layout(); plt.show()
+
+# -------------------
+# Generate: 横向 10 类 × 每类 5 张，列顶显示标签
+# -------------------
+@torch.no_grad()
+def generate_grid_horizontal_labeled(n_per=5):
+    G.eval()
+    imgs_by_class = []
+    for c in range(num_classes):
+        z = torch.randn(n_per, z_dim, device=device)
+        y = torch.full((n_per,), c, dtype=torch.long, device=device)
+        # 关闭 autocast 或显示前转 float32，避免 matplotlib 不支持 float16
+        with torch.autocast(device_type='cuda', enabled=False) if use_amp else contextlib.nullcontext():
+            x = G(z, y)
+        imgs_by_class.append(x.detach().cpu().float())  # [n_per, 3, 32, 32]
+
+    fig, axes = plt.subplots(n_per, num_classes, figsize=(num_classes * 1.8, n_per * 1.8))
+    if n_per == 1:
+        axes = np.expand_dims(axes, 0)
+
+    for col in range(num_classes):
+        axes[0, col].set_title(classes[col], fontsize=10)
+        for row in range(n_per):
+            img = denorm(imgs_by_class[col][row]).permute(1, 2, 0).numpy()
+            ax = axes[row, col]
+            ax.imshow(img)
+            ax.axis('off')
+
+    plt.tight_layout(w_pad=0.1, h_pad=0.1)
+    plt.show()
+
+# -------------------
+# Run
+# -------------------
+loss_D_hist, loss_G_hist, acc_hist = train()
+plot_history(loss_D_hist, loss_G_hist, acc_hist)
+generate_grid_horizontal_labeled()
+```
+
+</details>
+
+可以看到，模型训练相当稳定，准确率也比之前高了很多。
+
+![loss](./Image-models-replication-assets/ver2_loss.png)
+
+生成的图像里面，也有很多是挺像模像样的。
+
+![gen](./Image-models-replication-assets/ver2_gen.png)
+
+## 总结：使用什么模型进行分类？
