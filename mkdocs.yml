@@ -151,9 +151,9 @@ nav:
     - 'DNN/index.md'
     - 复现记录:
       - 'DNN/model-expr/index.md'
+      - 图像语义分割和目标检测相关模型复现手记: 'DNN/model-expr/S-and-D-models-replication.md'
       - 图像分类相关模型复现手记: 'DNN/model-expr/Image-models-replication.md'
       - DC-GAN 老婆生成器: 'DNN/model-expr/DC-GAN-老婆生成器.md'
-      - 图像语义分割和目标检测相关模型复现手记: 'DNN/model-expr/S-and-D-models-replication.md'
     - 优化器:
       - 'DNN/optimizer/index.md'
       - 后续的写作计划: 'DNN/optimizer/misc.md'
