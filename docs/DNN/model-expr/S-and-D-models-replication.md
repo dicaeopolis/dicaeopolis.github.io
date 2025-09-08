@@ -102,17 +102,17 @@ graph LR
 
 这里我们取到 `Maxpool 5` 之前的地方就够了，这样 VGG-16 的输出就是一张 `512@7x7` 的低分辨率特征图。然后 FCN 在这里就出现了几个变体（或者说一个演进的过程）：
 
-首先考虑把这个特征图直接上采样到 224x224，我们肯定不能用什么线性插值、立方插值、Lanczos 插值等算法，因为它只是插值而不引入新信息。这就要祭出我们在 DC-GAN 以及 SRCNN 等生成式模型里面见到的 `ConvTranspose2d` 了。之前在分类模型下面没有细讲，这里简要介绍一下：`ConvTranspose2d` 的原理是在原有像素的四周均匀插 `0` 得到和目标大小一致的大图，然后再在这个大图上面做正常卷积。
+首先考虑把这个特征图直接上采样到 224x224，我们肯定不能用什么线性插值、立方插值、Lanczos 插值等算法，因为它只是插值而不引入新信息。这就要祭出我们在 DC-GAN 以及 SRCNN 等生成式模型里面见到的 `ConvTranspose2d` 了。之前在分类模型下面没有细讲，这里简要介绍一下：`ConvTranspose2d` 的原理是在原有像素的四周均匀插 0 得到和目标大小一致的大图，然后再在这个大图上面做正常卷积。
 
-于是我们通过步长为 32 的转置卷积一次性将 `512@7x7` 的特征图上采样到 `3@224x224`，得到我们的目标图像。这便是 FCN-32s。这里的 32 就是转置卷积的步长。
+于是我们通过步长为 32 的转置卷积一次性将 `512@7x7` 的特征图上采样到 `n@224x224`，得到我们的目标图像。这便是 FCN-32s。这里的 32 就是转置卷积的步长，s 就是 stride 的意思。
 
 很显然，这个 `512@7x7` 的特征图剩下的信息相比于原图已经很少了，而我们的目标是要实现**像素级**的分割，为此，FCN 提出了跳跃连接的概念：既然编码器像一个“漏斗”一样去压榨特征，那么我取压榨之前具有更丰富信息的特征图，和我后面转置卷积上采样得到的特征图一融合，不就行了嘛。这便是 FCN 提出的跳跃连接思想。（其实和 ResNet 的残差连接有点像）
 
-这样，我们就不一次性暴力恢复，而是先利用步长为 2 的转置卷积将 `512@7x7` 的特征图上采样到 `512@14x14`，也就是和 `Maxpool 4` 的输出形状一致。这样就可以和前一个阶段的信息直接融合了。而这引发了我对于 FCN 架构的第一个疑点——FCN 的论文说是将两个特征图**相加**。但是我认为在通道维直接**拼接**，可能效果更好，因为对于特征图相加之后进行的卷积操作 C1 而言，我们总能设计一个卷积核使得拼接特征图再进行卷积操作 C2 的输出和相加后进行 C1 的输出完全一样，这意味着拼接再卷积作为一个张量到张量的映射集合，其“维度”是大于相加再卷积的，因而有能力承载更多的特征。不过，我们先按照原论文来，进行相加操作，得到 `512@14x14` 的特征图。最后，我们实施一次步长为 16 的转置卷积，上采样到 `3@224x224`，由于这一步步长为 16，所以叫 FCN-16s。
+这样，我们就不一次性暴力恢复，而是先利用步长为 2 的转置卷积将 `512@7x7` 的特征图上采样到 `n@14x14`，其中 n 是类别数，也就是和 `Maxpool 4` 的输出尺寸一致。这样，前一个阶段的信息经过一个 1x1 卷积合并通道之后，就可以直接融合了。而这引发了我对于 FCN 架构的第一个疑点——FCN 的论文说是将两个特征图**相加**。但是我认为在通道维直接**拼接**，可能效果更好，因为对于特征图相加之后进行的卷积操作 C1 而言，我们总能设计一个卷积核使得拼接特征图再进行卷积操作 C2 的输出和相加后进行 C1 的输出完全一样，这意味着拼接再卷积作为一个张量到张量的映射集合，其“维度”是大于相加再卷积的，因而有能力承载更多的特征。不过，我们先按照原论文来，进行相加操作，得到 `n@14x14` 的特征图。最后，我们实施一次步长为 16 的转置卷积，上采样到 `n@224x224`，由于这一步步长为 16，所以叫 FCN-16s。
 
-这样，FCN-8s 的意思就很简单了。我们对 `512@14x14` 的特征图进行一次步长为 2 的转置卷积，再同 `Maxpool 3` 的输出特征图相加得到 `256@28x28` 的特征图再实施一次步长为 8 的转置卷积，上采样到 `3@224x224` 即可。
+这样，FCN-8s 的意思就很简单了。我们对 `n@14x14` 的特征图进行一次步长为 2 的转置卷积，再同 `Maxpool 3` 的输出特征图相加得到 `n@28x28` 的特征图，再实施一次步长为 8 的转置卷积，上采样到 `n@224x224` 即可。
 
-FCN 的论文只做到 8s，为什么不接着往后面做呢？这就是我的第二个疑点。如果逐层应用跳跃连接，也就是 `256@28x28` 到 `128@56x56` 到 `64@112x112` 再到 `3@224x224`，每一步都以**拼接**的方式实现跳跃连接，那么我们几乎就发明了 U-Net。
+FCN 的论文只做到 8s，为什么不接着往后面做呢？这就是我的第二个疑点。如果逐层应用跳跃连接，也就是 `n@28x28` 到 `n@56x56` 到 `n@112x112` 再到 `n@224x224`，每一步都以**拼接**的方式实现跳跃连接，那么我们几乎就发明了 U-Net。
 
 下面是 FCN-8s 的架构：
 
@@ -255,21 +255,127 @@ graph LR
 那么我们就可以以此来评估模型性能了：
 
 $$
-\mathrm{Acc.}=\frac{\mathrm{TP}+\mathrm{FN}}{\mathrm{S}}\\
-\mathrm{Prec.}=\frac{\mathrm{TP}}{\mathrm{P}}=1-\frac{\mathrm{FP}}{\mathrm{P}}\\
-\mathrm{Recall}=\frac{\mathrm{TP}}{\mathrm{TP}+\mathrm{FN}}
+\begin{align*}
+    \mathrm{Acc.}&=\frac{\mathrm{TP}+\mathrm{FN}}{\mathrm{S}}\\
+    \mathrm{Prec.}&=\frac{\mathrm{TP}}{\mathrm{P}}=1-\frac{\mathrm{FP}}{\mathrm{P}}\\
+    \mathrm{Recall}&=\frac{\mathrm{TP}}{\mathrm{TP}+\mathrm{FN}}
+\end{align*}
+
 $$
 
 第一个是**准确率**即预测正确占总数的比例。第二个是**精准率**，越高说明假阴性/假阳性的占比越低。最后一个是**召回率**，可以理解成在预测正确的情况下，模型有多大意愿给出阴性/阳性结果。在语义分割的语境下，我们在单张图片的像素意义上计算这些指标，也就是说我们可以得到像素准确率 PA。
 
 ![alt text](image-26.png)
 
-如图，假设黑圈是 ground truth 而白圈是 prediction，那么以上三个率就很能可视化了。
+如图，假设黑圈是 ground truth 而白圈是 prediction，那么以上三个率就能可视化了。
 
 如果做的是像 Pascal VOC 这样的多类别语义分割，我们给每个类别都计算 PA，然后求平均，就得到一个总的计算准确率的指标：平均类别像素准确率 mPA。
 
-另一方面，我们其实希望白圈和黑圈尽可能重合，其实就是**相交得更多，不属于相交的部分更少**。为此，我们可以引入一个指标来衡量：交并比 IoU，也就是 II 区域的面积除以 I、II 和 III 区域的面积之和。同样的，我们可以计算类别平均交并比 mIoU。
+另一方面，我们其实希望白圈和黑圈尽可能重合，其实就是**相交得更多，不属于相交的部分更少**。为此，我们可以引入一个指标来衡量：交并比 IoU，也就是 II 区域的面积除以 I、II 和 III 区域的面积之和。
+
+$$
+\mathrm{IoU}=\dfrac{\mathrm{TP}}{\mathrm{T}+\mathrm{P}-\mathrm{TP}}
+$$
+
+同样的，我们可以计算类别平均交并比 mIoU。
+
+下面的代码就实现了基于混淆矩阵计算 PA 和 mIoU。
+
+```python
+def compute_metrics(hist):
+    pixel_accuracy = np.diag(hist).sum() / hist.sum() # 对角线元素都是预测正确的
+    iou = np.diag(hist) / (hist.sum(axis=1) + hist.sum(axis=0) - np.diag(hist))
+    miou = np.nanmean(iou)
+    return pixel_accuracy, miou
+```
 
 FCN 的损失函数当简单：其实我们等于是**对一个和原图尺寸一致的像素阵列做独立的分类**，那么和分类任务一样，**直接沿用交叉熵损失即可**！
 
 #### 实现细节
+
+这里的细节主要是来讲 FCN-8s 这个类的具体实现。
+
+```python
+class FCN8s(nn.Module):
+    def __init__(self, num_classes):
+        super(FCN8s, self).__init__()
+        # 预训练 VGG16
+        vgg = vgg16(weights=VGG16_Weights.IMAGENET1K_V1)
+        features = vgg.features
+        
+        # 提取不同阶段的特征图
+        self.pool3_features = features[:17]   # 到 pool3
+        self.pool4_features = features[17:24] # 到 pool4
+        self.pool5_features = features[24:]   # 到 pool5
+        
+        # 全连接层改为卷积层（FCN）
+        self.fc6 = nn.Conv2d(512, 4096, kernel_size=7, padding=3)
+        self.relu6 = nn.ReLU(inplace=True)
+        self.drop6 = nn.Dropout2d()
+        
+        self.fc7 = nn.Conv2d(4096, 4096, kernel_size=1)
+        self.relu7 = nn.ReLU(inplace=True)
+        self.drop7 = nn.Dropout2d()
+        
+        self.score_fr = nn.Conv2d(4096, num_classes, kernel_size=1)
+        
+        # 跳连 1x1
+        self.score_pool3 = nn.Conv2d(256, num_classes, kernel_size=1)
+        self.score_pool4 = nn.Conv2d(512, num_classes, kernel_size=1)
+        
+        # 上采样层（反卷积）
+        self.upscore2 = nn.ConvTranspose2d(num_classes, num_classes, kernel_size=4, stride=2, padding=1, bias=False)
+        self.upscore_pool4 = nn.ConvTranspose2d(num_classes, num_classes, kernel_size=4, stride=2, padding=1, bias=False)
+
+        # 1) 将 VGG classifier 的 fc6/fc7 预训练权重拷贝到卷积层
+        with torch.no_grad():
+            # vgg.classifier: [Linear(25088,4096), ReLU, Dropout, Linear(4096,4096), ReLU, Dropout, Linear(4096,1000)]
+            fc6_w = vgg.classifier[0].weight.view(4096, 512, 7, 7)
+            fc6_b = vgg.classifier[0].bias
+            self.fc6.weight.copy_(fc6_w)
+            self.fc6.bias.copy_(fc6_b)
+
+            fc7_w = vgg.classifier[3].weight.view(4096, 4096, 1, 1)
+            fc7_b = vgg.classifier[3].bias
+            self.fc7.weight.copy_(fc7_w)
+            self.fc7.bias.copy_(fc7_b)
+
+        # 2) 反卷积层用双线性插值进行初始化
+        with torch.no_grad():
+            self.upscore2.weight.copy_(bilinear_kernel(num_classes, num_classes, 4))
+            self.upscore_pool4.weight.copy_(bilinear_kernel(num_classes, num_classes, 4))
+
+    def forward(self, x):
+        input_size = x.shape[2:] # H, W
+        
+        pool3 = self.pool3_features(x)
+        pool4 = self.pool4_features(pool3)
+        pool5 = self.pool5_features(pool4)
+        
+        # FC -> Conv
+        h = self.relu6(self.fc6(pool5))
+        h = self.drop6(h)
+        h = self.relu7(self.fc7(h))
+        h = self.drop7(h)
+        
+        h = self.score_fr(h)
+        # 第一次上采样 (x2)
+        upscore2 = self.upscore2(h)
+        
+        # 跳连 pool4
+        score_pool4 = self.score_pool4(pool4)
+        upscore2 = F.interpolate(upscore2, size=score_pool4.size()[2:], mode='bilinear', align_corners=False)
+        fuse_pool4 = upscore2 + score_pool4
+        
+        # 第二次上采样 (x2)
+        upscore_pool4 = self.upscore_pool4(fuse_pool4)
+        
+        # 跳连 pool3
+        score_pool3 = self.score_pool3(pool3)
+        upscore_pool4 = F.interpolate(upscore_pool4, size=score_pool3.size()[2:], mode='bilinear', align_corners=False)
+        fuse_pool3 = upscore_pool4 + score_pool3
+        
+        # 最终上采样到输入尺寸
+        out = F.interpolate(fuse_pool3, size=input_size, mode='bilinear', align_corners=False)
+        return out
+```
