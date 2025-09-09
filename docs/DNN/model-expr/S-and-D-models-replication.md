@@ -775,6 +775,10 @@ print(f"最终验证 mIoU: {history['val_miou'][-1]:.4f}")
 
 ![alt text](curves.png)
 
+训练 70 个 Epoch，最后得到的 mIoU 在 0.53 左右，且出现了轻微的过拟合。因为没有像原论文一样从 32s 到 16s 逐步训练，也没有用 SBD 和其他数据增强，所以偏低。
+
+训练的过程中出现了损失尖峰，差点训炸，可能还是梯度缩放数值不大稳定，以及 batch size 只有 16 比较小。
+
 ![alt text](results_0.png)
 
 ### U-Net
