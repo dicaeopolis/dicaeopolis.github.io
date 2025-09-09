@@ -352,7 +352,7 @@ class FCN8s(nn.Module):
             self.fc7.bias.copy_(fc7_b)
 
         # 反卷积层用双线性插值进行初始化
-        # 反卷积和初始化的细节在后面说明
+        # 反卷积的初始化的细节在后面说明
         with torch.no_grad():
             self.upscore2.weight.copy_(bilinear_kernel(num_classes, num_classes, 4))
             self.upscore_pool4.weight.copy_(bilinear_kernel(num_classes, num_classes, 4))
@@ -774,3 +774,15 @@ print(f"最终验证 mIoU: {history['val_miou'][-1]:.4f}")
 #### 训练结果
 
 ![alt text](curves.png)
+
+![alt text](results_0.png)
+
+### U-Net
+
+待填坑。
+
+## 目标检测
+
+### YOLO v1
+
+待填坑。
