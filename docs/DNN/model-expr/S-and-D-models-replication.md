@@ -423,7 +423,7 @@ def bilinear_kernel(in_channels, out_channels, kernel_size):
 
 这里关键是 `filt` 的计算，本质上就是卷积核内部计算对应的行到边界的归一化曼哈顿距离乘以对应的列到边界的归一化曼哈顿距离。对于从小图到大图的转置卷积而言，大图里面两个源于小图的像素之间的像素，就可以根据到这两个像素的曼哈顿距离作为比例来混合得到。也就是说即使我们还没有从网络里面学到任何知识，这个卷积核至少还可以不破坏原有信息而直接插值放大。同时本来 FCN 的卷积核就需要对特征图进行放大，这无疑是相比随机初始化更高效的初始化方法。
 
-下面是完整的训练代码，关于数据加载和增强的大量工程性代码就不细讲了。
+下面是完整的训练代码，关于数据加载和增强的大量工程性代码就不细讲了。不过，代码里的数据增强还是比较有效。
 
 <details>
 
@@ -431,34 +431,61 @@ def bilinear_kernel(in_channels, out_channels, kernel_size):
 
 ```python
 import os
-import torch
-import torch.nn as nn
-import torch.optim as optim
-from torch.utils.data import Dataset, DataLoader
-import torchvision.transforms as T
-from torchvision.models import vgg16, VGG16_Weights
-import torch.nn.functional as F
-from PIL import Image
-import numpy as np
-import matplotlib.pyplot as plt
-from tqdm.notebook import tqdm
 import time
 import warnings
 warnings.filterwarnings("ignore", "(Possibly )?corrupt EXIF data", UserWarning)
 
-# --- 配置 ---
+import numpy as np
+from PIL import Image
+import matplotlib.pyplot as plt
+from tqdm.notebook import tqdm
+
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import torch.nn.functional as F
+from torch.utils.data import Dataset, DataLoader, ConcatDataset
+import torchvision.transforms as T
+from torchvision.models import vgg16, VGG16_Weights
+import itertools as it
+
+# -------------------- 配置 --------------------
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-DATA_PATH = "/kaggle/input/pascal-voc-2012/VOC2012/"
-NUM_CLASSES = 21  # 20类 + 背景
+USE_AMP = True  # 固定用 CUDA AMP
+
+# Kaggle 路径
+VOC2007_ROOT = "/kaggle/input/pascal-voc-2007/VOCtrainval_06-Nov-2007/VOCdevkit/VOC2007"
+VOC2007_ROOT_ALT = "/kaggle/input/pascal-voc-2007/VOCdevkit/VOC2007"
+if not os.path.isdir(VOC2007_ROOT) and os.path.isdir(VOC2007_ROOT_ALT):
+    VOC2007_ROOT = VOC2007_ROOT_ALT
+
+VOC2012_ROOT = "/kaggle/input/pascal-voc-2012/VOC2012"
+
+NUM_CLASSES = 21
 BATCH_SIZE = 16
+VAL_BATCH_SIZE = 1
 NUM_WORKERS = 6
-LEARNING_RATE = 1e-4
+
+LEARNING_RATE = 7.5e-5
 WEIGHT_DECAY = 1e-4
-EPOCHS = 25
+EPOCHS = 50
+
+# 评估加速开关
+EVAL_COMPUTE_LOSS = False     # True 会计算 val loss，稍慢
+EVAL_MAX_BATCHES = None       # 限制评估批次数；None 表示全量
+EVAL_MAX_IMAGES = None        # 限制评估图片数；None 表示全量
+EVAL_PROGRESS = True          # 保留 tqdm 进度条
+
+SAVE_DIR = "/kaggle/working"
+BEST_PATH_VOC = os.path.join(SAVE_DIR, "fcn8s_best_voc2012val.pth")
+LATEST_PATH = os.path.join(SAVE_DIR, "fcn8s_latest.pth")
+VIS_DIR = os.path.join(SAVE_DIR, "vis_voc_val")
 
 print(f"Using device: {DEVICE}")
+if DEVICE == "cuda":
+    torch.backends.cudnn.benchmark = True
 
-# PASCAL VOC 2012 颜色映射 (RGB)
+# PASCAL VOC 颜色映射 (RGB) 用于可视化
 VOC_COLORMAP = [
     [0, 0, 0], [128, 0, 0], [0, 128, 0], [128, 128, 0], [0, 0, 128],
     [128, 0, 128], [0, 128, 128], [128, 128, 128], [64, 0, 0], [192, 0, 0],
@@ -467,122 +494,134 @@ VOC_COLORMAP = [
     [0, 64, 128]
 ]
 
-# 颜色到类别索引的查表
-colormap2label = torch.zeros(256 ** 3, dtype=torch.long)
-for i, colormap in enumerate(VOC_COLORMAP):
-    colormap2label[(colormap[0] * 256 + colormap[1]) * 256 + colormap[2]] = i
-
-def voc_label_indices(mask, colormap2label):
-    """将RGB mask (PIL Image) 转换为类别索引mask (Torch Tensor)"""
-    mask_rgb = np.array(mask, dtype=np.int32)
-    idx = (mask_rgb[:, :, 0] * 256 + mask_rgb[:, :, 1]) * 256 + mask_rgb[:, :, 2]
-    return colormap2label[idx]
-
+# -------------------- 数据集（VOC） --------------------
 class VOCSegmentationDataset(Dataset):
-    def __init__(self, root, image_set='train', transforms=None):
+    """
+    用于 VOC2007/VOC2012 的语义分割数据。
+    若缺少 ImageSets/Segmentation/{split}.txt，将回退到扫描 SegmentationClass 目录。
+    """
+    def __init__(self, root, image_set="train", transforms=None, strict=True):
         self.root = root
         self.transforms = transforms
         self.image_set = image_set
-        
-        voc_dir = os.path.join(self.root)
-        image_dir = os.path.join(voc_dir, 'JPEGImages')
-        mask_dir = os.path.join(voc_dir, 'SegmentationClass')
-        
-        splits_dir = os.path.join(voc_dir, 'ImageSets', 'Segmentation')
-        split_f = os.path.join(splits_dir, image_set.rstrip('\n') + '.txt')
-        
-        with open(os.path.join(split_f), "r") as f:
-            file_names = [x.strip() for x in f.readlines()]
-            
-        self.images = [os.path.join(image_dir, x + ".jpg") for x in file_names]
-        self.masks = [os.path.join(mask_dir, x + ".png") for x in file_names]
-        
-        assert len(self.images) == len(self.masks)
+
+        image_dir = os.path.join(root, "JPEGImages")
+        mask_dir = os.path.join(root, "SegmentationClass")
+        split_file = os.path.join(root, "ImageSets", "Segmentation", f"{image_set}.txt")
+
+        assert os.path.isdir(image_dir), f"Image dir not found: {image_dir}"
+        if not os.path.isdir(mask_dir):
+            if strict:
+                raise FileNotFoundError(f"SegmentationClass not found: {mask_dir}")
+            else:
+                print(f"[Warning] SegmentationClass not found in {root}, dataset will be empty.")
+        self.image_dir = image_dir
+        self.mask_dir = mask_dir
+
+        ids = []
+        if os.path.isfile(split_file):
+            with open(split_file, "r") as f:
+                ids = [line.strip() for line in f if line.strip()]
+        else:
+            if os.path.isdir(mask_dir):
+                ids = [os.path.splitext(fn)[0] for fn in os.listdir(mask_dir) if fn.endswith(".png")]
+            else:
+                ids = []
+
+        self.image_paths, self.mask_paths = [], []
+        for id_ in ids:
+            ip = os.path.join(image_dir, f"{id_}.jpg")
+            mp = os.path.join(mask_dir, f"{id_}.png")
+            if os.path.isfile(ip) and os.path.isfile(mp):
+                self.image_paths.append(ip)
+                self.mask_paths.append(mp)
+        if len(self.image_paths) == 0:
+            print(f"[Warning] Empty dataset for root={root}, split={image_set}. Check masks/splits.")
 
     def __len__(self):
-        return len(self.images)
+        return len(self.image_paths)
 
     def __getitem__(self, idx):
-        image = Image.open(self.images[idx]).convert('RGB')
-        # 打开 palette mask（不转RGB，后续再处理）
-        mask = Image.open(self.masks[idx])
-        
+        image = Image.open(self.image_paths[idx]).convert("RGB")
+        mask = Image.open(self.mask_paths[idx])  # palette 索引
+
         if self.transforms is not None:
             image, target = self.transforms(image, mask)
         else:
-            # 兜底转换（通常不会走到这里）
-            image = T.functional.to_tensor(image)
-            image = T.functional.normalize(image, (0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
+            img = T.functional.to_tensor(image)
+            img = T.functional.normalize(img, (0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
             target = torch.from_numpy(np.array(mask, dtype=np.uint8)).long()
-        
+            image, target = img, target
         return image, target
 
+# -------------------- 数据增强与预处理 --------------------
 class SegmentationTransforms:
-    def __init__(self, is_train=True, base_size=520, crop_size=480):
+    def __init__(self, is_train=True, base_size=520, crop_size=480,
+                 color_jitter=True, add_noise_prob=0.15, noise_std=0.03):
         self.is_train = is_train
         self.base_size = base_size
         self.crop_size = crop_size
         self.mean = (0.485, 0.456, 0.406)
         self.std = (0.229, 0.224, 0.225)
-    
-    def __call__(self, img, mask):  # img, mask: PIL
-        # 如果任一边小于 base_size，按短边放大，保持比例
-        w, h = img.size
-        if w < self.base_size or h < self.base_size:
+        self.color_jitter = T.ColorJitter(0.4, 0.4, 0.4, 0.1) if color_jitter and is_train else None
+        self.add_noise_prob = add_noise_prob if is_train else 0.0
+        self.noise_std = noise_std
+
+    def __call__(self, img, mask):
+        if self.is_train:
+            # 1) 随机缩放短边到 [0.5, 2.0] * base_size
+            scale = np.random.uniform(0.5, 2.0)
+            short = int(self.base_size * scale)
+            w, h = img.size
             if w < h:
-                ow = self.base_size
-                oh = int(self.base_size * h / w)
+                ow, oh = short, int(short * h / w)
             else:
-                oh = self.base_size
-                ow = int(self.base_size * w / h)
+                oh, ow = short, int(short * w / h)
             img = img.resize((ow, oh), Image.BILINEAR)
             mask = mask.resize((ow, oh), Image.NEAREST)
 
-        if self.is_train:
-            # 随机裁剪到 crop_size
-            x1 = np.random.randint(0, img.width - self.crop_size + 1)
-            y1 = np.random.randint(0, img.height - self.crop_size + 1)
+            # 2) 若小于 crop_size，右下角 padding（mask 用 255）
+            pad_w = max(0, self.crop_size - img.size[0])
+            pad_h = max(0, self.crop_size - img.size[1])
+            if pad_w > 0 or pad_h > 0:
+                img = T.functional.pad(img, (0, 0, pad_w, pad_h), fill=0)
+                mask = T.functional.pad(mask, (0, 0, pad_w, pad_h), fill=255)
+
+            # 3) 随机裁剪
+            w, h = img.size
+            x1 = np.random.randint(0, w - self.crop_size + 1)
+            y1 = np.random.randint(0, h - self.crop_size + 1)
             img = img.crop((x1, y1, x1 + self.crop_size, y1 + self.crop_size))
             mask = mask.crop((x1, y1, x1 + self.crop_size, y1 + self.crop_size))
-            # 随机水平翻转
+
+            # 4) 随机水平翻转
             if np.random.rand() > 0.5:
                 img = T.functional.hflip(img)
                 mask = T.functional.hflip(mask)
-        else:
-            # 验证集不裁剪，保持整图评估
-            pass
 
-        # 转 Tensor 并标准化（仅 image）
+            # 5) 颜色抖动
+            if self.color_jitter is not None:
+                img = self.color_jitter(img)
+
+        # 转 Tensor
         img = T.functional.to_tensor(img)
+
+        # 可选噪声（归一化前）
+        if self.is_train and np.random.rand() < self.add_noise_prob:
+            noise = torch.randn_like(img) * self.noise_std
+            img = torch.clamp(img + noise, 0.0, 1.0)
+
+        # 标准化
         img = T.functional.normalize(img, self.mean, self.std)
-        
-        # mask -> 语义标签索引（使用颜色查表），并恢复边界像素为 255 忽略
-        target = voc_label_indices(mask.convert('RGB'), colormap2label)
-        mask_np = np.array(mask, dtype=np.uint8)
-        border_pixels = (mask_np == 255)
-        if border_pixels.any():
-            target[torch.from_numpy(border_pixels)] = 255
-        
+
+        # 直接把 palette/L 索引图转成类别 id（0..20，255 忽略）
+        target = torch.from_numpy(np.array(mask, dtype=np.uint8)).long()
         return img, target
 
-# 数据集与 DataLoader
-train_dataset = VOCSegmentationDataset(DATA_PATH, image_set='train', transforms=SegmentationTransforms(is_train=True))
-val_dataset = VOCSegmentationDataset(DATA_PATH, image_set='val', transforms=SegmentationTransforms(is_train=False))
-
-train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=NUM_WORKERS, pin_memory=True)
-# 验证整图评估，batch_size 设为 1
-val_loader = DataLoader(val_dataset, batch_size=1, shuffle=False, num_workers=NUM_WORKERS, pin_memory=True)
-
-print(f"训练集样本数: {len(train_dataset)}")
-print(f"验证集样本数: {len(val_dataset)}")
-
+# -------------------- 模型（FCN-8s） --------------------
 def bilinear_kernel(in_channels, out_channels, kernel_size):
-    """生成双线性插值的反卷积初始化权重"""
     factor = (kernel_size + 1) // 2
-    if kernel_size % 2 == 1:
-        center = factor - 1
-    else:
-        center = factor - 0.5
+    center = factor - 1 if kernel_size % 2 == 1 else factor - 0.5
     og = np.ogrid[:kernel_size, :kernel_size]
     filt = (1 - abs(og[0] - center) / factor) * (1 - abs(og[1] - center) / factor)
     weight = np.zeros((in_channels, out_channels, kernel_size, kernel_size), dtype=np.float32)
@@ -593,37 +632,29 @@ def bilinear_kernel(in_channels, out_channels, kernel_size):
 class FCN8s(nn.Module):
     def __init__(self, num_classes):
         super(FCN8s, self).__init__()
-        # 预训练 VGG16
         vgg = vgg16(weights=VGG16_Weights.IMAGENET1K_V1)
         features = vgg.features
-        
-        # 提取不同阶段的特征图
-        self.pool3_features = features[:17]   # 到 pool3
-        self.pool4_features = features[17:24] # 到 pool4
-        self.pool5_features = features[24:]   # 到 pool5
-        
-        # 全连接层改为卷积层（FCN）
+
+        self.pool3_features = features[:17]
+        self.pool4_features = features[17:24]
+        self.pool5_features = features[24:]
+
         self.fc6 = nn.Conv2d(512, 4096, kernel_size=7, padding=3)
         self.relu6 = nn.ReLU(inplace=True)
         self.drop6 = nn.Dropout2d()
-        
+
         self.fc7 = nn.Conv2d(4096, 4096, kernel_size=1)
         self.relu7 = nn.ReLU(inplace=True)
         self.drop7 = nn.Dropout2d()
-        
+
         self.score_fr = nn.Conv2d(4096, num_classes, kernel_size=1)
-        
-        # 跳连 1x1
         self.score_pool3 = nn.Conv2d(256, num_classes, kernel_size=1)
         self.score_pool4 = nn.Conv2d(512, num_classes, kernel_size=1)
-        
-        # 上采样层（反卷积）
+
         self.upscore2 = nn.ConvTranspose2d(num_classes, num_classes, kernel_size=4, stride=2, padding=1, bias=False)
         self.upscore_pool4 = nn.ConvTranspose2d(num_classes, num_classes, kernel_size=4, stride=2, padding=1, bias=False)
 
-        # 1) 将 VGG classifier 的 fc6/fc7 预训练权重拷贝到卷积层
         with torch.no_grad():
-            # vgg.classifier: [Linear(25088,4096), ReLU, Dropout, Linear(4096,4096), ReLU, Dropout, Linear(4096,1000)]
             fc6_w = vgg.classifier[0].weight.view(4096, 512, 7, 7)
             fc6_b = vgg.classifier[0].bias
             self.fc6.weight.copy_(fc6_w)
@@ -634,145 +665,323 @@ class FCN8s(nn.Module):
             self.fc7.weight.copy_(fc7_w)
             self.fc7.bias.copy_(fc7_b)
 
-        # 2) 反卷积层用双线性插值进行初始化
-        with torch.no_grad():
-            self.upscore2.weight.copy_(bilinear_kernel(num_classes, num_classes, 4))
-            self.upscore_pool4.weight.copy_(bilinear_kernel(num_classes, num_classes, 4))
+            self.upscore2.weight.copy_(bilinear_kernel(NUM_CLASSES, NUM_CLASSES, 4))
+            self.upscore_pool4.weight.copy_(bilinear_kernel(NUM_CLASSES, NUM_CLASSES, 4))
 
     def forward(self, x):
-        input_size = x.shape[2:] # H, W
-        
+        input_size = x.shape[2:]
         pool3 = self.pool3_features(x)
         pool4 = self.pool4_features(pool3)
         pool5 = self.pool5_features(pool4)
-        
-        # FC -> Conv
+
         h = self.relu6(self.fc6(pool5))
         h = self.drop6(h)
         h = self.relu7(self.fc7(h))
         h = self.drop7(h)
-        
+
         h = self.score_fr(h)
-        # 第一次上采样 (x2)
         upscore2 = self.upscore2(h)
-        
-        # 跳连 pool4
+
         score_pool4 = self.score_pool4(pool4)
         upscore2 = F.interpolate(upscore2, size=score_pool4.size()[2:], mode='bilinear', align_corners=False)
         fuse_pool4 = upscore2 + score_pool4
-        
-        # 第二次上采样 (x2)
+
         upscore_pool4 = self.upscore_pool4(fuse_pool4)
-        
-        # 跳连 pool3
+
         score_pool3 = self.score_pool3(pool3)
         upscore_pool4 = F.interpolate(upscore_pool4, size=score_pool3.size()[2:], mode='bilinear', align_corners=False)
         fuse_pool3 = upscore_pool4 + score_pool3
-        
-        # 最终上采样到输入尺寸
+
         out = F.interpolate(fuse_pool3, size=input_size, mode='bilinear', align_corners=False)
         return out
 
-model = FCN8s(num_classes=NUM_CLASSES).to(DEVICE)
-
+# -------------------- 评估指标 --------------------
 def compute_metrics(hist):
-    pixel_accuracy = np.diag(hist).sum() / hist.sum()
-    iou = np.diag(hist) / (hist.sum(axis=1) + hist.sum(axis=0) - np.diag(hist))
+    pixel_accuracy = np.diag(hist).sum() / hist.sum() if hist.sum() > 0 else 0.0
+    denom = (hist.sum(axis=1) + hist.sum(axis=0) - np.diag(hist))
+    iou = np.divide(np.diag(hist), denom, out=np.full_like(np.diag(hist, k=0), np.nan, dtype=float), where=denom!=0)
     miou = np.nanmean(iou)
     return pixel_accuracy, miou
 
-def train_one_epoch(model, optimizer, criterion, data_loader, device, scaler):
+# -------------------- 训练 / 验证 --------------------
+def train_one_epoch(model, optimizer, criterion, data_loader, device, scaler, lr_scheduler, grad_clip=1.0):
     model.train()
     total_loss = 0
     progress_bar = tqdm(data_loader, desc="Training", leave=False)
     for images, targets in progress_bar:
         images = images.to(device)
         targets = targets.to(device)
-        
+
         optimizer.zero_grad()
         with torch.amp.autocast(device_type='cuda'):
             outputs = model(images)
             loss = criterion(outputs, targets)
 
         scaler.scale(loss).backward()
+        scaler.unscale_(optimizer)
+        if grad_clip is not None and grad_clip > 0:
+            nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
+
         scaler.step(optimizer)
         scaler.update()
 
+        lr_scheduler.step()
+
         total_loss += loss.item()
-        progress_bar.set_postfix(loss=f'{loss.item():.4f}')
-        
+        progress_bar.set_postfix(
+            loss=f'{loss.item():.4f}',
+            lr=f'{optimizer.param_groups[0]["lr"]:.2e}/{optimizer.param_groups[1]["lr"]:.2e}'
+        )
     return total_loss / len(data_loader)
 
 @torch.no_grad()
-def evaluate(model, criterion, data_loader, device, num_classes):
+def evaluate_fast(model, criterion, data_loader, device, num_classes,
+                  compute_loss=False, max_batches=None, max_images=None, progress=True):
     model.eval()
-    total_loss = 0
-    confusion_matrix = np.zeros((num_classes, num_classes), dtype=np.int64)
-    
-    progress_bar = tqdm(data_loader, desc="Evaluating", leave=False)
-    for images, targets in progress_bar:
-        images = images.to(device)
-        targets = targets.to(device)
-        
-        with torch.amp.autocast(device_type='cuda'):
-            outputs = model(images)
-            loss = criterion(outputs, targets)
-        
-        total_loss += loss.item()
-        
-        preds = torch.argmax(outputs, dim=1).cpu().numpy()
-        targets_np = targets.cpu().numpy()
-        
-        # 忽略标签为255的像素
-        mask = targets_np != 255
-        
-        # 更新混淆矩阵（整图评估）
-        np.add.at(confusion_matrix, (targets_np[mask], preds[mask]), 1)
+    total_loss = 0.0
+    seen_images = 0
+    batches = 0
 
-    avg_loss = total_loss / len(data_loader)
-    pixel_acc, miou = compute_metrics(confusion_matrix)
+    conf = torch.zeros((num_classes, num_classes), dtype=torch.int64, device=device)
+    iterator = tqdm(data_loader, desc="Evaluating", leave=False) if progress else data_loader
+
+    with torch.inference_mode():
+        for images, targets in iterator:
+            images = images.to(device, non_blocking=True)
+            targets = targets.to(device, non_blocking=True)
+
+            with torch.amp.autocast(device_type='cuda'):
+                outputs = model(images)
+                if compute_loss:
+                    loss = criterion(outputs, targets)
+                    total_loss += loss.item()
+
+            preds = outputs.argmax(1)
+            valid = targets != 255
+            if valid.any():
+                n = num_classes
+                t = targets[valid].to(torch.int64)
+                p = preds[valid].to(torch.int64)
+                k = (t * n + p).view(-1)
+                conf += torch.bincount(k, minlength=n*n).view(n, n)
+
+            batches += 1
+            seen_images += images.size(0)
+
+            if (max_batches is not None and batches >= max_batches) or \
+               (max_images is not None and seen_images >= max_images):
+                break
+
+    conf_f = conf.to(torch.float32)
+    total = conf_f.sum()
+    pixel_acc = (torch.diag(conf_f).sum() / total).item() if total > 0 else 0.0
+    denom = (conf_f.sum(dim=1) + conf_f.sum(dim=0) - torch.diag(conf_f))
+    iou = torch.where(denom > 0, torch.diag(conf_f) / denom, torch.full_like(denom, float('nan')))
+    miou = torch.nanmean(iou).item()
+
+    avg_loss = (total_loss / batches) if compute_loss and batches > 0 else float('nan')
     return avg_loss, pixel_acc, miou
 
-criterion = nn.CrossEntropyLoss(ignore_index=255)
-optimizer = optim.AdamW(model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
+# -------------------- 可视化 --------------------
+def decode_segmap(image, nc=21, void_value=255, void_color=(0, 0, 0)):
+    lut = np.zeros((256, 3), dtype=np.uint8)
+    lut[:nc] = np.array(VOC_COLORMAP, dtype=np.uint8)
+    lut[void_value] = np.array(void_color, dtype=np.uint8)
+    return lut[image]
 
-# 混合精度
+def denormalize(tensor):
+    mean = np.array([0.485, 0.456, 0.406])
+    std = np.array([0.229, 0.224, 0.225])
+    arr = tensor.detach().cpu().numpy().transpose(1, 2, 0)
+    arr = std * arr + mean
+    return np.clip(arr, 0, 1)
+
+@torch.no_grad()
+def visualize_predictions(model, data_loader, device, num_images=20, save_dir=VIS_DIR, overlay_alpha=0.6):
+    os.makedirs(save_dir, exist_ok=True)
+    model.eval()
+    shown = 0
+
+    for images, targets in data_loader:
+        images = images.to(device)
+        with torch.amp.autocast(device_type='cuda'):
+            outputs = model(images)
+
+        preds = torch.argmax(outputs, dim=1).cpu().numpy()
+        images_cpu = images.cpu()
+        targets_np = targets.cpu().numpy()
+
+        bsz = images_cpu.shape[0]
+        for i in range(bsz):
+            if shown >= num_images: break
+
+            original_img = denormalize(images_cpu[i])
+            gt_mask_rgb = decode_segmap(targets_np[i])
+            pred_mask_rgb = decode_segmap(preds[i])
+
+            fig, axes = plt.subplots(1, 4, figsize=(20, 5))
+            axes[0].imshow(original_img); axes[0].set_title("Original"); axes[0].axis('off')
+            axes[1].imshow(gt_mask_rgb);  axes[1].set_title("Ground Truth"); axes[1].axis('off')
+            axes[2].imshow(pred_mask_rgb);axes[2].set_title("Prediction");   axes[2].axis('off')
+            axes[3].imshow(original_img); axes[3].imshow(pred_mask_rgb, alpha=overlay_alpha)
+            axes[3].set_title("Overlay"); axes[3].axis('off')
+            plt.tight_layout()
+
+            out_path = os.path.join(save_dir, f'result_{shown:03d}.png')
+            plt.savefig(out_path, dpi=150, bbox_inches='tight')
+            plt.close(fig)
+            shown += 1
+        if shown >= num_images: break
+
+    print(f"可视化结果保存在: {os.path.abspath(save_dir)}（共 {shown} 张）")
+
+# -------------------- 准备数据与模型 --------------------
+# 训练集：VOC2007 trainval + VOC2012 train（若 2007 不可用，则仅 2012）
+train_sets = []
+
+# VOC2007 trainval（若存在分割标注）
+if os.path.isdir(VOC2007_ROOT):
+    try:
+        train_07 = VOCSegmentationDataset(
+            VOC2007_ROOT, image_set='trainval',
+            transforms=SegmentationTransforms(is_train=True, base_size=520, crop_size=480),
+            strict=False
+        )
+        if len(train_07) > 0:
+            train_sets.append(train_07)
+            print(f"VOC2007 trainval 可用: {len(train_07)} 样本")
+        else:
+            print("VOC2007 trainval 无可用分割样本，跳过 2007。")
+    except Exception as e:
+        print(f"加载 VOC2007 失败，跳过：{e}")
+else:
+    print(f"未找到 VOC2007 路径：{VOC2007_ROOT}（将仅使用 VOC2012 训练）")
+
+# VOC2012 train
+train_12 = VOCSegmentationDataset(
+    VOC2012_ROOT, image_set='train',
+    transforms=SegmentationTransforms(is_train=True, base_size=520, crop_size=480),
+    strict=True
+)
+print(f"VOC2012 train: {len(train_12)} 样本")
+train_sets.append(train_12)
+
+# 合并训练集
+if len(train_sets) == 1:
+    train_dataset = train_sets[0]
+else:
+    train_dataset = ConcatDataset(train_sets)
+
+# 验证：VOC2012 val
+val_dataset_voc = VOCSegmentationDataset(
+    VOC2012_ROOT, image_set='val',
+    transforms=SegmentationTransforms(is_train=False, base_size=520, crop_size=480),
+    strict=True
+)
+
+train_loader = DataLoader(
+    train_dataset, batch_size=BATCH_SIZE, shuffle=True,
+    num_workers=NUM_WORKERS, pin_memory=True, persistent_workers=True
+)
+val_loader_voc = DataLoader(
+    val_dataset_voc, batch_size=VAL_BATCH_SIZE, shuffle=False,
+    num_workers=NUM_WORKERS, pin_memory=True, persistent_workers=True
+)
+
+print(f"训练集总样本数: {len(train_dataset)}")
+print(f"验证集样本数 (VOC2012 val): {len(val_dataset_voc)}")
+
+model = FCN8s(num_classes=NUM_CLASSES).to(DEVICE)
+criterion = nn.CrossEntropyLoss(ignore_index=255)
+
+# 参数分组 + poly 学习率
+base_lr = LEARNING_RATE
+new_lr = LEARNING_RATE * 10
+new_modules = [model.score_fr, model.score_pool3, model.score_pool4, model.upscore2, model.upscore_pool4]
+optimizer = optim.AdamW([
+    {'params': it.chain(model.pool3_features.parameters(),
+                        model.pool4_features.parameters(),
+                        model.pool5_features.parameters(),
+                        model.fc6.parameters(),
+                        model.fc7.parameters()), 'lr': base_lr},
+    {'params': it.chain(*(m.parameters() for m in new_modules)), 'lr': new_lr},
+], weight_decay=WEIGHT_DECAY)
+
+max_iter = EPOCHS * len(train_loader)
+def poly_lr_lambda(it_idx):
+    return (1 - it_idx / max_iter) ** 0.9
+lr_scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=poly_lr_lambda)
+
+# AMP Scaler（固定 cuda）
 scaler = torch.amp.GradScaler('cuda')
 
-# 记录指标
-history = {
-    'train_loss': [],
-    'val_loss': [],
-    'val_pa': [],
-    'val_miou': []
-}
+# 记录与保存
+history = {'train_loss': [], 'val_loss': [], 'val_pa': [], 'val_miou': []}
+best_miou_voc = -1.0
+os.makedirs(SAVE_DIR, exist_ok=True)
 
+# -------------------- 训练循环 --------------------
 print("开始训练...")
 start_time = time.time()
 
 for epoch in range(EPOCHS):
-    train_loss = train_one_epoch(model, optimizer, criterion, train_loader, DEVICE, scaler)
-    val_loss, val_pa, val_miou = evaluate(model, criterion, val_loader, DEVICE, NUM_CLASSES)
-    
+    train_loss = train_one_epoch(model, optimizer, criterion, train_loader, DEVICE, scaler, lr_scheduler)
+
+    val_loss_voc, val_pa_voc, val_miou_voc = evaluate_fast(
+        model, criterion, val_loader_voc, DEVICE, NUM_CLASSES,
+        compute_loss=EVAL_COMPUTE_LOSS,
+        max_batches=EVAL_MAX_BATCHES,
+        max_images=EVAL_MAX_IMAGES,
+        progress=EVAL_PROGRESS
+    )
+
     history['train_loss'].append(train_loss)
-    history['val_loss'].append(val_loss)
-    history['val_pa'].append(val_pa)
-    history['val_miou'].append(val_miou)
-    
+    history['val_loss'].append(val_loss_voc)
+    history['val_pa'].append(val_pa_voc)
+    history['val_miou'].append(val_miou_voc)
+
+    if val_miou_voc > best_miou_voc:
+        best_miou_voc = val_miou_voc
+        torch.save({
+            'epoch': epoch + 1,
+            'model_state': model.state_dict(),
+            'optimizer_state': optimizer.state_dict(),
+            'miou_voc': best_miou_voc,
+            'config': {
+                'base_lr': base_lr, 'new_lr': new_lr, 'weight_decay': WEIGHT_DECAY,
+                'epochs': EPOCHS, 'batch_size': BATCH_SIZE
+            }
+        }, BEST_PATH_VOC)
+
+    val_loss_str = f"{val_loss_voc:.4f}" if EVAL_COMPUTE_LOSS else "n/a"
     print(
         f"Epoch {epoch+1}/{EPOCHS} | "
         f"Train Loss: {train_loss:.4f} | "
-        f"Val Loss: {val_loss:.4f} | "
-        f"Val Pixel Acc: {val_pa:.4f} | "
-        f"Val mIoU: {val_miou:.4f}"
+        f"VOC Val: Loss {val_loss_str}, PA {val_pa_voc:.4f}, mIoU {val_miou_voc:.4f} | "
+        f"Best VOC mIoU: {best_miou_voc:.4f}"
     )
 
 end_time = time.time()
 print(f"\n训练完成！总耗时: {(end_time - start_time) / 60:.2f} 分钟")
-print("\n--- 最终评估指标 ---")
-print(f"最终验证损失: {history['val_loss'][-1]:.4f}")
-print(f"最终验证像素准确率: {history['val_pa'][-1]:.4f}")
-print(f"最终验证 mIoU: {history['val_miou'][-1]:.4f}")
+print("\n--- 最终评估指标 (VOC2012 val) ---")
+final_loss_str = f"{history['val_loss'][-1]:.4f}" if EVAL_COMPUTE_LOSS else "n/a"
+print(f"Val Loss: {final_loss_str} | PA: {history['val_pa'][-1]:.4f} | mIoU: {history['val_miou'][-1]:.4f}")
+print(f"最优权重已保存至: {BEST_PATH_VOC}")
+
+# 保存当前（latest）
+torch.save(model.state_dict(), LATEST_PATH)
+print(f"已保存当前模型权重到: {LATEST_PATH}")
+
+# 加载最优权重用于可视化
+if os.path.isfile(BEST_PATH_VOC):
+    ckpt_voc = torch.load(BEST_PATH_VOC, map_location=torch.device(DEVICE))
+    model.load_state_dict(ckpt_voc['model_state'])
+    print(f"\n已加载 VOC 最优权重进行可视化: {BEST_PATH_VOC} (epoch={ckpt_voc.get('epoch','?')}, mIoU_VOC={ckpt_voc.get('miou_voc', 0):.4f})")
+else:
+    print("\n未找到 VOC 最优权重，使用当前模型进行可视化。")
+
+print("\n--- 可视化预测结果 (VOC2012 val) ---")
+visualize_predictions(model, val_loader_voc, DEVICE, num_images=20, save_dir=VIS_DIR)
 ```
 
 </details>
@@ -781,11 +990,13 @@ print(f"最终验证 mIoU: {history['val_miou'][-1]:.4f}")
 
 ![alt text](curves.png)
 
-训练 70 个 Epoch，最后得到的 mIoU 在 0.53 左右，且出现了轻微的过拟合。因为没有像原论文一样从 32s 到 16s 逐步训练，也没有用 SBD 和其他数据增强，所以偏低。
+在 Pascal VOC 07+12 上训练 50 个 Epoch，总用时 7796.3s，mIoU 达到 0.6277，像素准确率达到 0.9065，已经超过了原论文的指标。
 
-训练的过程中出现了损失尖峰，差点训炸，可能还是梯度缩放数值不大稳定，以及 batch size 只有 16 比较小。
+![res00](./result_000.png)
 
-![alt text](results_0.png)
+![res01](./result_001.png)
+
+![res01](./result_004.png)
 
 ### U-Net
 
