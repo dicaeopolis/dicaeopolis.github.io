@@ -1863,15 +1863,15 @@ $$
 对于拿到的图片，先过网络推理得到 `(S, S, B*5+C)` 的预测张量。然后扫一遍所有格子：
 
 - 如果有个真实框 T 的中心落在格子 $i$ 里面了：
-  - 此时 $1_i^{\mathrm{obj}}=1$
-  - 从格子 $i$ 的 $B$ 个框里面找到和 T 的 IoU 最大的框 $j$，此时 $1_{ij}^{\mathrm{obj}}=1$
-  - 对于这个框，计算 $\mathcal{L}_1=\lambda_{\mathrm{coord}}(\mathcal{L}_\mathrm{center}+\mathcal{L}_\mathrm{size})+\mathcal{L}_{\mathrm{P}}$
-  - 对于剩下的 $B-1$ 个框，计算 $\mathcal{L}_2=\lambda_{\mathrm{noobj}}\sum^{B-1}\mathcal{L}_{\mathrm{N}}$
-  - 对于这个格子的类别概率向量 $p_i$，和 T 的类别做交叉熵，即计算 $\mathcal{L}_{\mathrm{class}}=\sum_i ^{S^2}CE(p_i||\mathrm{one\_hot}_i^{\mathrm{T}})$
-  - 格子的总损失 $\mathcal{L}_{\mathrm{objcell}}=\mathcal{L}_1+\mathcal{L}_2+\mathcal{L}_{\mathrm{class}}$
+    - 此时 $1_i^{\mathrm{obj}}=1$
+    - 从格子 $i$ 的 $B$ 个框里面找到和 T 的 IoU 最大的框 $j$，此时 $1_{ij}^{\mathrm{obj}}=1$
+    - 对于这个框，计算 $\mathcal{L}_1=\lambda_{\mathrm{coord}}(\mathcal{L}_\mathrm{center}+\mathcal{L}_\mathrm{size})+\mathcal{L}_{\mathrm{P}}$
+    - 对于剩下的 $B-1$ 个框，计算 $\mathcal{L}_2=\lambda_{\mathrm{noobj}}\sum^{B-1}\mathcal{L}_{\mathrm{N}}$
+    - 对于这个格子的类别概率向量 $p_i$，和 T 的类别做交叉熵，即计算 $\mathcal{L}_{\mathrm{class}}=\sum_i ^{S^2}CE(p_i||\mathrm{one\_hot}_i^{\mathrm{T}})$
+    - 格子的总损失 $\mathcal{L}_{\mathrm{objcell}}=\mathcal{L}_1+\mathcal{L}_2+\mathcal{L}_{\mathrm{class}}$
 - 如果没有：
-  - 此时 $1_i^{\mathrm{obj}}=0$
-  - 只需对所有框求和： $\mathcal{L}_{\mathrm{noobjcell}}=\mathcal{L}_2=\lambda_{\mathrm{noobj}}\sum^{B}\mathcal{L}_{\mathrm{N}}$
+    - 此时 $1_i^{\mathrm{obj}}=0$
+    - 只需对所有框求和： $\mathcal{L}_{\mathrm{noobjcell}}=\mathcal{L}_2=\lambda_{\mathrm{noobj}}\sum^{B}\mathcal{L}_{\mathrm{N}}$
 
 最后可以得到整个图片的损失：$\mathcal{L}_{\mathrm{YOLO}}=\sum\mathcal{L}_{\mathrm{objcell}}+\sum\mathcal{L}_{\mathrm{noobjcell}}$。
 
