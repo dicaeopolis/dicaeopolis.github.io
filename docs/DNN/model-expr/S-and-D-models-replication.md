@@ -1789,9 +1789,9 @@ visualize_predictions(model, val_loader, DEVICE, num_images=20, save_dir=VIS_DIR
 
 那么，YOLO 采用了什么方法来缩减目标框呢？不像 R-CNN 一样选择先学习目标框的位置分布再启发式地搜寻，YOLO 选择**端到端**的方式获得目标框。比如有一张 224x224 的 ImageNet 图像，我们首先可以划分一个 7x7 的网格，每个小格子的边长是 32px。对于这个 32x32 的小图像干什么呢？难道是像 R-CNN 一样直接分类吗？不然。
 
-俗语有言，“管中窥豹，可见一斑”。我们考虑某一个物体的**一部分**落入了这个格子里面，那么这个格子就很可能有一部分信息知道这个物体是什么。换句话说，对于这七七四十九个格子，我们让每一个格子都来看看落在格子里的是什么东西，也就是给出类别的预测概率。另一方面，一个格子的信息基本上也差不多能让我们知道这个物体大概的尺寸如何，比如说格子里面有个人脸，那么往下画一个6~8头身的框基本上就没错了。具体到底是几头身，模型不确定，那就六头身七头身八头身都试一下，多打几个框。
+俗语有言，“管中窥豹，可见一斑”。我们考虑某一个物体的**中心**落入了这个格子里面，那么这个格子就很可能有一部分信息知道这个物体是什么。换句话说，对于这七七四十九个格子，我们让每一个格子都来看看落在格子里的是什么东西，也就是给出类别的预测概率。另一方面，一个格子的信息基本上也差不多能让我们知道这个物体大概的尺寸如何，比如说格子里面有个人脸，那么往下画一个6~8头身的框基本上就没错了。具体到底是几头身，模型不确定，那就六头身七头身八头身都试一下，多打几个框，总有一个能蒙对。
 
-用形式化的语言来说，也就是每个格子负责预测 $B$ 个框，每个框有 $x,y,w,h$ 四个参数，对应框的中心点相对图像左上角的坐标 $x,y$ 与框的尺寸 $w,h$，这四个参数全部根据图像尺寸归一化到 $[0,1]$ 之间方便反向传播。同时，框打的准不准，还需要一个置信度 $c$ 来衡量。具体解释在下一段。同时 YOLO v1 假定一个框里面只有一个物体，所以还要给出物体所属的各类别的概率（下一段再解释）。以在 Pascal VOC 上训练的 YOLO v1 来说，一张图片画成 $S\times S$ 也就是 7x7 的网格，每个网格负责对格子里面的内容打框。一个格子打两个框，还负责输出 20 个类别，那么一个格子的输出就是 $2\times 5+21=31$ 维的向量，而整个网络的输出就是一个 `(7,7,30)` 的张量。
+用形式化的语言来说，也就是每个格子负责预测 $B$ 个框，每个框有 $x,y,w,h$ 四个参数，对应框的中心点相对图像左上角的坐标 $x,y$ 与框的尺寸 $w,h$，这四个参数全部根据图像尺寸归一化到 $[0,1]$ 之间方便反向传播。同时，框打的准不准，还需要一个置信度 $c$ 来衡量。具体解释在下一段。同时 YOLO v1 假定一个框里面只有一个物体，所以还要给出物体所属的各类别的概率（下一段再解释）。以在 Pascal VOC 上训练的 YOLO v1 来说，一张图片画成 $S\times S$ 也就是 7x7 的网格，每个网格负责对格子里面的内容打框。一个格子打两个框，还负责输出 20 个类别，那么一个格子的输出就是 $2\times 5+20=30$ 维的向量，而整个网络的输出就是一个 `(7,7,30)` 的张量。
 
 刚刚提到打框使用的是**置信度**。我们知道打框无非就是要**打的准**，不仅位置要准，识别也要准。位置准不准很简单，只需要用真实框和预测框的 IoU 就可以了。而由于一般的网络只能识别**类别是什么**而不能识别**类别是否存在**（之前看到某同学给一个 MNIST 分类器喂了一个五角星，然后模型煞有介事的给出了类别 8 的高达 99% 的分类概率），于是我们还需要引入一个判断是否存在待分类对象的概率 $P(\mathrm{Obj})$，乘起来就得到**置信度**了：$c=P(\mathrm{Obj})\times \mathrm{IoU}$。这代表**模型对得到的这个框的信心**。也就是框里面有物体并且预测和真实越接近，这个框就越可信。当然这只是我们的一厢情愿，具体的置信度还需要反向传播来算出来。
 
@@ -1875,11 +1875,13 @@ $$
 
 最后可以得到整个图片的损失：$\mathcal{L}_{\mathrm{YOLO}}=\sum\mathcal{L}_{\mathrm{objcell}}+\sum\mathcal{L}_{\mathrm{noobjcell}}$。
 
-最后值得一提的是，“选取IoU最大的框”这个操作似乎因为涉及到 `max` 操作而**不可导**，但是由于我们对不同的情况分配了不同的损失，因此我们事实上执行的操作是**对最大框**利用 $\mathcal{L}_1$ 回传梯度而对其他框利用 $\mathcal{L}_{\mathrm{N}}$ 回传梯度，也就是通过条件判断来构建不同的损失路径，这样整个网络就完全可导了。
+最后值得一提的是，“选取IoU最大的框”这个操作似乎因为涉及到 `max` 操作而**不可导**，但是由于我们对不同的情况分配了不同的损失，因此我们事实上执行的操作是**对最大框**利用 $\mathcal{L}_1$ 回传梯度而对其他框利用 $\mathcal{L}_{\mathrm{N}}$ 回传梯度，也就是通过条件判断来构建不同的损失路径，这样整个网络就完全可导了。这一点写成代码也是有说法的，请看 VCR：
+
+![alt text](image-36.png)
 
 #### 网络结构
 
-YOLO v1 使用自研架构 Darknet-24 来实现打框。他们在 ImageNet 上面预训练了特征提取器，然后替换分类头改为输出 `(S, S, B*5+C)` 的预测张量，再在 VOC 07+12 上面训练。由于 Darknet 的预训练权重没有公开（只公开了），我们在这里使用 torchvision 开源的 ResNet-18 在 ImageNet 上面的预训练权重作为骨干网。当然这个网络的参数量完全比不过 Darknet。
+YOLO v1 使用自研架构 Darknet 来实现打框。他们在 ImageNet 上面预训练了特征提取器，然后替换分类头改为输出 `(S, S, B*5+C)` 的预测张量，再在 VOC 07+12 上面训练。由于 Darknet 的预训练权重没有公开（只公开了在目标检测数据上面微调好的），我们在这里使用 torchvision 开源的 ResNet-18 在 ImageNet 上面的预训练权重作为骨干网。当然这个网络的参数量完全比不过 Darknet。
 
 #### mAP
 
@@ -1889,3 +1891,197 @@ YOLO v1 使用自研架构 Darknet-24 来实现打框。他们在 ImageNet 上�
 
 因为一般精确率和召回率是反向变化的，所以这个分数越高，一方面意味着它打框有基本的准确度，但是更意味着模型**在类别预测上**越好。
 
+#### 训练
+
+下面的代码，主要是在 VOC 07+12 上训练 YOLO v1 (ResNet-18 backbone) 并进行验证和评估。由于 ResNet-18 的参数量小且不是为了目标检测而优化的（因为 Darknet 用上了多尺度卷积核，通道数也更宽从而更适合像 FCN 一样输出 `(S, S, 5*B+C)` 的“特征图”，其实某种意义上用 VGG 或者 GoogLeNet 都更适合，但是参数量更大），所以只能获得 mAP@0.5 = 0.4723，具体的结果如下：
+
+![alt text](image-34.png)
+
+![alt text](image-35.png)
+
+下面给出模型类的定义：
+
+```python
+class YOLOv1ResNet18(nn.Module):
+    def __init__(self, s=7, b=2, c=20, pretrained=True):
+        super().__init__()
+        self.S, self.B, self.C = s, b, c
+        backbone = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1 if pretrained else None)
+        # 下面就是预训练的权重
+        self.stem = nn.Sequential(
+            backbone.conv1, backbone.bn1, backbone.relu, backbone.maxpool,
+            backbone.layer1, backbone.layer2, backbone.layer3, backbone.layer4
+        )
+        # 扩展到 1024 通道，为输出 (7,7,30) 的张量做准备。 
+        # 由于输出已经是 512@7x7 的了，其实相当于我们准备整合到 30@7x7
+        self.reduce = nn.Sequential(
+            nn.Conv2d(512, 1024, kernel_size=3, stride=2, padding=1, bias=False),
+            nn.BatchNorm2d(1024),
+            nn.LeakyReLU(0.1, inplace=True)
+        )
+        out_ch = b*5 + c
+        # 双卷积到输出通道，这两部分都没有用上预训练权重，也导致 mAP 比较低
+        # Leakly ReLU 和论文一致
+        self.head = nn.Sequential(
+            nn.Conv2d(1024, 1024, kernel_size=3, padding=1, bias=False),
+            nn.BatchNorm2d(1024),
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.Conv2d(1024, out_ch, kernel_size=1)
+        )
+
+    def forward(self, x):
+        x = self.stem(x)     # [N,512,14,14]
+        x = self.reduce(x)   # [N,1024,7,7]
+        x = self.head(x)     # [N,(B*5+C),7,7]
+        x = x.permute(0, 2, 3, 1).contiguous() # [N,7,7,(B*5+C)]
+        # 这里由于置换了张量维，所以.contiguous()一下让内存连续。
+        return x
+```
+
+下面是重头戏，我们的损失函数：
+
+```python
+class YoloV1Loss(nn.Module):
+    def __init__(self, s=7, b=2, c=20, lambda_coord=5.0, lambda_noobj=0.5,
+                 ignore_iou_thresh=0.5, cls_label_smooth=0.0):
+        super().__init__()
+        self.S, self.B, self.C = s, b, c
+        self.lambda_coord = lambda_coord # 和论文与之前的分析一致
+        self.lambda_noobj = lambda_noobj # 也是一致
+        self.ignore_iou_thresh = ignore_iou_thresh # 神奇妙妙参数
+        self.cls_label_smooth = cls_label_smooth # 为了让 CE 参数更新稳定使用的标签平滑
+
+    def forward(self, pred, target):
+        """
+        pred: [N,S,S,B*5+C]
+        target: [N,S,S,5+C]  (tx,ty,bw,bh,obj, one-hot C)
+        """
+        N, S, B, C = pred.size(0), self.S, self.B, self.C
+        device = pred.device
+
+        # 接受网络的输出，得到 (N, S, S, B*5 + C) 的预测张量
+        pred = pred.view(N, S, S, B*5 + C)
+        # 最后一维的前 B*5 解包成 (N, S, S, B, 5) 的预测框
+        pred_boxes = pred[...,:B*5].view(N, S, S, B, 5)  # x,y,w,h,conf (raw)
+        # 后面 C 个保留，对应格子的类别概率
+        pred_cls_logits = pred[...,B*5:]                 # [N,S,S,C]
+
+        # targets，生成在 _encode_target(self, boxes_abs, img_wh) 这个方法里面。
+        # target = np.zeros((self.S, self.S, 5 + C), dtype=np.float32)
+        t_xywh = target[...,:4] # [N,S,S,4] 4 对应 x,y,w,h
+        t_obj  = target[...,4]  # [N,S,S,1] 最后一维恒为 1
+        t_cls  = target[...,5:] # [N,S,S,C] 即输出标签的 one-hot
+
+        # grid
+        # 生成坐标向量 [0,1,...,S-1]
+        gxv = torch.arange(S, device=device, dtype=torch.float32)
+        gyv = torch.arange(S, device=device, dtype=torch.float32)
+        # 得到两个方向的二维的 SxS 坐标矩阵
+        gy, gx = torch.meshgrid(gyv, gxv, indexing='ij')
+        # 添加两个维度
+        gx = gx[None, :, :, None]; gy = gy[None, :, :, None] # [1, S, S, 1]
+
+        # 对预测的 x,y,w,h,conf 解码
+        px = torch.sigmoid(pred_boxes[...,0])
+        py = torch.sigmoid(pred_boxes[...,1])
+        pw = F.softplus(pred_boxes[...,2]).pow(2).clamp(1e-6, 1.0)
+        ph = F.softplus(pred_boxes[...,3]).pow(2).clamp(1e-6, 1.0)
+        pconf = torch.sigmoid(pred_boxes[...,4])
+
+        pcx = (gx + px) / float(S)
+        pcy = (gy + py) / float(S)
+        p_cxcywh = torch.stack([pcx.expand_as(px), pcy.expand_as(py), pw, ph], dim=-1)
+        p_xyxy = cxcywh_to_xyxy(p_cxcywh).clamp(0, 1)   # [N,S,S,B,4]
+
+        # targets to xyxy
+        tx, ty, tw, th = t_xywh[...,0], t_xywh[...,1], t_xywh[...,2].clamp(1e-6,1.0), t_xywh[...,3].clamp(1e-6,1.0)
+        tcx = (gx.squeeze(-1) + tx) / float(S)
+        tcy = (gy.squeeze(-1) + ty) / float(S)
+        t_cxcywh = torch.stack([tcx,tcy,tw,th], dim=-1)  # [N,S,S,4]
+        t_xyxy = cxcywh_to_xyxy(t_cxcywh).clamp(0, 1)    # [N,S,S,4]
+
+        # IoU per B with its cell GT
+        t_xyxy_exp = t_xyxy.unsqueeze(3).expand(-1,-1,-1,B,-1)  # [N,S,S,B,4]
+        iou_all = iou_xyxy_aligned(p_xyxy, t_xyxy_exp)          # [N,S,S,B]
+
+        # responsibility mask
+        obj_cells = t_obj  # [N,S,S]
+        iou_all_masked = iou_all.masked_fill(obj_cells.unsqueeze(-1)==0, -1.0)
+        # 之前已经提到，虽然 argmax 本身不可导，但是这里的 argmax 只是用来控制梯度回传的。
+        # 相当于一个选择器。
+        best_box_idx = iou_all_masked.argmax(dim=-1)            # [N,S,S]
+        resp_mask = F.one_hot(best_box_idx, num_classes=B).float() * obj_cells.unsqueeze(-1)
+
+        # coordinate loss (with sqrt on w/h)
+        sqrt_pw, sqrt_ph = torch.sqrt(pw + 1e-6), torch.sqrt(ph + 1e-6)
+        sqrt_tw, sqrt_th = torch.sqrt(tw + 1e-6), torch.sqrt(th + 1e-6)
+
+        coord_x_loss = ((px - tx.unsqueeze(-1))**2) * resp_mask
+        coord_y_loss = ((py - ty.unsqueeze(-1))**2) * resp_mask
+        coord_w_loss = ((sqrt_pw - sqrt_tw.unsqueeze(-1))**2) * resp_mask
+        coord_h_loss = ((sqrt_ph - sqrt_th.unsqueeze(-1))**2) * resp_mask
+
+        # objectness: positives target=IoU
+        iou_target = iou_all.detach()
+        conf_obj_terms = ((pconf - iou_target)**2) * resp_mask
+
+        # no-object masks
+        not_resp_mask = obj_cells.unsqueeze(-1) * (1.0 - resp_mask)           # in obj cells but not responsible
+        noobj_cells_mask = (1.0 - obj_cells).unsqueeze(-1).expand_as(pconf)   # pure noobj cells
+
+        # ignore region for noobj: max IoU with any GT in the image >= thresh -> ignore
+        ignore_mask = torch.zeros_like(pconf)
+        with torch.no_grad():
+            for n in range(N):
+                # all GT in this image
+                obj_mask_n = obj_cells[n] > 0
+                gt_n = t_xyxy[n][obj_mask_n]                                  # [M,4]
+                pred_n = p_xyxy[n].reshape(-1, 4)                              # [S*S*B,4]
+                if gt_n.numel() == 0:
+                    max_iou = torch.zeros(pred_n.size(0), device=device)
+                else:
+                    ious = box_iou_xyxy(pred_n, gt_n)                          # [K,M]
+                    max_iou = ious.max(dim=1).values
+                ign = (max_iou >= self.ignore_iou_thresh).float().view(S, S, B)
+                ignore_mask[n] = ign
+
+        conf_noobj_terms = ((pconf - 0.0)**2) * (not_resp_mask + noobj_cells_mask) * (1.0 - ignore_mask)
+
+        # classification: CrossEntropy on obj cells only
+        num_objcells = obj_cells.sum().clamp(min=1.0)
+        t_cls_idx = t_cls.argmax(dim=-1)  # [N,S,S]
+        obj_mask_bool = (obj_cells > 0)
+        if obj_mask_bool.any():
+            ce = F.cross_entropy(
+                pred_cls_logits[obj_mask_bool].reshape(-1, C),
+                t_cls_idx[obj_mask_bool].long().reshape(-1),
+                reduction='sum',
+                label_smoothing=self.cls_label_smooth
+            )
+            class_loss = ce / num_objcells
+        else:
+            class_loss = torch.tensor(0.0, device=device)
+
+        # normalizations
+        num_resp = resp_mask.sum().clamp(min=1.0)
+        num_noobj = ( ((not_resp_mask + noobj_cells_mask) * (1.0 - ignore_mask)).sum() ).clamp(min=1.0)
+
+        coord_loss = self.lambda_coord * (coord_x_loss.sum() + coord_y_loss.sum() + coord_w_loss.sum() + coord_h_loss.sum()) / num_resp
+        conf_obj_loss = conf_obj_terms.sum() / num_resp
+        conf_noobj_loss = self.lambda_noobj * conf_noobj_terms.sum() / num_noobj
+
+        total_loss = coord_loss + conf_obj_loss + conf_noobj_loss + class_loss
+
+        loss_dict = {
+            'loss_total': total_loss.detach().item(),
+            'loss_coord': coord_loss.detach().item(),
+            'loss_conf_obj': conf_obj_loss.detach().item(),
+            'loss_conf_noobj': conf_noobj_loss.detach().item(),
+            'loss_class': class_loss.detach().item(),
+        }
+        return total_loss, loss_dict
+```
+
+#### 推理
+
+#### 可视化
