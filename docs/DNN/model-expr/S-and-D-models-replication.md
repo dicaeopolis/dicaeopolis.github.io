@@ -1000,9 +1000,772 @@ visualize_predictions(model, val_loader_voc, DEVICE, num_images=20, save_dir=VIS
 
 ### U-Net
 
-把那个 FCN-8s 改对称并且在跳跃连接由相加再在通道维拼接，最后加数据增强即可。
+#### 原理
 
-待填坑。
+我们实践刚刚在 FCN-8s 里面提到的更改，也就是把网络结构改对称，并且跳跃连接由相加再在通道维拼接，最后加数据增强即可。
+
+其实从 FCN 到 U-Net，有点类似于从 ResNet 到 DenseNet。
+
+```python
+# 基本的双卷积块，负责整合拼接之后的通道维。
+class DoubleConv(nn.Module):
+    def __init__(self, in_ch, out_ch, p=0.1):
+        super().__init__()
+        self.block = nn.Sequential(
+            nn.Conv2d(in_ch, out_ch, kernel_size=3, padding=1, bias=False),
+            nn.BatchNorm2d(out_ch),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(out_ch, out_ch, kernel_size=3, padding=1, bias=False),
+            nn.BatchNorm2d(out_ch),
+            nn.ReLU(inplace=True),
+            nn.Dropout2d(p),
+        )
+
+    def forward(self, x):
+        return self.block(x)
+
+
+class UNetVGG16(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+        # 预训练 VGG16 编码器
+        vgg = vgg16(weights=VGG16_Weights.IMAGENET1K_V1)
+        features = vgg.features
+
+        # 这里保持 4 次下采样，方式在 FCN-8s 里面已经有介绍过。
+        self.conv1 = features[:4]
+        self.pool1 = features[4]
+        self.conv2 = features[5:9]
+        self.pool2 = features[9]
+        self.conv3 = features[10:16]
+        self.pool3 = features[16]
+        self.conv4 = features[17:23]
+        self.pool4 = features[23]
+        self.conv5 = features[24:30]
+        # 这里不含 pool5，我们不想让网络的参数过大，因此只到 conv5 的特征图就够了。
+        # 同时一个典型的 U-Net 有 4 个跳跃连接就足矣。
+        # 但是相比于之前的 FCN-8s，实际上参数量小了很多。
+        # 因为 FCN-8s 基本上用到了 VGG 的所有预训练权重。
+        # 所以最后效果是以比 FCN-8s 少了五分之四的参数，换取了 9% 的 mIoU 降幅。
+
+        # 上采样：在 U-Net 里面基本上已经舍弃了转置卷积，而是直接上采样再做卷积。
+        # 其实效果和转置卷积还差不多，但省参数和计算量。
+        self.up4 = nn.Sequential(
+            nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),
+            nn.Conv2d(512, 512, kernel_size=1, bias=False),
+            nn.BatchNorm2d(512),
+            nn.ReLU(inplace=True),
+        )
+        # 解码器就是跳跃连接之后做双卷积。
+        self.dec4 = DoubleConv(512 + 512, 512)
+
+        # 后面这些上采样+解码就依葫芦画瓢了，只需要更改通道数而已。
+        self.up3 = nn.Sequential(
+            nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),
+            nn.Conv2d(512, 256, kernel_size=1, bias=False),
+            nn.BatchNorm2d(256),
+            nn.ReLU(inplace=True),
+        )
+        self.dec3 = DoubleConv(256 + 256, 256)
+
+        self.up2 = nn.Sequential(
+            nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),
+            nn.Conv2d(256, 128, kernel_size=1, bias=False),
+            nn.BatchNorm2d(128),
+            nn.ReLU(inplace=True),
+        )
+        self.dec2 = DoubleConv(128 + 128, 128)
+
+        self.up1 = nn.Sequential(
+            nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),
+            nn.Conv2d(128, 64, kernel_size=1, bias=False),
+            nn.BatchNorm2d(64),
+            nn.ReLU(inplace=True),
+        )
+        self.dec1 = DoubleConv(64 + 64, 64)
+
+        # 输出层
+        self.out_conv = nn.Conv2d(64, num_classes, kernel_size=1)
+
+    @staticmethod
+    def _align(x, ref):
+        # 对齐尺寸，避免奇偶数导致的 1px 误差
+        if x.shape[2:] != ref.shape[2:]:
+            x = F.interpolate(x, size=ref.shape[2:], mode='bilinear', align_corners=False)
+        return x
+
+    def forward(self, x):
+        # 编码器，C 表示通道数，后面的分数代表特征图相对原图的尺寸之比。
+        x1 = self.conv1(x)           # C=64,   1/1
+        p1 = self.pool1(x1)          #         1/2
+
+        x2 = self.conv2(p1)          # C=128,  1/2
+        p2 = self.pool2(x2)          #         1/4
+
+        x3 = self.conv3(p2)          # C=256,  1/4
+        p3 = self.pool3(x3)          #         1/8
+
+        x4 = self.conv4(p3)          # C=512,  1/8
+        p4 = self.pool4(x4)          #        1/16
+
+        x5 = self.conv5(p4)          # C=512, 1/16 (bottleneck)
+
+        # 解码器
+        u4 = self.up4(x5)            # -> 1/8
+        u4 = self._align(u4, x4)
+        d4 = self.dec4(torch.cat([u4, x4], dim=1))   # C=512
+
+        u3 = self.up3(d4)            # -> 1/4
+        u3 = self._align(u3, x3)
+        d3 = self.dec3(torch.cat([u3, x3], dim=1))   # C=256
+
+        u2 = self.up2(d3)            # -> 1/2
+        u2 = self._align(u2, x2)
+        d2 = self.dec2(torch.cat([u2, x2], dim=1))   # C=128
+
+        u1 = self.up1(d2)            # -> 1/1
+        u1 = self._align(u1, x1)
+        d1 = self.dec1(torch.cat([u1, x1], dim=1))   # C=64
+
+        out = self.out_conv(d1)      # -> num_classes@HxW
+        return out
+```
+
+#### 训练代码
+
+<details>
+
+<summary> U-Net 的训练代码 </summary>
+
+```python
+import numpy as np
+from PIL import Image
+import matplotlib.pyplot as plt
+from tqdm.notebook import tqdm
+
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import torch.nn.functional as F
+from torch.utils.data import Dataset, DataLoader, ConcatDataset
+import torchvision.transforms as T
+from torchvision.models import vgg16, VGG16_Weights
+import itertools as it
+
+# -------------------- 配置 --------------------
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+USE_AMP = True  # 固定用 CUDA AMP
+
+# Kaggle 常见路径（可按需修改）
+VOC2007_ROOT = "/kaggle/input/pascal-voc-2007/VOCtrainval_06-Nov-2007/VOCdevkit/VOC2007"
+VOC2007_ROOT_ALT = "/kaggle/input/pascal-voc-2007/VOCdevkit/VOC2007"
+if not os.path.isdir(VOC2007_ROOT) and os.path.isdir(VOC2007_ROOT_ALT):
+    VOC2007_ROOT = VOC2007_ROOT_ALT
+
+VOC2012_ROOT = "/kaggle/input/pascal-voc-2012/VOC2012"
+
+NUM_CLASSES = 21
+BATCH_SIZE = 16
+VAL_BATCH_SIZE = 1  # 你要手调就改这里（>1 时需自己加 padding collate）
+NUM_WORKERS = 6
+
+LEARNING_RATE = 7.5e-5
+WEIGHT_DECAY = 1e-4
+EPOCHS = 80
+
+# 评估加速开关
+EVAL_COMPUTE_LOSS = False     # True 会计算 val loss，稍慢
+EVAL_MAX_BATCHES = None       # 限制评估批次数；None 表示全量
+EVAL_MAX_IMAGES = None         # 限制评估图片数；None 表示全量
+EVAL_PROGRESS = True          # 保留 tqdm 进度条
+
+SAVE_DIR = "/kaggle/working"
+BEST_PATH_VOC = os.path.join(SAVE_DIR, "fcn8s_best_voc2012val.pth")
+LATEST_PATH = os.path.join(SAVE_DIR, "fcn8s_latest.pth")
+VIS_DIR = os.path.join(SAVE_DIR, "vis_voc_val")
+
+print(f"Using device: {DEVICE}")
+if DEVICE == "cuda":
+    torch.backends.cudnn.benchmark = True
+
+# PASCAL VOC 颜色映射 (RGB) 用于可视化
+VOC_COLORMAP = [
+    [0, 0, 0], [128, 0, 0], [0, 128, 0], [128, 128, 0], [0, 0, 128],
+    [128, 0, 128], [0, 128, 128], [128, 128, 128], [64, 0, 0], [192, 0, 0],
+    [64, 128, 0], [192, 128, 0], [64, 0, 128], [192, 0, 128], [64, 128, 128],
+    [192, 128, 128], [0, 64, 0], [128, 64, 0], [0, 192, 0], [128, 192, 0],
+    [0, 64, 128]
+]
+
+# -------------------- 数据集（VOC） --------------------
+class VOCSegmentationDataset(Dataset):
+    """
+    用于 VOC2007/VOC2012 的语义分割数据。
+    若缺少 ImageSets/Segmentation/{split}.txt，将回退到扫描 SegmentationClass 目录。
+    """
+    def __init__(self, root, image_set="train", transforms=None, strict=True):
+        self.root = root
+        self.transforms = transforms
+        self.image_set = image_set
+
+        image_dir = os.path.join(root, "JPEGImages")
+        mask_dir = os.path.join(root, "SegmentationClass")
+        split_file = os.path.join(root, "ImageSets", "Segmentation", f"{image_set}.txt")
+
+        assert os.path.isdir(image_dir), f"Image dir not found: {image_dir}"
+        if not os.path.isdir(mask_dir):
+            if strict:
+                raise FileNotFoundError(f"SegmentationClass not found: {mask_dir}")
+            else:
+                print(f"[Warning] SegmentationClass not found in {root}, dataset will be empty.")
+        self.image_dir = image_dir
+        self.mask_dir = mask_dir
+
+        ids = []
+        if os.path.isfile(split_file):
+            with open(split_file, "r") as f:
+                ids = [line.strip() for line in f if line.strip()]
+        else:
+            if os.path.isdir(mask_dir):
+                ids = [os.path.splitext(fn)[0] for fn in os.listdir(mask_dir) if fn.endswith(".png")]
+            else:
+                ids = []
+
+        self.image_paths, self.mask_paths = [], []
+        for id_ in ids:
+            ip = os.path.join(image_dir, f"{id_}.jpg")
+            mp = os.path.join(mask_dir, f"{id_}.png")
+            if os.path.isfile(ip) and os.path.isfile(mp):
+                self.image_paths.append(ip)
+                self.mask_paths.append(mp)
+        if len(self.image_paths) == 0:
+            print(f"[Warning] Empty dataset for root={root}, split={image_set}. Check masks/splits.")
+
+    def __len__(self):
+        return len(self.image_paths)
+
+    def __getitem__(self, idx):
+        image = Image.open(self.image_paths[idx]).convert("RGB")
+        mask = Image.open(self.mask_paths[idx])  # palette 索引
+
+        if self.transforms is not None:
+            image, target = self.transforms(image, mask)
+        else:
+            img = T.functional.to_tensor(image)
+            img = T.functional.normalize(img, (0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
+            target = torch.from_numpy(np.array(mask, dtype=np.uint8)).long()
+            image, target = img, target
+        return image, target
+
+# -------------------- 数据增强与预处理 --------------------
+class SegmentationTransforms:
+    def __init__(self, is_train=True, base_size=520, crop_size=480,
+                 color_jitter=True, add_noise_prob=0.0, noise_std=0.03):  # 关闭噪声：默认 0.0
+        self.is_train = is_train
+        self.base_size = base_size
+        self.crop_size = crop_size
+        self.mean = (0.485, 0.456, 0.406)
+        self.std = (0.229, 0.224, 0.225)
+        self.color_jitter = T.ColorJitter(0.4, 0.4, 0.4, 0.1) if color_jitter and is_train else None
+        self.add_noise_prob = add_noise_prob if is_train else 0.0
+        self.noise_std = noise_std
+
+    def __call__(self, img, mask):
+        if self.is_train:
+            # 1) 随机缩放短边到 [0.5, 2.0] * base_size
+            scale = np.random.uniform(0.5, 2.0)
+            short = int(self.base_size * scale)
+            w, h = img.size
+            if w < h:
+                ow, oh = short, int(short * h / w)
+            else:
+                oh, ow = short, int(short * w / h)
+            img = img.resize((ow, oh), Image.BILINEAR)
+            mask = mask.resize((ow, oh), Image.NEAREST)
+
+            # 2) 若小于 crop_size，右下角 padding（mask 用 255）
+            pad_w = max(0, self.crop_size - img.size[0])
+            pad_h = max(0, self.crop_size - img.size[1])
+            if pad_w > 0 or pad_h > 0:
+                img = T.functional.pad(img, (0, 0, pad_w, pad_h), fill=0)
+                mask = T.functional.pad(mask, (0, 0, pad_w, pad_h), fill=255)
+
+            # 3) 随机裁剪
+            w, h = img.size
+            x1 = np.random.randint(0, w - self.crop_size + 1)
+            y1 = np.random.randint(0, h - self.crop_size + 1)
+            img = img.crop((x1, y1, x1 + self.crop_size, y1 + self.crop_size))
+            mask = mask.crop((x1, y1, x1 + self.crop_size, y1 + self.crop_size))
+
+            # 4) 随机水平翻转
+            if np.random.rand() > 0.5:
+                img = T.functional.hflip(img)
+                mask = T.functional.hflip(mask)
+
+            # 5) 颜色抖动
+            if self.color_jitter is not None:
+                img = self.color_jitter(img)
+
+        # 转 Tensor
+        img = T.functional.to_tensor(img)
+
+        # 可选噪声（现已关闭，默认 add_noise_prob=0.0）
+        if self.is_train and np.random.rand() < self.add_noise_prob:
+            noise = torch.randn_like(img) * self.noise_std
+            img = torch.clamp(img + noise, 0.0, 1.0)
+
+        # 标准化
+        img = T.functional.normalize(img, self.mean, self.std)
+
+        # 直接把 palette/L 索引图转成类别 id（0..20，255 忽略）
+        target = torch.from_numpy(np.array(mask, dtype=np.uint8)).long()
+        return img, target
+
+# -------------------- 模型（U-Net） --------------------
+def bilinear_kernel(in_channels, out_channels, kernel_size):
+    factor = (kernel_size + 1) // 2
+    center = factor - 1 if kernel_size % 2 == 1 else factor - 0.5
+    og = np.ogrid[:kernel_size, :kernel_size]
+    filt = (1 - abs(og[0] - center) / factor) * (1 - abs(og[1] - center) / factor)
+    weight = np.zeros((in_channels, out_channels, kernel_size, kernel_size), dtype=np.float32)
+    for i in range(min(in_channels, out_channels)):
+        weight[i, i, :, :] = filt
+    return torch.from_numpy(weight)
+
+# 解码器 DoubleConv：加 BN + Dropout2d
+class DoubleConv(nn.Module):
+    def __init__(self, in_ch, out_ch, p=0.1):
+        super().__init__()
+        self.block = nn.Sequential(
+            nn.Conv2d(in_ch, out_ch, kernel_size=3, padding=1, bias=False),
+            nn.BatchNorm2d(out_ch),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(out_ch, out_ch, kernel_size=3, padding=1, bias=False),
+            nn.BatchNorm2d(out_ch),
+            nn.ReLU(inplace=True),
+            nn.Dropout2d(p),
+        )
+
+    def forward(self, x):
+        return self.block(x)
+
+
+class UNetVGG16(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+        # 预训练 VGG16 编码器
+        vgg = vgg16(weights=VGG16_Weights.IMAGENET1K_V1)
+        features = vgg.features
+
+        # 拆分为“卷积块 + 池化”，并移除 pool5（保持 4 次下采样）
+        self.conv1 = features[:4]
+        self.pool1 = features[4]
+        self.conv2 = features[5:9]
+        self.pool2 = features[9]
+        self.conv3 = features[10:16]
+        self.pool3 = features[16]
+        self.conv4 = features[17:23]
+        self.pool4 = features[23]
+        self.conv5 = features[24:30]  # 不含 pool5
+
+        # 解码器：上采样改为“插值 + 卷积(BN+ReLU)” + 拼接 + 双卷积(DoubleConv: BN+Dropout)
+        self.up4 = nn.Sequential(
+            nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),
+            nn.Conv2d(512, 512, kernel_size=1, bias=False),
+            nn.BatchNorm2d(512),
+            nn.ReLU(inplace=True),
+        )
+        self.dec4 = DoubleConv(512 + 512, 512)
+
+        self.up3 = nn.Sequential(
+            nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),
+            nn.Conv2d(512, 256, kernel_size=1, bias=False),
+            nn.BatchNorm2d(256),
+            nn.ReLU(inplace=True),
+        )
+        self.dec3 = DoubleConv(256 + 256, 256)
+
+        self.up2 = nn.Sequential(
+            nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),
+            nn.Conv2d(256, 128, kernel_size=1, bias=False),
+            nn.BatchNorm2d(128),
+            nn.ReLU(inplace=True),
+        )
+        self.dec2 = DoubleConv(128 + 128, 128)
+
+        self.up1 = nn.Sequential(
+            nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),
+            nn.Conv2d(128, 64, kernel_size=1, bias=False),
+            nn.BatchNorm2d(64),
+            nn.ReLU(inplace=True),
+        )
+        self.dec1 = DoubleConv(64 + 64, 64)
+
+        # 输出层
+        self.out_conv = nn.Conv2d(64, num_classes, kernel_size=1)
+
+    @staticmethod
+    def _align(x, ref):
+        # 对齐尺寸，避免奇偶数导致的 1px 误差
+        if x.shape[2:] != ref.shape[2:]:
+            x = F.interpolate(x, size=ref.shape[2:], mode='bilinear', align_corners=False)
+        return x
+
+    def forward(self, x):
+        # 编码器
+        x1 = self.conv1(x)           # C=64,   1/1
+        p1 = self.pool1(x1)          #        1/2
+
+        x2 = self.conv2(p1)          # C=128,  1/2
+        p2 = self.pool2(x2)          #        1/4
+
+        x3 = self.conv3(p2)          # C=256,  1/4
+        p3 = self.pool3(x3)          #        1/8
+
+        x4 = self.conv4(p3)          # C=512,  1/8
+        p4 = self.pool4(x4)          #        1/16
+
+        x5 = self.conv5(p4)          # C=512,  1/16 (bottleneck)
+
+        # 解码器（U-Net）
+        u4 = self.up4(x5)            # -> 1/8
+        u4 = self._align(u4, x4)
+        d4 = self.dec4(torch.cat([u4, x4], dim=1))   # C=512
+
+        u3 = self.up3(d4)            # -> 1/4
+        u3 = self._align(u3, x3)
+        d3 = self.dec3(torch.cat([u3, x3], dim=1))   # C=256
+
+        u2 = self.up2(d3)            # -> 1/2
+        u2 = self._align(u2, x2)
+        d2 = self.dec2(torch.cat([u2, x2], dim=1))   # C=128
+
+        u1 = self.up1(d2)            # -> 1/1
+        u1 = self._align(u1, x1)
+        d1 = self.dec1(torch.cat([u1, x1], dim=1))   # C=64
+
+        out = self.out_conv(d1)      # -> num_classes@HxW
+        return out
+
+# -------------------- 评估指标 --------------------
+def compute_metrics(hist):
+    pixel_accuracy = np.diag(hist).sum() / hist.sum() if hist.sum() > 0 else 0.0
+    denom = (hist.sum(axis=1) + hist.sum(axis=0) - np.diag(hist))
+    iou = np.divide(np.diag(hist), denom, out=np.full_like(np.diag(hist, k=0), np.nan, dtype=float), where=denom!=0)
+    miou = np.nanmean(iou)
+    return pixel_accuracy, miou
+
+# -------------------- 训练 / 验证 --------------------
+def train_one_epoch(model, optimizer, criterion, data_loader, device, scaler, lr_scheduler, grad_clip=1.0):
+    model.train()
+    total_loss = 0
+    progress_bar = tqdm(data_loader, desc="Training", leave=False)
+    for images, targets in progress_bar:
+        images = images.to(device)
+        targets = targets.to(device)
+
+        optimizer.zero_grad()
+        with torch.amp.autocast(device_type='cuda'):
+            outputs = model(images)
+            loss = criterion(outputs, targets)
+
+        scaler.scale(loss).backward()
+        scaler.unscale_(optimizer)
+        if grad_clip is not None and grad_clip > 0:
+            nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
+
+        scaler.step(optimizer)
+        scaler.update()
+
+        lr_scheduler.step()
+
+        total_loss += loss.item()
+        progress_bar.set_postfix(
+            loss=f'{loss.item():.4f}',
+            lr=f'{optimizer.param_groups[0]["lr"]:.2e}/{optimizer.param_groups[1]["lr"]:.2e}'
+        )
+    return total_loss / len(data_loader)
+
+@torch.no_grad()
+def evaluate_fast(model, criterion, data_loader, device, num_classes,
+                  compute_loss=False, max_batches=None, max_images=None, progress=True):
+    model.eval()
+    total_loss = 0.0
+    seen_images = 0
+    batches = 0
+
+    conf = torch.zeros((num_classes, num_classes), dtype=torch.int64, device=device)
+    iterator = tqdm(data_loader, desc="Evaluating", leave=False) if progress else data_loader
+
+    with torch.inference_mode():
+        for images, targets in iterator:
+            images = images.to(device, non_blocking=True)
+            targets = targets.to(device, non_blocking=True)
+
+            with torch.amp.autocast(device_type='cuda'):
+                outputs = model(images)
+                if compute_loss:
+                    loss = criterion(outputs, targets)
+                    total_loss += loss.item()
+
+            preds = outputs.argmax(1)
+            valid = targets != 255
+            if valid.any():
+                n = num_classes
+                t = targets[valid].to(torch.int64)
+                p = preds[valid].to(torch.int64)
+                k = (t * n + p).view(-1)
+                conf += torch.bincount(k, minlength=n*n).view(n, n)
+
+            batches += 1
+            seen_images += images.size(0)
+
+            if (max_batches is not None and batches >= max_batches) or \
+               (max_images is not None and seen_images >= max_images):
+                break
+
+    conf_f = conf.to(torch.float32)
+    total = conf_f.sum()
+    pixel_acc = (torch.diag(conf_f).sum() / total).item() if total > 0 else 0.0
+    denom = (conf_f.sum(dim=1) + conf_f.sum(dim=0) - torch.diag(conf_f))
+    iou = torch.where(denom > 0, torch.diag(conf_f) / denom, torch.full_like(denom, float('nan')))
+    miou = torch.nanmean(iou).item()
+
+    avg_loss = (total_loss / batches) if compute_loss and batches > 0 else float('nan')
+    return avg_loss, pixel_acc, miou
+
+# -------------------- 可视化 --------------------
+def decode_segmap(image, nc=21, void_value=255, void_color=(0, 0, 0)):
+    lut = np.zeros((256, 3), dtype=np.uint8)
+    lut[:nc] = np.array(VOC_COLORMAP, dtype=np.uint8)
+    lut[void_value] = np.array(void_color, dtype=np.uint8)
+    return lut[image]
+
+def denormalize(tensor):
+    mean = np.array([0.485, 0.456, 0.406])
+    std = np.array([0.229, 0.224, 0.225])
+    arr = tensor.detach().cpu().numpy().transpose(1, 2, 0)
+    arr = std * arr + mean
+    return np.clip(arr, 0, 1)
+
+@torch.no_grad()
+def visualize_predictions(model, data_loader, device, num_images=20, save_dir=VIS_DIR, overlay_alpha=0.6):
+    os.makedirs(save_dir, exist_ok=True)
+    model.eval()
+    shown = 0
+
+    for images, targets in data_loader:
+        images = images.to(device)
+        with torch.amp.autocast(device_type='cuda'):
+            outputs = model(images)
+
+        preds = torch.argmax(outputs, dim=1).cpu().numpy()
+        images_cpu = images.cpu()
+        targets_np = targets.cpu().numpy()
+
+        bsz = images_cpu.shape[0]
+        for i in range(bsz):
+            if shown >= num_images: break
+
+            original_img = denormalize(images_cpu[i])
+            gt_mask_rgb = decode_segmap(targets_np[i])
+            pred_mask_rgb = decode_segmap(preds[i])
+
+            fig, axes = plt.subplots(1, 4, figsize=(20, 5))
+            axes[0].imshow(original_img); axes[0].set_title("Original"); axes[0].axis('off')
+            axes[1].imshow(gt_mask_rgb);  axes[1].set_title("Ground Truth"); axes[1].axis('off')
+            axes[2].imshow(pred_mask_rgb);axes[2].set_title("Prediction");   axes[2].axis('off')
+            axes[3].imshow(original_img); axes[3].imshow(pred_mask_rgb, alpha=overlay_alpha)
+            axes[3].set_title("Overlay"); axes[3].axis('off')
+            plt.tight_layout()
+
+            out_path = os.path.join(save_dir, f'result_{shown:03d}.png')
+            plt.savefig(out_path, dpi=150, bbox_inches='tight')
+            plt.close(fig)
+            shown += 1
+        if shown >= num_images: break
+
+    print(f"可视化结果保存在: {os.path.abspath(save_dir)}（共 {shown} 张）")
+
+# -------------------- 准备数据与模型 --------------------
+# 训练集：VOC2007 trainval + VOC2012 train（若 2007 不可用，则仅 2012）
+train_sets = []
+
+# VOC2007 trainval（若存在分割标注）
+if os.path.isdir(VOC2007_ROOT):
+    try:
+        train_07 = VOCSegmentationDataset(
+            VOC2007_ROOT, image_set='trainval',
+            transforms=SegmentationTransforms(is_train=True, base_size=520, crop_size=480),  # 已默认关闭噪声
+            strict=False
+        )
+        if len(train_07) > 0:
+            train_sets.append(train_07)
+            print(f"VOC2007 trainval 可用: {len(train_07)} 样本")
+        else:
+            print("VOC2007 trainval 无可用分割样本，跳过 2007。")
+    except Exception as e:
+        print(f"加载 VOC2007 失败，跳过：{e}")
+else:
+    print(f"未找到 VOC2007 路径：{VOC2007_ROOT}（将仅使用 VOC2012 训练）")
+
+# VOC2012 train
+train_12 = VOCSegmentationDataset(
+    VOC2012_ROOT, image_set='train',
+    transforms=SegmentationTransforms(is_train=True, base_size=520, crop_size=480),  # 已默认关闭噪声
+    strict=True
+)
+print(f"VOC2012 train: {len(train_12)} 样本")
+train_sets.append(train_12)
+
+# 合并训练集
+if len(train_sets) == 1:
+    train_dataset = train_sets[0]
+else:
+    train_dataset = ConcatDataset(train_sets)
+
+# 验证：VOC2012 val
+val_dataset_voc = VOCSegmentationDataset(
+    VOC2012_ROOT, image_set='val',
+    transforms=SegmentationTransforms(is_train=False, base_size=520, crop_size=480),
+    strict=True
+)
+
+train_loader = DataLoader(
+    train_dataset, batch_size=BATCH_SIZE, shuffle=True,
+    num_workers=NUM_WORKERS, pin_memory=True, persistent_workers=True
+)
+val_loader = DataLoader(
+    val_dataset_voc, batch_size=VAL_BATCH_SIZE, shuffle=False,
+    num_workers=NUM_WORKERS, pin_memory=True, persistent_workers=True
+)
+
+print(f"训练集总样本数: {len(train_dataset)}")
+print(f"验证集样本数 (VOC2012 val): {len(val_dataset_voc)}")
+
+model = UNetVGG16(num_classes=NUM_CLASSES).to(DEVICE)
+criterion = nn.CrossEntropyLoss(ignore_index=255)
+
+# 参数分组 + poly 学习率
+base_lr = LEARNING_RATE
+new_lr  = LEARNING_RATE * 10
+
+# 预训练的编码器（VGG16 features）
+encoder_modules = [model.conv1, model.conv2, model.conv3, model.conv4, model.conv5]
+
+# 新初始化的解码器与输出层
+new_modules = [
+    model.up4, model.dec4,
+    model.up3, model.dec3,
+    model.up2, model.dec2,
+    model.up1, model.dec1,
+    model.out_conv
+]
+
+optimizer = optim.AdamW([
+    {'params': it.chain(*(m.parameters() for m in encoder_modules)), 'lr': base_lr},
+    {'params': it.chain(*(m.parameters() for m in new_modules)), 'lr': new_lr},
+], weight_decay=WEIGHT_DECAY)
+
+max_iter = EPOCHS * len(train_loader)
+def poly_lr_lambda(it_idx):
+    return (1 - it_idx / max_iter) ** 0.9
+
+lr_scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=poly_lr_lambda)
+
+# AMP Scaler（固定 cuda）
+scaler = torch.amp.GradScaler('cuda')
+
+# 记录与保存
+history = {'train_loss': [], 'val_loss': [], 'val_pa': [], 'val_miou': []}
+best_miou_voc = -1.0
+os.makedirs(SAVE_DIR, exist_ok=True)
+
+# -------------------- 训练循环 --------------------
+print("开始训练...")
+start_time = time.time()
+
+for epoch in range(EPOCHS):
+    train_loss = train_one_epoch(model, optimizer, criterion, train_loader, DEVICE, scaler, lr_scheduler)
+
+    val_loss_voc, val_pa_voc, val_miou_voc = evaluate_fast(
+        model, criterion, val_loader, DEVICE, NUM_CLASSES,
+        compute_loss=EVAL_COMPUTE_LOSS,
+        max_batches=EVAL_MAX_BATCHES,
+        max_images=EVAL_MAX_IMAGES,
+        progress=EVAL_PROGRESS
+    )
+
+    history['train_loss'].append(train_loss)
+    history['val_loss'].append(val_loss_voc)
+    history['val_pa'].append(val_pa_voc)
+    history['val_miou'].append(val_miou_voc)
+
+    if val_miou_voc > best_miou_voc:
+        best_miou_voc = val_miou_voc
+        torch.save({
+            'epoch': epoch + 1,
+            'model_state': model.state_dict(),
+            'optimizer_state': optimizer.state_dict(),
+            'miou_voc': best_miou_voc,
+            'config': {
+                'base_lr': base_lr, 'new_lr': new_lr, 'weight_decay': WEIGHT_DECAY,
+                'epochs': EPOCHS, 'batch_size': BATCH_SIZE
+            }
+        }, BEST_PATH_VOC)
+
+    val_loss_str = f"{val_loss_voc:.4f}" if EVAL_COMPUTE_LOSS else "n/a"
+    print(
+        f"Epoch {epoch+1}/{EPOCHS} | "
+        f"Train Loss: {train_loss:.4f} | "
+        f"VOC Val: Loss {val_loss_str}, PA {val_pa_voc:.4f}, mIoU {val_miou_voc:.4f} | "
+        f"Best VOC mIoU: {best_miou_voc:.4f}"
+    )
+
+end_time = time.time()
+print(f"\n训练完成！总耗时: {(end_time - start_time) / 60:.2f} 分钟")
+print("\n--- 最终评估指标 (VOC2012 val) ---")
+final_loss_str = f"{history['val_loss'][-1]:.4f}" if EVAL_COMPUTE_LOSS else "n/a"
+print(f"Val Loss: {final_loss_str} | PA: {history['val_pa'][-1]:.4f} | mIoU: {history['val_miou'][-1]:.4f}")
+print(f"最优权重已保存至: {BEST_PATH_VOC}")
+
+# 保存当前（latest）
+torch.save(model.state_dict(), LATEST_PATH)
+print(f"已保存当前模型权重到: {LATEST_PATH}")
+
+# 加载最优权重用于可视化
+if os.path.isfile(BEST_PATH_VOC):
+    ckpt_voc = torch.load(BEST_PATH_VOC, map_location=torch.device(DEVICE))
+    model.load_state_dict(ckpt_voc['model_state'])
+    print(f"\n已加载 VOC 最优权重进行可视化: {BEST_PATH_VOC} (epoch={ckpt_voc.get('epoch','?')}, mIoU_VOC={ckpt_voc.get('miou_voc', 0):.4f})")
+else:
+    print("\n未找到 VOC 最优权重，使用当前模型进行可视化。")
+
+print("\n--- 可视化预测结果 (VOC2012 val) ---")
+visualize_predictions(model, val_loader, DEVICE, num_images=20, save_dir=VIS_DIR)
+```
+
+</details>
+
+#### 结果
+
+在 Pascal VOC 07+12 上训练 80 个 Epoch，耗时 19332s，最后的 mIoU 为 0.5342。诶，您别瞧这 mIoU 还打不过 FCN-8s，那边可是用上了 VGG 预训练参数的大头——也就是 pool5 之后的两个线性层啊！
+
+![alt text](image-28.png)
+
+下面是几个样例图像：
+
+![alt text](image-29.png)
+
+![alt text](image-30.png)
+
+![alt text](image-31.png)
+
+### 碎碎念
+
+记得当时学数字逻辑的时候，老是有题目来考察多路选择器 MUX，也就是根据 n 个输入端高低电平，把它看作一个二进制数 x，从而激活第 x 个输出端。这种题目一般不会让多路选择器做自己的本职工作，而是利用自己可以进行从二进制编码到逻辑最小项的“译码”来干花活——比如搓一个全加器。
+
+其实全卷积架构也是如此。单纯做语义分割，还是太限制它的发挥了。事实上它展示了一种**像素级的编码器——解码器**的通用架构，从而可以用在各种**生成式任务**上面。无论是 VAE 还是 DC-GAN，我们都在其中看到了反卷积的应用；而大名鼎鼎的 DDPM，其生成正是使用了 U-Net 架构。
 
 ## 目标检测
 
