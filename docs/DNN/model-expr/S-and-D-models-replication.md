@@ -1803,9 +1803,9 @@ visualize_predictions(model, val_loader, DEVICE, num_images=20, save_dir=VIS_DIR
 
 首先我们来看损失函数。我们来回顾一下打框的几个要素：首先定中心点坐标，然后算框的尺寸，给出置信度分数，最后一部分是概率。其中每一个要素都要兼顾。
 
-首先我们要确定对于每一个格子而言，它的框在预测什么。这很简单，对于每一个框，我们选**和它 IoU 最大的那个真实框**作为预测的类别。
+首先我们要确定对于每一个格子而言，它的框在预测什么。这很简单，对于每一个框，我们选**和它 IoU 最大的那个真实框**作为预测的类别。我们把那个框叫做“事实框”。
 
-对于第 $i$ 个格子的第 $j$ 个框，其中心点的误差，我们可以直接用距离模长的平方衡量：
+对于第 $i$ 个格子的第 $j$ 个框，其中心点的误差，我们可以直接用预测框中心点到事实框中心点距离模长的平方衡量：
 
 $$
 \mathcal{L}_\mathrm{center}=\sum_i^{S^2}\sum_j^{B}\left((x_{ij}-x_{ij}^{\mathrm{true}})^2+(y_{ij}-y_{ij}^{\mathrm{true}})^2\right)
@@ -1813,17 +1813,41 @@ $$
 
 而尺寸上的误差如果仍然是直接相减再求平方的算法，会导致**相同的误差对大框的惩罚不合理地大于小框**，因为从观感和尺度而言，同样是 10px 的差值，对于大框而言无足轻重，对于小框却是很大的偏移。也就是说我们需要把对大框的衡量尺度调小而对小框的衡量尺度调大。其实 $x^{1/p}(p>1)$ 就能做到这个映射，在论文里面，取到的是 $p=2$。现在就可以类似地写出尺寸的损失了：
 
-
 $$
 \mathcal{L}_\mathrm{size}=\sum_i^{S^2}\sum_j^{B}\left((\sqrt {w_{ij}}-\sqrt{w_{ij}^{\mathrm{true}}})^2+(\sqrt{h_{ij}}-\sqrt{h_{ij}^{\mathrm{true}}})^2\right)
 $$
 
-下一部分是置信度分数的损失。我们知道
+下一部分是置信度分数的损失。我们知道对于每一个框，理想的置信度分数如下：
 
 $$
-c_i=\left\{
+c_{ij}^\mathrm{ideal}=\left\{
 \begin{align*}
     &\mathrm{IoU}^{\mathrm{true}}_{\mathrm{pred}},&\mathrm{With\ Obj.\ in\ it}\\
     &0,&\mathrm{Without\ Obj.\ in\ it}
 \end{align*}\right.
 $$
+
+这里的置信度损失的关键是要**分辨正确的目标和背景**，如果前面两项损失都很低，IoU 自然相当高，所以这里的关键就是，对于预测框而言，我们需要让它相对对应的事实框的置信度分数尽量高（正样本），而相对其他框的置信度分数尽量低（负样本）。
+
+正样本和负样本的损失计算就是把刚刚的式子拆开，仍旧使用 MSE：
+
+$$
+\begin{align*}
+    \mathcal{L}_{\mathrm{P}}&=\sum_i^{S^2}\sum_j^{B}\left(c_{ij}-\mathrm{IoU}_{\mathrm{pred}}^\mathrm{true}\right)^2\\
+    \mathcal{L}_{\mathrm{N}}&=\sum_i^{S^2}\sum_j^{B}\left(c_{ij}-0\right)^2
+\end{align*}
+$$
+
+最后就是分类误差了。对于某个事实框，若其中心落在格子 $i$ 里面，就意味着这个格子负责预测该事物的类别。原论文还是用的 MSE，不过我觉得分类任务用交叉熵显然更合适：
+
+$$
+\mathcal{L}_{\mathrm{class}}=\sum_i CE(p_i||\mathrm{one\_hot_i^{true}})
+$$
+
+最后把他们加权起来：
+
+$$
+\mathcal{L}_{\mathrm{YOLO}}=\lambda_{\mathrm{coord}}(\mathcal{L}_\mathrm{center}+\mathcal{L}_\mathrm{size})+\mathcal{L}_{\mathrm{P}}+\lambda_{\mathrm{noobj}}\mathcal{L}_{\mathrm{N}}+\mathcal{L}_{\mathrm{class}}
+$$
+
+这个加权也是有说法的。我们的优先级是打框打到位，要不然后面的置信度这些都是扯淡，因此要给 $\lambda_{\mathrm{coord}}$ 一个大权重，论文里面给到了 $5$，而且由于一个图背景肯定多于目标，因此所有框的 $\mathcal{L}_{\mathrm{N}}$ 肯定相当高，导致模型倾向于压置信分，把所有的框都预测成背景，因此我们需要控制这部分损失，给 $\lambda_{\mathrm{noobj}}$ 一个小权重，论文里面给到 $0.5$。
