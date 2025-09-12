@@ -1877,9 +1877,11 @@ $$
 
 如果你是像我一样从过程式的 C/C++ 开始接触程序设计语言的，大概会觉得这就是一个 for-if 就能解决的事。但是如果你读了下面的损失函数代码就会发现**完全不是这样做的**，而是一种接近**函数式**的思想。
 
-如果想感受这种范式转移 (Paradigm Shift) 带来的震撼，强烈推荐阅读下面计算损失使用的代码。
+如果想感受这种范式转移 (Paradigm Shift) 带来的震撼，强烈推荐阅读下面计算损失使用的代码。配合这首 Paradigm Shift 食用更佳哦~
 
-<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=419116089&auto=0&height=66"></iframe>
+<div style="text-align: center; margin: 20px 0;">
+    <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=419116089&auto=0&height=66" style="border: 0px solid #ccc;"></iframe>
+</div>
 
 最后值得一提的是，“选取IoU最大的框”这个操作似乎因为涉及到 `argmax` 操作而**不可导**，但是由于我们对不同的情况分配了不同的损失，因此我们事实上执行的操作是**对最大框**利用 $\mathcal{L}_1$ 回传梯度而对其他框利用 $\mathcal{L}_{\mathrm{N}}$ 回传梯度，也就是通过条件判断来构建不同的损失路径，这样整个网络就完全可导了。这一点写成代码也是有说法的，请看 VCR：
 
@@ -1893,7 +1895,7 @@ YOLO v1 使用自研架构 Darknet 来实现打框。他们在 ImageNet 上面�
 
 我们知道一个格子可以有多个框，不同的框有不同的置信度。对于一个给定的 IoU 阈值，比如说 0.5，我们可以通过选择置信度阈值来筛选框，也就是说我们可以把同时符合下面三个条件的框视作**TP**而这个格子打的其他框视作**FP**：预测类别和真实类别一致、相对真实框的 IoU 满足 IoU 阈值以及满足置信度阈值。然后我们就可以得到混淆矩阵，从而得到 P-R 曲线也就是**精准率-召回率曲线**。
 
-我们按等间隔采样 11 个召回率，计算对应精确率的平均，就得到了**平均精确率**也就是 AP，由于我们设置的 IoU 阈值是 0.5，所以写作 AP@0.5，同样的对类别做平均就得到了我们主要的评价指标 mAP@0.5。从几何意义上讲，是在近似计算 P-R 曲线下的面积（也就是 AUC）。
+我们按等间隔采样 11 个召回率（事实上真实P-R分布别不可能等间隔，但是我们插值即可），计算对应精确率的平均，就得到了**平均精确率**也就是 AP，由于我们设置的 IoU 阈值是 0.5，所以写作 AP@0.5，同样的对类别做平均就得到了我们主要的评价指标 mAP@0.5。从几何意义上讲，是在近似计算 P-R 曲线下的面积（也就是 AUC）。
 
 因为一般精确率和召回率是反向变化的，所以这个分数越高，一方面意味着它打框有基本的准确度，但是更意味着模型**在类别预测上**越好。
 
@@ -2243,8 +2245,559 @@ class YoloV1Loss(nn.Module):
         return total_loss, loss_dict
 ```
 
+
 </details>
 
-#### 推理
+#### 推理与评估
+
+唯一值得一提的就是推理时使用的 NMS 手段。由于打框的时候模型想提高召回（尤其在我们之前魔改过的 YOLO Loss 里面），就会给同一个目标打很多相互重叠的框，于是我们就需要对这些框进行筛选。
+
+首先评判一个框好不好最佳标准是**置信度** $c$，因此我们按置信度排序，最高的框就是质量最好的框。我们记录下来。接下来我们不能保留太多重叠的框，就丢弃和这个最佳框 IoU 大于某个阈值 `NMS_IoU` 的所有框。然后对剩下的框（不含那个最佳框）重复执行刚刚的排序——丢弃操作。最后记录下来的所有框就是筛选好的框了。
+
+这叫做 Non-Max Suppression(NMS)，非极大值抑制。
+
+其他的内容，请具体看代码吧。这里没有给 `yolo_decode` 函数，因为解码的部分在 `YOLOV1Loss` 类里面已经有呈现了。
+
+<details>
+
+<summary> 利用 NMS 评估 mAP, P-R 等指标 </summary>
+
+```python
+def nms_classwise(dets, iou_thr=0.45):
+    """
+    按类别进行非极大值抑制 (NMS)，去除重叠度高的检测框
+    
+    Args:
+        dets: 检测结果张量，形状为 [num_detections, 6]，每行包含 [x1, y1, x2, y2, score, class]
+        iou_thr: IoU 阈值，用于判断两个框是否重叠过高，默认为 0.45
+        
+    Returns:
+        经过 NMS 处理后的检测结果张量
+    """
+    # 检查是否有检测结果
+    if dets.numel() == 0:
+        return dets
+        
+    out = []
+    # 对每个类别单独处理
+    for cls in dets[:,5].unique():
+        cls = int(cls.item())
+        # 创建当前类别的掩码
+        mask = dets[:,5] == cls
+        # 提取当前类别的检测结果
+        d = dets[mask]
+        # 使用 TorchVision 的 NMS 函数进行非极大值抑制
+        # 注意：这里应用了 NMS，这是去除重叠框的关键步骤
+        # NMS 会保留得分最高的框，并移除与其 IoU 超过阈值的其他框
+        keep_idx = torchvision.ops.nms(d[:, :4], d[:, 4], iou_thr)
+        # 将保留的检测结果添加到输出列表
+        out.append(d[keep_idx])
+        
+    # 合并所有类别的检测结果
+    return torch.cat(out, dim=0) if out else dets
+
+def evaluate_map_pr(dataset, model, device, conf_thresh=1e-4, nms_iou=0.45, iou_match=0.5, subsample=None):
+    """
+    全面评估 YOLO 模型的性能，计算 mAP (mean Average Precision) 和精确率-召回率指标
+    
+    Args:
+        dataset: 评估数据集，应提供图像和标注
+        model: 训练好的 YOLO 模型
+        device: 计算设备 ('cpu' 或 'cuda')
+        conf_thresh: 置信度阈值，过滤低置信度预测框，默认 1e-4
+        nms_iou: NMS 操作的 IoU 阈值，用于去除重叠框，默认 0.45
+        iou_match: 判断预测框与真实框匹配的 IoU 阈值，默认 0.5 (PASCAL VOC 标准)
+        subsample: 评估子集大小，用于快速验证，默认评估全部数据
+        
+    Returns:
+        dict: 包含多种评估指标的字典
+    """
+    # 设置模型为评估模式，关闭 dropout 和 batch normalization 的随机性
+    model.eval()
+    
+    # 创建数据加载器，设置合适的批量大小和工作线程数
+    loader = DataLoader(dataset, batch_size=8, shuffle=False, num_workers=NUM_WORKERS,
+                        pin_memory=PIN_MEMORY, persistent_workers=False, collate_fn=collate_fn)
+    
+    # 初始化数据结构存储所有真实框和预测框
+    # all_gts: 按类别组织的真实框，结构为 {class_id: {image_id: [bboxes]}}
+    # all_preds: 按类别组织的预测框，结构为 {class_id: [(image_id, confidence, bbox)]}
+    all_gts = {c: {} for c in range(C_global)}
+    all_preds = {c: [] for c in range(C_global)}
+
+    # 使用无梯度计算和自动混合精度（如果启用）以提高效率
+    with torch.no_grad(), torch.amp.autocast(device_type='cuda', enabled=AUTOCAST_ENABLED):
+        processed = 0  # 已处理图像计数器
+        
+        # 使用进度条遍历数据加载器
+        for images, targets, gts, ids in tqdm(loader, desc='Eval', leave=False):
+            # 将图像数据转移到指定设备（CPU/GPU）
+            images = images.to(device, non_blocking=True)
+            
+            # 前向传播获取模型预测
+            preds = model(images)
+            
+            # 解码原始预测输出，转换为边界框格式
+            dets_batch = yolo_decode(preds, conf_thresh=conf_thresh)
+            
+            # 处理批次中的每个图像
+            for bi, dets in enumerate(dets_batch):
+                # 对检测结果应用非极大值抑制 (NMS)，去除重叠框
+                # 这是评估流程中的关键步骤，确保每个目标只有一个最佳预测框
+                dets = nms_classwise(dets.detach().cpu(), iou_thr=nms_iou)
+                
+                # 获取当前图像的ID和真实标注
+                img_id = ids[bi]
+                gt = gts[bi].cpu()  # 真实标注，格式为 [x1, y1, x2, y2, class]
+                
+                # 存储真实框信息到全局数据结构
+                for g in gt:
+                    x1, y1, x2, y2, cls = g.tolist()
+                    # 初始化该类别的图像字典（如果不存在）
+                    if img_id not in all_gts[int(cls)]:
+                        all_gts[int(cls)][img_id] = []
+                    # 添加真实框坐标
+                    all_gts[int(cls)][img_id].append([x1, y1, x2, y2])
+                
+                # 存储预测框信息到全局数据结构
+                for d in dets:
+                    x1, y1, x2, y2, score, cls = d.tolist()
+                    all_preds[int(cls)].append((img_id, score, [x1, y1, x2, y2]))
+            
+            # 更新已处理图像计数
+            processed += len(ids)
+            
+            # 如果设置了子采样且已达到采样数量，提前终止评估
+            if subsample is not None and processed >= subsample:
+                break
+
+    # 初始化评估指标
+    aps = []  # 存储每个类别的 AP (Average Precision)
+    iou_list = []  # 存储所有匹配框的 IoU 值，用于计算平均 IoU
+    tp_total = fp_total = fn_total = 0  # 全局的真正例、假正例、假反例计数
+
+    # 对每个类别单独计算评估指标
+    for cls in range(C_global):
+        # 按置信度降序排序当前类别的所有预测框
+        # 这是计算 PR 曲线的关键步骤，因为我们需要按置信度从高到低处理预测
+        preds = sorted(all_preds[cls], key=lambda x: -x[1])
+        
+        # 获取当前类别的所有真实框，按图像分组
+        gt_per_image = all_gts[cls]
+        
+        # 创建匹配标记字典，记录每个真实框是否已被预测框匹配
+        # 结构: {image_id: numpy_array_of_booleans}
+        gt_matched = {}
+        for img_id, boxes in gt_per_image.items():
+            gt_matched[img_id] = np.zeros(len(boxes), dtype=bool)
+
+        # 初始化真正例(TP)、假正例(FP)和得分列表
+        TPs, FPs, scores = [], [], []
+        
+        # 按置信度从高到低遍历所有预测框
+        for (img_id, score, box) in preds:
+            scores.append(score)  # 记录当前预测框的得分
+            
+            # 获取当前图像中该类别的所有真实框
+            gt_boxes = gt_per_image.get(img_id, [])
+            
+            # 如果当前图像没有该类别的真实框，所有预测都是假正例(FP)
+            if len(gt_boxes) == 0:
+                TPs.append(0)
+                FPs.append(1)
+                continue
+                
+            # 计算当前预测框与所有真实框的 IoU
+            box_t = torch.tensor([box], dtype=torch.float32)  # 当前预测框
+            gt_t = torch.tensor(gt_boxes, dtype=torch.float32)  # 所有真实框
+            
+            # 计算 IoU 矩阵并获取最大值和索引
+            ious = box_iou_xyxy(box_t, gt_t).squeeze(0).numpy()
+            best_idx = ious.argmax()  # 最高 IoU 的索引
+            best_iou = ious[best_idx]  # 最高 IoU 值
+            
+            # 判断是否为真正例(TP)的条件：
+            # 1. IoU 超过匹配阈值 (通常为 0.5)
+            # 2. 对应的真实框尚未被匹配
+            if best_iou >= iou_match and not gt_matched[img_id][best_idx]:
+                TPs.append(1)  # 真正例
+                FPs.append(0)  # 不是假正例
+                gt_matched[img_id][best_idx] = True  # 标记该真实框已被匹配
+                iou_list.append(best_iou)  # 记录匹配框的 IoU
+            else:
+                TPs.append(0)  # 不是真正例
+                FPs.append(1)  # 假正例
+
+        # 转换为 numpy 数组以便向量化计算
+        TPs, FPs, scores = np.array(TPs), np.array(FPs), np.array(scores)
+        
+        # 计算累积真正例和假正例数量
+        cum_TP = np.cumsum(TPs)
+        cum_FP = np.cumsum(FPs)
+        
+        # 计算当前类别的真实框总数
+        total_gts = sum(len(v) for v in gt_per_image.values())
+        
+        # 如果没有真实框，AP 设为 0
+        if total_gts == 0:
+            aps.append(0.0)
+            continue
+
+        # 计算召回率和精确率曲线
+        # 召回率 = 真正例数 / 总真实框数
+        recalls = cum_TP / (total_gts + 1e-8)
+        
+        # 精确率 = 真正例数 / (真正例数 + 假正例数)
+        precisions = cum_TP / (cum_TP + cum_FP + 1e-8)
+
+        # 使用 11点插值法计算 AP (Average Precision)
+        # 这是 PASCAL VOC 挑战赛的标准评估方法
+        ap = 0.0
+        for t in np.linspace(0, 1, 11):  # 在 [0, 1] 区间均匀取11个点
+            # 对于每个召回率阈值 t，找到所有召回率 ≥ t 的精确率最大值
+            p = precisions[recalls >= t].max() if np.any(recalls >= t) else 0.0
+            ap += p / 11.0  # 平均这些精确率值
+        
+        aps.append(ap)  # 记录当前类别的 AP
+
+        # 计算置信度阈值 0.5 下的 TP, FP, FN
+        # 这在实践中很有用，因为它反映了模型在实际应用中的性能
+        mask = scores >= 0.5  # 选择置信度 ≥ 0.5 的预测
+        tp = int(TPs[mask].sum())  # 真正例数
+        fp = int(FPs[mask].sum())  # 假正例数
+        fn = total_gts - tp  # 假反例数 = 总真实框数 - 真正例数
+        
+        # 累加到全局计数
+        tp_total += tp
+        fp_total += fp
+        fn_total += fn
+
+    # 计算最终评估指标
+    # mAP: 所有类别 AP 的平均值，是目标检测的主要评估指标
+    mAP = float(np.mean(aps)) if len(aps) else 0.0
+    
+    # 平均 IoU: 所有匹配框的 IoU 平均值，反映定位精度
+    mean_iou_matched = float(np.mean(iou_list)) if len(iou_list) else 0.0
+    
+    # 置信度阈值 0.5 下的精确率和召回率
+    precision_05 = tp_total / (tp_total + fp_total + 1e-8)
+    recall_05 = tp_total / (tp_total + fn_total + 1e-8)
+
+    # 返回包含所有评估指标的字典
+    return {
+        'mAP_50': mAP,  # 使用 IoU 阈值 0.5 的 mAP
+        'mean_iou_matched': mean_iou_matched,  # 匹配框的平均 IoU
+        'precision@0.5': precision_05,  # 置信度阈值 0.5 下的精确率
+        'recall@0.5': recall_05,  # 置信度阈值 0.5 下的召回率
+        'AP_per_class': aps  # 每个类别的 AP 值，用于分析类别特异性性能
+    }
+```
+
+</details>
 
 #### 可视化
+
+这里实现了通过摄像头视频流进行**实时目标检测**。
+
+<details>
+
+<summary> 实时目标检测使用的代码 </summary>
+
+```python
+import os
+import math
+import time
+from pathlib import Path
+
+import numpy as np
+import cv2
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from torchvision import transforms
+from torchvision.models import resnet18, ResNet18_Weights
+from torchvision.models import regnet_y_1_6gf, RegNet_Y_1_6GF_Weights
+
+# --------------------
+# 全局配置 (仅保留推理必要参数)
+# --------------------
+S = 7   # 网格大小
+B = 2   # 每个网格的边界框数量
+C = 20  # VOC类别数量
+IMG_SIZE = 448  # 输入图像尺寸
+DEVICE = 'cuda' if torch.cuda.is_available() else 'xpu' if torch.xpu.is_available() else 'cpu'
+AUTOCAST_ENABLED = (DEVICE == 'cuda' or DEVICE == 'xpu')
+
+# VOC类别映射
+VOC_CLASSES = [
+    'aeroplane','bicycle','bird','boat','bottle','bus','car','cat','chair',
+    'cow','diningtable','dog','horse','motorbike','person','pottedplant',
+    'sheep','sofa','train','tvmonitor'
+]
+CLASS_TO_IDX = {c:i for i,c in enumerate(VOC_CLASSES)}
+IDX_TO_CLASS = {i:c for c,i in CLASS_TO_IDX.items()}
+
+# --------------------
+# 边界框工具函数
+# --------------------
+def box_iou_xyxy(boxes1, boxes2):
+    # boxes1: [N, 4], boxes2: [M, 4]
+    N = boxes1.size(0)
+    M = boxes2.size(0)
+    if N == 0 or M == 0:
+        return torch.zeros((N, M), device=boxes1.device)
+    lt = torch.max(boxes1[:, None, :2], boxes2[:, :2])   # [N,M,2]
+    rb = torch.min(boxes1[:, None, 2:], boxes2[:, 2:])   # [N,M,2]
+    wh = (rb - lt).clamp(min=0)
+    inter = wh[:, :, 0] * wh[:, :, 1]
+    area1 = (boxes1[:, 2] - boxes1[:, 0]).clamp(min=0) * (boxes1[:, 3] - boxes1[:, 1]).clamp(min=0)
+    area2 = (boxes2[:, 2] - boxes2[:, 0]).clamp(min=0) * (boxes2[:, 3] - boxes2[:, 1]).clamp(min=0)
+    union = area1[:, None] + area2 - inter
+    iou = inter / (union + 1e-8)
+    return iou
+
+def cxcywh_to_xyxy(boxes):
+    cx, cy, w, h = boxes[..., 0], boxes[..., 1], boxes[..., 2], boxes[..., 3]
+    x1 = (cx - w / 2.0)
+    y1 = (cy - h / 2.0)
+    x2 = (cx + w / 2.0)
+    y2 = (cy + h / 2.0)
+    return torch.stack([x1, y1, x2, y2], dim=-1)
+
+# --------------------
+# YOLOv1模型定义
+# --------------------
+class YOLOv1ResNet18(nn.Module):
+    def __init__(self, s=7, b=2, c=20, pretrained=True):
+        super().__init__()
+        self.S, self.B, self.C = s, b, c
+        backbone = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1 if pretrained else None)
+        self.stem = nn.Sequential(
+            backbone.conv1, backbone.bn1, backbone.relu, backbone.maxpool,
+            backbone.layer1, backbone.layer2, backbone.layer3, backbone.layer4
+        )
+        self.reduce = nn.Sequential(
+            nn.Conv2d(512, 1024, kernel_size=3, stride=2, padding=1, bias=False),
+            nn.BatchNorm2d(1024),
+            nn.LeakyReLU(0.1, inplace=True)
+        )
+        out_ch = b*5 + c
+        self.head = nn.Sequential(
+            nn.Conv2d(1024, 1024, kernel_size=3, padding=1, bias=False),
+            nn.BatchNorm2d(1024),
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.Conv2d(1024, out_ch, kernel_size=1)
+        )
+
+    def forward(self, x):
+        x = self.stem(x)     # [N,512,14,14] 输入为448x448时
+        x = self.reduce(x)   # [N,1024,7,7]
+        x = self.head(x)     # [N,(B*5+C),7,7]
+        x = x.permute(0, 2, 3, 1).contiguous()
+        return x  # [N,S,S,B*5+C]
+
+# --------------------
+# 预测解码与后处理
+# --------------------
+def yolo_decode(pred, conf_thresh=0.05):
+    """将模型输出解码为边界框 [x1,y1,x2,y2,score,cls] (归一化坐标)"""
+    N = pred.size(0)
+    pred = pred.view(N, S, S, B*5+C)
+    boxes = pred[...,:B*5].view(N, S, S, B, 5)
+    cls_logits = pred[...,B*5:]  # [N,S,S,C]
+    cls_prob = F.softmax(cls_logits, dim=-1)
+
+    # 生成网格坐标
+    grid_x = torch.arange(S, device=pred.device).float()
+    grid_y = torch.arange(S, device=pred.device).float()
+    gy, gx = torch.meshgrid(grid_y, grid_x, indexing='ij')
+    gx = gx[None, :, :, None]
+    gy = gy[None, :, :, None]
+
+    # 解码边界框
+    px = boxes[...,0].sigmoid()
+    py = boxes[...,1].sigmoid()
+    pw = F.softplus(boxes[...,2]).pow(2).clamp(min=1e-6, max=1.0)
+    ph = F.softplus(boxes[...,3]).pow(2).clamp(min=1e-6, max=1.0)
+    pconf = boxes[...,4].sigmoid()
+
+    # 转换为归一化坐标
+    pcx = (gx + px) / float(S)
+    pcy = (gy + py) / float(S)
+    p_cxcywh = torch.stack([pcx.expand_as(px), pcy.expand_as(py), pw, ph], dim=-1)
+    p_xyxy = cxcywh_to_xyxy(p_cxcywh).clamp(0, 1)
+
+    dets_per_image = []
+    for n in range(N):
+        boxes_n = p_xyxy[n].view(-1, 4)      # [S*S*B,4]
+        conf_n = pconf[n].view(-1, 1)        # [S*S*B,1]
+        cls_prob_n = cls_prob[n].view(S*S, C)
+        cls_prob_expand = cls_prob_n.repeat_interleave(B, dim=0)  # [S*S*B,C]
+        scores = conf_n * cls_prob_expand                          # [S*S*B,C]
+        max_scores, max_cls = scores.max(dim=1)
+        keep = max_scores > conf_thresh
+        
+        if keep.sum() == 0:
+            dets_per_image.append(torch.zeros((0,6), device=pred.device))
+            continue
+            
+        boxes_keep = boxes_n[keep]
+        scores_keep = max_scores[keep]
+        cls_keep = max_cls[keep].float()
+        dets = torch.cat([boxes_keep, scores_keep.unsqueeze(1), cls_keep.unsqueeze(1)], dim=1)
+        dets_per_image.append(dets)
+        
+    return dets_per_image
+
+def nms_classwise(dets, iou_thr=0.45):
+    """按类别进行非极大值抑制"""
+    if dets.numel() == 0:
+        return dets
+    out = []
+    for cls in dets[:,5].unique():
+        cls = int(cls.item())
+        mask = dets[:,5] == cls
+        class_dets = dets[mask]
+        keep_idx = torchvision.ops.nms(class_dets[:, :4], class_dets[:, 4], iou_thr)
+        out.append(class_dets[keep_idx])
+    return torch.cat(out, dim=0) if len(out) else dets
+
+# --------------------
+# 摄像头实时检测功能
+# --------------------
+def preprocess_frame(frame, img_size=448):
+    """预处理摄像头帧用于模型输入"""
+    # 调整大小
+    frame_resized = cv2.resize(frame, (img_size, img_size))
+    # BGR转RGB
+    frame_rgb = cv2.cvtColor(frame_resized, cv2.COLOR_BGR2RGB)
+    # 转换为张量并归一化
+    frame_tensor = torch.from_numpy(frame_rgb).permute(2, 0, 1).float() / 255.0
+    # 应用ImageNet标准化
+    normalize = transforms.Normalize(
+        mean=[0.485, 0.456, 0.406],
+        std=[0.229, 0.224, 0.225]
+    )
+    frame_tensor = normalize(frame_tensor)
+    # 添加批次维度
+    return frame_tensor.unsqueeze(0)
+
+def draw_detections(frame, detections, img_size):
+    """在原始帧上绘制检测结果"""
+    h, w = frame.shape[:2]
+    for det in detections:
+        x1, y1, x2, y2, score, cls_idx = det
+        # 将归一化坐标转换为原始图像尺寸
+        x1 = int(x1 * w)
+        y1 = int(y1 * h)
+        x2 = int(x2 * w)
+        y2 = int(y2 * h)
+        
+        # 绘制边界框
+        cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+        # 绘制类别和置信度
+        cls_name = IDX_TO_CLASS[int(cls_idx)]
+        label = f"{cls_name} {score:.2f}"
+        cv2.putText(frame, label, (x1, max(0, y1-10)), 
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+    return frame
+
+def run_camera_detection(model, fps=15, conf_thresh=0.6, nms_iou=0.45):
+    """运行摄像头实时检测"""
+    # 打开摄像头
+    cap = cv2.VideoCapture(0)
+    if not cap.isOpened():
+        print("无法打开摄像头")
+        return
+        
+    # 设置摄像头参数
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+    cap.set(cv2.CAP_PROP_FPS, fps)
+    
+    model.eval()
+    model.to(DEVICE)
+    print("开始实时检测 (按 'q' 退出)")
+    
+    try:
+        while True:
+            start_time = time.time()
+            
+            # 读取一帧
+            ret, frame = cap.read()
+            if not ret:
+                print("无法获取视频帧")
+                break
+                
+            # 预处理
+            input_tensor = preprocess_frame(frame, IMG_SIZE).to(DEVICE)
+            
+            # 模型推理
+            with torch.no_grad(), torch.amp.autocast(device_type='cuda' if DEVICE == 'cuda' else 'cpu', 
+                                                  enabled=AUTOCAST_ENABLED):
+                pred = model(input_tensor)
+            
+            # 解码和后处理
+            dets = yolo_decode(pred, conf_thresh=conf_thresh)[0].detach().cpu()
+            dets = nms_classwise(dets, iou_thr=nms_iou)
+            
+            # 绘制检测结果
+            frame_with_dets = draw_detections(frame, dets, IMG_SIZE)
+            
+            # 计算并显示FPS
+            elapsed = time.time() - start_time
+            current_fps = 1.0 / elapsed if elapsed > 0 else 0
+            cv2.putText(frame_with_dets, f"FPS: {current_fps:.1f}", (10, 30),
+                       cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+            
+            # 显示结果
+            cv2.imshow("YOLOv1 Real-time Detection", frame_with_dets)
+            
+            # 按'q'退出
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+                
+    finally:
+        cap.release()
+        cv2.destroyAllWindows()
+
+# --------------------
+# 主函数 - 加载模型并启动检测
+# --------------------
+def main():
+    # 创建模型
+    model = YOLOv1ResNet18(s=S, b=B, c=C, pretrained=True)
+
+    # 加载权重
+    checkpoint_path = './yolov1_resnet18_voc0712.pth'
+    if os.path.exists(checkpoint_path):
+        checkpoint = torch.load(checkpoint_path, map_location=torch.device(DEVICE))
+        # 加载模型权重
+        model.load_state_dict(checkpoint['model_state_dict'])
+        print(f"成功加载模型权重: {checkpoint_path}")
+    else:
+        print(f"警告: 未找到模型权重文件 {checkpoint_path}，使用随机权重")
+    
+    # 启动摄像头检测
+    run_camera_detection(
+        model,
+        fps=15,           # 目标帧率
+        conf_thresh=0.50, # 置信度阈值
+        nms_iou=0.45      # NMS的IOU阈值
+    )
+
+if __name__ == "__main__":
+    print(f"using device: {DEVICE}")
+    import torchvision  # 延迟导入，仅在主程序运行时需要
+    print("初始化完毕，开始加载权重...")
+    main()
+```
+
+</details>
+
+最后在真实世界样本的检测效果如下：（帧率很低是由于笔记本没有独显导致只能在 CPU 上面推理）
+|||
+|:-:|:-:|
+|![alt text](<屏幕截图 2025-09-06 005625.png>)|![alt text](<屏幕截图 2025-09-06 005447.png>)|
+|![alt text](<屏幕截图 2025-09-06 005400.png>)|![alt text](<屏幕截图 2025-09-06 005133.png>)|
+|![alt text](<屏幕截图 2025-09-06 003519.png>)|![alt text](<屏幕截图 2025-09-06 010942.png>)|
