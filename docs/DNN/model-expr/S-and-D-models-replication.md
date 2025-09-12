@@ -1828,7 +1828,7 @@ $$
 $$
 c_{ij}^\mathrm{ideal}=\left\{
 \begin{align*}
-    &\mathrm{IoU}^{\mathrm{true}}_{\mathrm{pred}}(=1),&1_{ij}^\mathrm{obj}=1\\
+    &\mathrm{IoU}^{\mathrm{true}}_{\mathrm{pred}},&1_{ij}^\mathrm{obj}=1\\
     &0,&1_{ij}^\mathrm{noobj}=1
 \end{align*}\right.
 $$
@@ -1875,7 +1875,13 @@ $$
 
 最后可以得到整个图片的损失：$\mathcal{L}_{\mathrm{YOLO}}=\sum\mathcal{L}_{\mathrm{objcell}}+\sum\mathcal{L}_{\mathrm{noobjcell}}$。
 
-最后值得一提的是，“选取IoU最大的框”这个操作似乎因为涉及到 `max` 操作而**不可导**，但是由于我们对不同的情况分配了不同的损失，因此我们事实上执行的操作是**对最大框**利用 $\mathcal{L}_1$ 回传梯度而对其他框利用 $\mathcal{L}_{\mathrm{N}}$ 回传梯度，也就是通过条件判断来构建不同的损失路径，这样整个网络就完全可导了。这一点写成代码也是有说法的，请看 VCR：
+如果你是像我一样从过程式的 C/C++ 开始接触程序设计语言的，大概会觉得这就是一个 for-if 就能解决的事。但是如果你读了下面的损失函数代码就会发现**完全不是这样做的**，而是一种接近**函数式**的思想。
+
+如果想感受这种范式转移 (Paradigm Shift) 带来的震撼，强烈推荐阅读下面计算损失使用的代码。
+
+<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=419116089&auto=0&height=66"></iframe>
+
+最后值得一提的是，“选取IoU最大的框”这个操作似乎因为涉及到 `argmax` 操作而**不可导**，但是由于我们对不同的情况分配了不同的损失，因此我们事实上执行的操作是**对最大框**利用 $\mathcal{L}_1$ 回传梯度而对其他框利用 $\mathcal{L}_{\mathrm{N}}$ 回传梯度，也就是通过条件判断来构建不同的损失路径，这样整个网络就完全可导了。这一点写成代码也是有说法的，请看 VCR：
 
 ![alt text](image-36.png)
 
@@ -1938,149 +1944,306 @@ class YOLOv1ResNet18(nn.Module):
         return x
 ```
 
-下面是重头戏，我们的损失函数：
+下面是重头戏，我们的损失函数。
+
+代码比较长，因为我具体分析了蛮多细节，因此折叠了一下。
+
+<details>
+
+<summary> YOLO v1 loss 详细的实现 </summary>
 
 ```python
 class YoloV1Loss(nn.Module):
     def __init__(self, s=7, b=2, c=20, lambda_coord=5.0, lambda_noobj=0.5,
                  ignore_iou_thresh=0.5, cls_label_smooth=0.0):
         super().__init__()
+        # 定义 YOLO v1 损失函数的超参数
+        # S 表示网格的尺寸，即将图像划分为 S×S 个格子
         self.S, self.B, self.C = s, b, c
-        self.lambda_coord = lambda_coord # 和论文与之前的分析一致
-        self.lambda_noobj = lambda_noobj # 也是一致
-        self.ignore_iou_thresh = ignore_iou_thresh # 神奇妙妙参数
-        self.cls_label_smooth = cls_label_smooth # 为了让 CE 参数更新稳定使用的标签平滑
+        # 坐标损失的权重系数，用于增强坐标预测的重要性
+        self.lambda_coord = lambda_coord
+        # 无目标置信度损失的权重系数，用于降低背景预测的权重
+        self.lambda_noobj = lambda_noobj
+        # IoU 忽略阈值，虽然原始的 YOLO 损失没有，但是下面会用到的神奇妙妙参数
+        self.ignore_iou_thresh = ignore_iou_thresh
+        # 分类标签平滑系数，用于防止过拟合
+        self.cls_label_smooth = cls_label_smooth
 
     def forward(self, pred, target):
         """
-        pred: [N,S,S,B*5+C]
-        target: [N,S,S,5+C]  (tx,ty,bw,bh,obj, one-hot C)
+        前向传播函数，计算 YOLO v1 的总损失及各个组成部分的损失值。
+        
+        pred: 网络输出的预测张量，形状为 [N, S, S, B*5+C]
+        target: 真实标签张量，形状为 [N, S, S, 5+C]，包含归一化的中心坐标、宽高、置信度和类别 one-hot 编码
         """
+        # 获取批量大小 (N)、网格尺寸 (S)、每个格子的预测框数量 (B) 和类别数量 (C)
         N, S, B, C = pred.size(0), self.S, self.B, self.C
         device = pred.device
 
-        # 接受网络的输出，得到 (N, S, S, B*5 + C) 的预测张量
+        # 将预测张量重塑为 [N, S, S, B*5 + C] 的形状
         pred = pred.view(N, S, S, B*5 + C)
-        # 最后一维的前 B*5 解包成 (N, S, S, B, 5) 的预测框
-        pred_boxes = pred[...,:B*5].view(N, S, S, B, 5)  # x,y,w,h,conf (raw)
-        # 后面 C 个保留，对应格子的类别概率
-        pred_cls_logits = pred[...,B*5:]                 # [N,S,S,C]
+        # 提取预测框部分并重塑为 [N, S, S, B, 5]，包含每个预测框的 (x, y, w, h, conf) 原始值
+        pred_boxes = pred[...,:B*5].view(N, S, S, B, 5)
+        # 提取类别预测部分，形状为 [N, S, S, C]
+        pred_cls_logits = pred[...,B*5:]
 
-        # targets，生成在 _encode_target(self, boxes_abs, img_wh) 这个方法里面。
-        # target = np.zeros((self.S, self.S, 5 + C), dtype=np.float32)
-        t_xywh = target[...,:4] # [N,S,S,4] 4 对应 x,y,w,h
-        t_obj  = target[...,4]  # [N,S,S,1] 最后一维恒为 1
-        t_cls  = target[...,5:] # [N,S,S,C] 即输出标签的 one-hot
+        # 从目标张量中提取真实边界框的坐标、置信度和类别信息
+        # t_xywh 包含归一化的中心坐标和宽高，形状为 [N, S, S, 4]
+        t_xywh = target[...,:4]
+        # t_obj 表示每个格子是否存在目标，形状为 [N, S, S]
+        # 这个就对应原论文的 1^obj_i
+        t_obj  = target[...,4]
+        # t_cls 表示每个格子的类别 one-hot 编码，形状为 [N, S, S, C]
+        t_cls  = target[...,5:]
 
-        # grid
-        # 生成坐标向量 [0,1,...,S-1]
+        # 生成网格坐标，用于将预测的相对坐标转换为绝对坐标
+        # 创建 [0, 1, ..., S-1] 的序列，表示网格的索引
         gxv = torch.arange(S, device=device, dtype=torch.float32)
         gyv = torch.arange(S, device=device, dtype=torch.float32)
-        # 得到两个方向的二维的 SxS 坐标矩阵
+        # 生成网格的 x 和 y 坐标矩阵，形状均为 [S, S]
         gy, gx = torch.meshgrid(gyv, gxv, indexing='ij')
-        # 添加两个维度
-        gx = gx[None, :, :, None]; gy = gy[None, :, :, None] # [1, S, S, 1]
+        # 扩展维度以便后续广播操作，形状变为 [1, S, S, 1]
+        gx = gx[None, :, :, None]
+        gy = gy[None, :, :, None]
 
-        # 对预测的 x,y,w,h,conf 解码
+        # 对预测的边界框参数进行解码和激活
+        # 使用 sigmoid 函数将 x 和 y 的预测值约束到 [0,1] 范围内，表示相对于格子左上角的偏移
         px = torch.sigmoid(pred_boxes[...,0])
         py = torch.sigmoid(pred_boxes[...,1])
+        # 使用 softplus 激活函数处理宽高预测值，然后平方并裁剪到 [1e-6, 1.0] 范围内，确保数值稳定性
+        # 这里使用 softplus 加上平方是为了确保宽高为正值，并且抑制特别大的框
+        # 具体来说，softplus 函数可以平滑地将负值映射到正值（softplus(x)=log(1+exp(x))），而平方操作则进一步放大了小值的影响
+        # 实践下来，这样处理的效果会更好一些
         pw = F.softplus(pred_boxes[...,2]).pow(2).clamp(1e-6, 1.0)
         ph = F.softplus(pred_boxes[...,3]).pow(2).clamp(1e-6, 1.0)
+        # 使用 sigmoid 函数将置信度预测值约束到 [0,1] 范围内
         pconf = torch.sigmoid(pred_boxes[...,4])
+        # 现在，我们就得到了每一个预测框的中心坐标 (px, py), 宽高 (pw, ph) 和置信度 pconf
+        # 这里预测的 (px, py) 是相对于格子左上角的偏移，(pw, ph) 是经过特殊处理的宽高
+        # 它们都是相对于输入图像尺寸归一化的值
 
+        # 将预测的相对坐标转换为绝对坐标
+        # 相对坐标就是相对于【格子】左上角的偏移
+        # 绝对坐标是相对于【整个图像】的左上角的偏移，还要除以 S 进行归一化
+        #
+        # -----------------------------------------------
+        # 
+        # 这里的坐标转换过程比较复杂，值得详细解释一下：
+        # 计算预测框的中心点绝对坐标，通过将格子索引加上偏移量并除以网格尺寸进行归一化
+        # px 的形状为 [N, S, S, B]，gx 的形状为 [1, S, S, 1]，通过广播机制进行加法
+        # 这个机制的操作过程具体是：gx 在第一个维度上面复制 N 份，在最后一个维度上复制 B 份
+        # 这样 gx 的形状就变成了 [N, S, S, B]，然后就可以和 px 每个位置对齐相加了
+        # 这一套操作下来，其实就是从一开始的一维 [S] 的向量 gxv，通过 meshgrid 在第二个维度上复制 S 份
+        # 变成了二维的 [S, S] 矩阵 gx，再分别添加两个维度并复制 N 和 B 份，变成了 [N, S, S, B] 的广播后张量
+        # 最后和 px 相加，得到每个预测框的绝对中心坐标
         pcx = (gx + px) / float(S)
+        # 对 y 坐标同理，最后除以 S 进行归一化
         pcy = (gy + py) / float(S)
+        # 组合预测框的中心坐标和宽高，形状为 [N, S, S, B, 4]
+        # dim =-1 表示在最后一个维度上进行堆叠
         p_cxcywh = torch.stack([pcx.expand_as(px), pcy.expand_as(py), pw, ph], dim=-1)
-        p_xyxy = cxcywh_to_xyxy(p_cxcywh).clamp(0, 1)   # [N,S,S,B,4]
+        # 将 (cx, cy, w, h) 格式的边界框转换为 (x1, y1, x2, y2) 格式，并裁剪到 [0,1] 范围内
+        p_xyxy = cxcywh_to_xyxy(p_cxcywh).clamp(0, 1)
+        # 现在，我们就得到了每一个预测框的绝对坐标 p_xyxy，形状为 [N, S, S, B, 4]
 
-        # targets to xyxy
+        # 对真实边界框坐标进行解码和归一化处理
+        # 从目标张量中提取真实边界框的 (x, y, w, h) 坐标
+        # 这里 tw, th 使用 clamp 限制在 [1e-6, 1.0] 范围内，防止数值不稳定
+        # tx 的形状为 [N, S, S, 1]，与 gx 形状兼容，其他类似
         tx, ty, tw, th = t_xywh[...,0], t_xywh[...,1], t_xywh[...,2].clamp(1e-6,1.0), t_xywh[...,3].clamp(1e-6,1.0)
+        # 计算真实边界框的中心坐标 (tcx, tcy)，通过将格子索引加上偏移量并除以网格尺寸进行归一化
+        # 这里 gx.squeeze(-1) 是把最后一个维度挤掉，变成 [1, S, S] 的形状
+        # 这个时候你就要问了，为什么不直接用 gx 和 gy 呢？当然可以！广播机制和之前完全一样。
+        # 这里保留是因为这个代码不是我写的，我猜测gpt是为了让形状更清晰一些
+        # 然后通过广播机制和 tx 的形状 [N, S, S, 1] 进行相加后再进行归一化，具体机制同上
         tcx = (gx.squeeze(-1) + tx) / float(S)
         tcy = (gy.squeeze(-1) + ty) / float(S)
-        t_cxcywh = torch.stack([tcx,tcy,tw,th], dim=-1)  # [N,S,S,4]
-        t_xyxy = cxcywh_to_xyxy(t_cxcywh).clamp(0, 1)    # [N,S,S,4]
+        # 将中心坐标和宽高组合成 (tcx, tcy, tw, th) 格式，形状为 [N, S, S, 4]
+        t_cxcywh = torch.stack([tcx,tcy,tw,th], dim=-1)
+        # 将 (tcx, tcy, tw, th) 转换为 (x1, y1, x2, y2) 格式，并裁剪到 [0, 1] 范围内
+        t_xyxy = cxcywh_to_xyxy(t_cxcywh).clamp(0, 1)
+        # 现在，我们就得到了每一个真实框的绝对坐标 t_xyxy，形状为 [N, S, S, 4]
+        
+        # 下面，就可以计算框的损失了。
 
-        # IoU per B with its cell GT
-        t_xyxy_exp = t_xyxy.unsqueeze(3).expand(-1,-1,-1,B,-1)  # [N,S,S,B,4]
-        iou_all = iou_xyxy_aligned(p_xyxy, t_xyxy_exp)          # [N,S,S,B]
+        # 计算每个预测框与对应格子中真实框的 IoU
+        # 扩展真实框张量以便与每个预测框计算 IoU，形状变为 [N, S, S, B, 4]
+        # 这一行代码的操作是把 t_xyxy 在最后一个维度上面添加一个维度，然后在这个维度上复制 B 份
+        # 这样 t_xyxy_exp 的形状就变成了 [N, S, S, B, 4]，然后就可以和 p_xyxy 每个位置对齐计算 IoU 了
+        t_xyxy_exp = t_xyxy.unsqueeze(3).expand(-1,-1,-1,B,-1)
+        # 计算所有预测框与对应真实框的 IoU，形状为 [N, S, S, B]
+        iou_all = iou_xyxy_aligned(p_xyxy, t_xyxy_exp)
 
-        # responsibility mask
-        obj_cells = t_obj  # [N,S,S]
+        # 下面我们要根据 iou_all 来决定哪些框负责预测，哪些框不负责预测
+
+        # 构建负责预测的掩码，用于标识每个格子中与真实框 IoU 最大的预测框
+        # obj_cells 表示存在目标的格子，形状为 [N, S, S]
+        # 这个就是论文中的 1^obj_i
+        obj_cells = t_obj
+        # 将无目标格子的 IoU 设置为 -1，以便后续处理，形状是 [N, S, S, B]
         iou_all_masked = iou_all.masked_fill(obj_cells.unsqueeze(-1)==0, -1.0)
-        # 之前已经提到，虽然 argmax 本身不可导，但是这里的 argmax 只是用来控制梯度回传的。
-        # 相当于一个选择器。
-        best_box_idx = iou_all_masked.argmax(dim=-1)            # [N,S,S]
+        # 获取每个格子中 IoU 最大的预测框索引，形状为 [N, S, S]
+        best_box_idx = iou_all_masked.argmax(dim=-1)
+        # 构建负责预测的掩码，形状为 [N, S, S, B]，其中负责预测的框位置为 1，其余为 0
+        # 这个就是论文中的 1^obj_ij
         resp_mask = F.one_hot(best_box_idx, num_classes=B).float() * obj_cells.unsqueeze(-1)
 
-        # coordinate loss (with sqrt on w/h)
+        # 计算坐标损失，包括中心点坐标和宽高的损失
+        # 对宽高取平方根以平衡大小框的损失贡献
+        # 这一部分对应的 L_coord 和 L_size
+        # w,h 的形状均为 [N, S, S, B]，但其实有意义的只有负责预测的框，也就是 IoU 最大的那个框
+        # 相当于这部分计算里面 (B-1)/B 的部分是没有意义的
+        # 但是由于后面乘上了 resp_mask，所以这些无意义的部分损失直接置零了，梯度不会回传
+        # 这个时候你就要问了，为什么不来个 for-if 来避免计算这些无意义的部分呢？
+        # 这样做的原因是，for-if 会导致计算图断裂，没法子求导了，而且逐元素分支预测慢死……
+        # 反观计算这些无意义的部分也不会特别影响效率，毕竟 B 一般都比较小，而且可以数据并行计算
+        # 这里加上一个很小的数值 1e-6 还是为了防止数值不稳定
         sqrt_pw, sqrt_ph = torch.sqrt(pw + 1e-6), torch.sqrt(ph + 1e-6)
         sqrt_tw, sqrt_th = torch.sqrt(tw + 1e-6), torch.sqrt(th + 1e-6)
-
+        # 计算中心点 x 坐标的损失，仅对负责预测的框计算
         coord_x_loss = ((px - tx.unsqueeze(-1))**2) * resp_mask
+        # 计算中心点 y 坐标的损失，仅对负责预测的框计算
         coord_y_loss = ((py - ty.unsqueeze(-1))**2) * resp_mask
+        # 计算宽度的损失，使用平方根处理后的值
         coord_w_loss = ((sqrt_pw - sqrt_tw.unsqueeze(-1))**2) * resp_mask
+        # 计算高度的损失，使用平方根处理后的值
         coord_h_loss = ((sqrt_ph - sqrt_th.unsqueeze(-1))**2) * resp_mask
 
-        # objectness: positives target=IoU
+        # 计算有目标置信度损失，目标值为预测框与真实框的 IoU，对应 L_P
+        # 那你就要问了，这 IoU 又不可导了，怎么办？
+        # 其实也没事，因为我们只是用它来作为一个常数目标值，又不是真的要优化它
+        # 反而，我们还需要使用 detach 来防止梯度回传
         iou_target = iou_all.detach()
+        # 计算有目标置信度损失，仅对负责预测的框计算
         conf_obj_terms = ((pconf - iou_target)**2) * resp_mask
 
-        # no-object masks
-        not_resp_mask = obj_cells.unsqueeze(-1) * (1.0 - resp_mask)           # in obj cells but not responsible
-        noobj_cells_mask = (1.0 - obj_cells).unsqueeze(-1).expand_as(pconf)   # pure noobj cells
+        # 构建无目标掩码，包括非负责预测框和纯粹无目标的格子，对应 L_N
+        # 非负责预测框掩码：存在目标的格子中不负责预测的框
+        # 这个就是论文中的 1^noobj_ij
+        not_resp_mask = obj_cells.unsqueeze(-1) * (1.0 - resp_mask)
+        # 纯粹无目标格子掩码：不存在目标的格子中的所有预测框
+        # 类比一下可以叫做 1^noobj_i
+        noobj_cells_mask = (1.0 - obj_cells).unsqueeze(-1).expand_as(pconf)
 
-        # ignore region for noobj: max IoU with any GT in the image >= thresh -> ignore
+        # 构建忽略掩码，用于处理与真实框 IoU 较高的无目标预测框
+        # 在 YOLO 训练中，有些预测框与真实框的 IoU 较高但并不是负责预测的框
+        # 这些框不应该被惩罚为无目标，因为它们的预测实际上"接近"某个真实目标
+        # 我们不能否定它们的努力，因此使用 ignore_iou_thresh 作为阈值来识别这些框
         ignore_mask = torch.zeros_like(pconf)
+        # 使用 torch.no_grad() 确保在这个计算过程中不生成梯度
+        # 因为我们只是用它来构建一个掩码，来进行选择性的损失计算和梯度回传
+        # 掩码本身不需要梯度，而且里面涉及到的 argmax 也是不可导的
         with torch.no_grad():
+            # 遍历批次中的每个样本
             for n in range(N):
-                # all GT in this image
+                # 获取当前样本中存在目标的网格位置的掩码，形状为 [S, S]
+                # 这里的机制是 obj_cells[n] 是 [S, S] 的张量
+                # obj_cells[n] > 0 会得到一个布尔张量，形状也是 [S, S]
+                # 这个布尔张量表示哪些格子是有目标的
                 obj_mask_n = obj_cells[n] > 0
-                gt_n = t_xyxy[n][obj_mask_n]                                  # [M,4]
-                pred_n = p_xyxy[n].reshape(-1, 4)                              # [S*S*B,4]
+                # 提取当前样本中所有真实框的坐标
+                # 由于 t_xyxy[n] 是 [S, S, 4] 的张量，所以可以直接索引
+                # 那你就要问了，gt_n 的形状是 [S, S, 4] 吗？
+                # 不是的，因为 obj_mask_n 是布尔索引，所以会把所有为 True 的位置都提取出来
+                # 单独放进第一个维度，所以最终 gt_n 的形状是 [num_gt, 4]，其中 num_gt 是当前样本中真实框的数量
+                gt_n = t_xyxy[n][obj_mask_n]
+                # 将当前样本的所有预测框重塑为 [S*S*B, 4] 的形状
+                # .reshape(-1, 4) 会将 [S, S, B, 4] 变成 [S*S*B, 4]
+                # -1 就是让前面的维度都堆在一起
+                pred_n = p_xyxy[n].reshape(-1, 4)
+                # 检查当前样本中是否存在真实框
+                # .numel() 会返回张量中元素的总数量
                 if gt_n.numel() == 0:
+                    # 如果没有真实框，所有预测框的最大 IoU 设为 0
                     max_iou = torch.zeros(pred_n.size(0), device=device)
                 else:
-                    ious = box_iou_xyxy(pred_n, gt_n)                          # [K,M]
+                    # 计算所有预测框与所有真实框的 IoU，得到 [num_pred, num_gt] 的 IoU 矩阵
+                    ious = box_iou_xyxy(pred_n, gt_n)
+                    # 获取每个预测框与所有真实框的最大 IoU [num_pred]
                     max_iou = ious.max(dim=1).values
+                # 将最大 IoU 超过阈值的预测框标记为忽略 (1.0)，否则为 0
+                # 也就是我们只需要对那些 IoU 较低的预测框计算无目标损失 L_N
+                # 其他框我们就忽略掉，不计算损失，肯定它们的劳动成果
+                # 然后将标记重塑为 [S, S, B] 的形状，与 ignore_mask 的当前样本形状匹配
                 ign = (max_iou >= self.ignore_iou_thresh).float().view(S, S, B)
+                # 将当前样本的忽略掩码赋值给 ignore_mask
                 ignore_mask[n] = ign
+            # 还有个问题，我们之前讨论过：为什么在这里还在用 for-if 这么低效的方案呢？
+            # 因为每个图像的 num_gt 也就是物品个数不一样，没法在维度上对齐
+            # 强行对齐也不是不可以，但是你还是要遍历一遍，效率差不了多少
+            # 并且这时候你就等着 CUDA out of memory 吧
 
+        # 计算无目标置信度损失，不包括被忽略的预测框，也就是 L_N
+        # 无目标损失包括两部分：非负责预测框 (not_resp_mask) 和无目标格子中的所有预测框 (noobj_cells_mask)
+        # 但需要排除那些与真实框 IoU 较高而被忽略的预测框 (乘以 (1.0 - ignore_mask))
         conf_noobj_terms = ((pconf - 0.0)**2) * (not_resp_mask + noobj_cells_mask) * (1.0 - ignore_mask)
 
-        # classification: CrossEntropy on obj cells only
+        # 对框的损失计算完毕，下面是对格子的损失。
+
+        # 计算分类损失，仅对存在目标的格子计算交叉熵损失
+        # 首先计算存在目标的格子数量，用于后续归一化，使用 clamp(min=1.0) 防止除零
         num_objcells = obj_cells.sum().clamp(min=1.0)
-        t_cls_idx = t_cls.argmax(dim=-1)  # [N,S,S]
+        # 从 one-hot 编码的真实标签中获取类别索引，形状为 [N, S, S]
+        t_cls_idx = t_cls.argmax(dim=-1)
+        # 构建存在目标的布尔掩码，形状为 [N, S, S]，用于索引存在目标的格子
         obj_mask_bool = (obj_cells > 0)
+        
+        # 检查是否存在至少一个包含目标的格子
         if obj_mask_bool.any():
+            # 计算交叉熵损失，使用标签平滑
+            # 首先从预测的分类logits中提取存在目标的格子部分，并重塑为 [N*S*S, C] 形状
+            # 同时从真实标签中提取对应的类别索引，并重塑为 [N*S*S] 形状
             ce = F.cross_entropy(
                 pred_cls_logits[obj_mask_bool].reshape(-1, C),
                 t_cls_idx[obj_mask_bool].long().reshape(-1),
-                reduction='sum',
-                label_smoothing=self.cls_label_smooth
+                reduction='sum',  # 使用求和而不是均值，因为后面会除以 num_objcells
+                label_smoothing=self.cls_label_smooth  # 应用标签平滑
             )
+            # 将交叉熵损失除以存在目标的格子数量，得到平均分类损失
             class_loss = ce / num_objcells
         else:
+            # 如果没有存在目标的格子，将分类损失设为 0
             class_loss = torch.tensor(0.0, device=device)
 
-        # normalizations
+        # 对各个损失组件进行归一化处理
+        # 计算负责预测的框数量，用于坐标损失和有目标置信度损失的归一化
         num_resp = resp_mask.sum().clamp(min=1.0)
+        # 计算需要计算无目标损失的框数量，包括非负责预测框和无目标格子中的预测框
+        # 但要排除被忽略的预测框 (乘以 (1.0 - ignore_mask))
         num_noobj = ( ((not_resp_mask + noobj_cells_mask) * (1.0 - ignore_mask)).sum() ).clamp(min=1.0)
 
-        coord_loss = self.lambda_coord * (coord_x_loss.sum() + coord_y_loss.sum() + coord_w_loss.sum() + coord_h_loss.sum()) / num_resp
+        # 计算加权后的坐标损失，包括中心点坐标和宽高损失
+        # 使用 lambda_coord 增强坐标预测的重要性
+        coord_loss = self.lambda_coord * (
+            coord_x_loss.sum() + coord_y_loss.sum() + 
+            coord_w_loss.sum() + coord_h_loss.sum()
+        ) / num_resp
+        
+        # 计算有目标置信度损失，使用负责预测的框数量进行归一化
         conf_obj_loss = conf_obj_terms.sum() / num_resp
+        
+        # 计算加权后的无目标置信度损失
+        # 使用 lambda_noobj 降低背景预测的权重，避免背景主导训练过程
         conf_noobj_loss = self.lambda_noobj * conf_noobj_terms.sum() / num_noobj
 
+        # 计算总损失，将所有损失组件相加
         total_loss = coord_loss + conf_obj_loss + conf_noobj_loss + class_loss
 
+        # 构建损失字典，用于记录各个损失组件的值
+        # 使用 detach().item() 将张量转换为 Python 数值，避免在日志记录中保留计算图
         loss_dict = {
-            'loss_total': total_loss.detach().item(),
-            'loss_coord': coord_loss.detach().item(),
-            'loss_conf_obj': conf_obj_loss.detach().item(),
-            'loss_conf_noobj': conf_noobj_loss.detach().item(),
-            'loss_class': class_loss.detach().item(),
+            'loss_total': total_loss.detach().item(),          # 总损失
+            'loss_coord': coord_loss.detach().item(),          # 坐标损失
+            'loss_conf_obj': conf_obj_loss.detach().item(),    # 有目标置信度损失
+            'loss_conf_noobj': conf_noobj_loss.detach().item(),# 无目标置信度损失
+            'loss_class': class_loss.detach().item(),          # 分类损失
         }
+        
+        # 返回总损失和损失字典
         return total_loss, loss_dict
 ```
+
+</details>
 
 #### 推理
 
