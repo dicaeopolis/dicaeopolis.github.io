@@ -166,6 +166,7 @@ nav:
     - 《数据结构》划重点笔记: 'campus-sources/ds-keynote.md'
     - 《数据结构》期末复习题题解: 'campus-sources/ds-write-up.md'
     - 自动签到脚本: 'campus-sources/autosignin.md'
+    - 《计算机组成原理》理论课程作业与笔记归档: 'campus-sources/SDC_assignments.md'
   - 配置和杂谈笔记:
     - 'misc/index.md'
     - 功能测试页面: 'misc/test.md'
