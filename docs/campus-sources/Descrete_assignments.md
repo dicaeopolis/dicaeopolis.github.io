@@ -35,12 +35,12 @@
 ![alt text](image-17.png)
 
 - (1) $p\lor (q\land r)=0\lor (0\land 1)=0$
-- (2) $(p\lrarr r)\land (\neg q\lor s)=(0\lrarr 1)\land (\neg q\lor s)=0$ 这里可以直接利用 $\land$ 的短路特性
-- (3) $(p\land (q\lor r))\rarr ((p\lor q)\land(r\land s))=(0\land (0\lor 1))\rarr ((0\lor 0)\land(1\land 1))=1$ 同样是利用蕴含符号左边 $\land$ 的短路特性得到那一坨是 $0$ 然后再利用蕴含符号本身的短路特性得到结果
-- (4) $\neg (p\lor (q\rarr (r\land \neg p)))\rarr (r\lor \neg s)=\neg (0\lor (0\rarr (r\land \neg p)))\rarr (1\lor \neg 1)=1\rarr 1=1$
+- (2) $(p\leftrightarrow r)\land (\neg q\lor s)=(0\leftrightarrow 1)\land (\neg q\lor s)=0$ 这里可以直接利用 $\land$ 的短路特性
+- (3) $(p\land (q\lor r))\rightarrow ((p\lor q)\land(r\land s))=(0\land (0\lor 1))\rightarrow ((0\lor 0)\land(1\land 1))=1$ 同样是利用蕴含符号左边 $\land$ 的短路特性得到那一坨是 $0$ 然后再利用蕴含符号本身的短路特性得到结果
+- (4) $\neg (p\lor (q\rightarrow (r\land \neg p)))\rightarrow (r\lor \neg s)=\neg (0\lor (0\rightarrow (r\land \neg p)))\rightarrow (1\lor \neg 1)=1\rightarrow 1=1$
 
 ![alt text](image-18.png)
 
 - (1) $\neg((p \land q) \to p)=\neg (\neg (p \land q)\lor p)=(p \land q)\land \neg p=q\land( p\land\neg p)=0$ 为矛盾式。
-- (2) $((p \to q) \land (q \to p)) \leftrightarrow (p \leftrightarrow q)=(p \leftrightarrow q)\lrarr(p \leftrightarrow q)=1$ 为重言式。
+- (2) $((p \to q) \land (q \to p)) \leftrightarrow (p \leftrightarrow q)=(p \leftrightarrow q)\leftrightarrow(p \leftrightarrow q)=1$ 为重言式。
 - (3) $(\neg p \to q) \to (q \to \neg p)=(\neg(\neg p) \lor q)\to (\neg q \lor \neg p)=(p \lor q)\to \neg(q \land p)=\neg(p \lor q)\lor \neg(q \land p)=\neg(p \lor q\land q \land p)=\neg(p\land q)$ 为可满足式。
