@@ -159,11 +159,12 @@ nav:
     - 自动签到脚本: 'campus-sources/autosignin.md'
   - 深度神经网络:
     - 'DNN/index.md'
-    - 复现记录:
+    - 深度学习相关模型理论与复现归档:
       - 'DNN/model-expr/index.md'
       - 图像语义分割和目标检测相关模型复现手记: 'DNN/model-expr/S-and-D-models-replication.md'
       - 图像分类相关模型复现手记: 'DNN/model-expr/Image-models-replication.md'
       - DC-GAN 老婆生成器: 'DNN/model-expr/DC-GAN-老婆生成器.md'
+      - 'DDPM 理论: 从多阶段变分自编码器到基于得分匹配的随机微分方程': 'DNN/model-expr/DDPM.md'
     - 优化器:
       - 'DNN/optimizer/index.md'
       - 后续的写作计划: 'DNN/optimizer/misc.md'
