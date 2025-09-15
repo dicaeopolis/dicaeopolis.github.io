@@ -1,5 +1,5 @@
 ---
-class: 复现记录
+class: 深度学习相关模型理论与复现归档
 comments: true
 ---
 
