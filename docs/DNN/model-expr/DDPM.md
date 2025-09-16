@@ -247,32 +247,97 @@ $$
 
 ### 关联上随机微分方程
 
-下面，将加噪过程视作一个 SDE：
-令 $x_i = x(t)，\alpha_i = \sqrt{1 - \frac{1}{T} \beta\left(t + \frac{1}{T}\right)} = \sqrt{1 - \delta t \cdot \beta(t + \delta t)}$；
-$x_{i+1} = x\left(t + \frac{1}{T}\right) = x(t + \delta t)，\beta_i = \sqrt{\frac{1}{T}} \beta\left(t + \frac{1}{T}\right) = \sqrt{\delta t \cdot \beta(t + \delta t)}$．
-$T$ 即总步数，$\frac{1}{T}$ 即时间微元 $\delta t$；对 $\alpha_i$ 作泰勒展开：$\alpha_i \sim 1 - \frac{\beta(t + \delta t) \cdot \delta t}{2}$．
-$\implies x(t + \delta t) = \left[ 1 - \frac{\beta(t + \delta t) \cdot \delta t}{2} \right] x(t) + \sqrt{\beta(t + \delta t)} \cdot \sqrt{\delta t} \ \varepsilon_t$
-$\implies dx = -\frac{\beta(t) \cdot x(t)}{2} dt + \sqrt{\beta(t)} \cdot \sqrt{dt} \cdot \varepsilon(t)$．
-取 $f[x(t), t] = -\frac{\beta(t) \cdot x(t)}{2}，g(t) = \sqrt{\beta(t)}，dw = \varepsilon(t) \cdot \sqrt{dt}$（其中 $dw$ 为布朗运动噪声，即“扩散项”），则有：
-$dx = f[x(t), t] dt + g(t) dw$.
-这就是加噪过程满足的 SDE．
-那么如何获得去噪过程的反向 SDE 呢？又如何与刚才得到的得分匹配形式相联系呢？当然是利用贝叶斯．
-将上面的 SDE 写成条件分布：$p(x_{t+\delta t} | x_t) = \mathcal{N}\bigl(x_{t+\delta t}; \ x_t + f_x(t) dt, \ g^2(t) dt \cdot I\bigr)$．
-利用贝叶斯公式：
-$p(x_t | x_{t+\delta t}) = \frac{p(x_{t+\delta t} | x_t) \cdot p(x_t)}{p(x_{t+\delta t})}$
-$= \exp\left[ \log p(x_{t+\delta t} | x_t) + \log p(x_t) - \log p(x_{t+\delta t}) \right]$
-$\propto \exp\left[ -\frac{1}{2 g^2(t) dt} \| x_{t+\delta t} - x_t - f_x(t) dt \|^2 + \log p(x_t) - \log p(x_{t+\delta t}) \right]$.
-对 $\log p(x_{t+\delta t})$ 作展开：
-$\log p(x_{t+\delta t}) \approx \log p(x_t) + (x_{t+\delta t} - x_t) \cdot \nabla_x \log p(x_t) + O(\delta t)$.
-$\log p(x_t) - \log p(x_{t+\delta t}) = -\frac{1}{2 g^2(t) \delta t} \left[ (x_{t+\delta t} - x_t) \cdot \nabla_x \log p(x_t) \cdot 2 g^2(t) \delta t \right] + O(\delta t)$
-这里我们可以配一个 $\left[ g^2(t) \delta t \cdot \nabla_x \log p(x_t) \right]^2 + 2 \left[ g^2(t) \nabla_x \log p(x_t) \delta t \right] \times f_x(t) \delta t$（因为都是 $\delta t$ 的二阶项，最后都能消失）；不过，配上之后就变成了完全平方式：
-$p(x_t | x_{t+\delta t}) = \exp\left[ -\frac{1}{2 g^2(t) \delta t} \left\| x_{t+\delta t} - x_t - \left[ f_x(t) - g^2(t) \nabla_x \log p(x_t) \right] \delta t \right\|^2 \right]$
-近似为正态分布：
-$\sim \mathcal{N}\bigl( x_t; \ x_{t+\delta t} - \left[ f_x(t) - g^2(t) \nabla_x \log p(x_{t+\delta t}) \right] \delta t, \ g^2(t+\delta t) \delta t \cdot I \bigr)$
-再由条件分布转化为 SDE：
-$dx = \left[ f[x(t), t] - g^2(t) \nabla_x \log p(x_t) \right] dt + g^2(t) dw$
-对于 f, g 而言，它们完全确定，因此我们需要估计得分函数 $\nabla_x \log p(x_t)$；或者换成离散形式的记号：$\nabla \log p(x_i)$。
+下面的任务是，将加噪和去噪的过程关联上随机微分方程。为此我们考虑把一共 $T$ 步的离散过程，转化为对 $t\in[0,1]$ 的连续过程的微元近似，为此我们先做换元，引入连续量：
+
+$$
+x_i = x(t),\quad\alpha_i = \sqrt{1 - \frac{1}{T} \beta\left(t + \frac{1}{T}\right)} = \sqrt{1 - \Delta t \cdot \beta(t + \Delta t)}\\
+x_{i+1} = x\left(t + \frac{1}{T}\right) = x(t + \Delta t),\quad\beta_i = \sqrt{\frac{1}{T}} \beta\left(t + \frac{1}{T}\right) = \sqrt{\Delta t \cdot \beta(t + \Delta t)}
+$$
+
+这里 $T$ 即总步数，$\dfrac{1}{T}$ 即我们要引入的时间微元 $\Delta t$。
+
+我们对 $\alpha_i$ 作泰勒展开 $\alpha_i \sim 1 - \dfrac{\beta(t + \Delta t) \cdot \Delta t}{2}$，然后替换一下，得到：
+
+$$
+x(t + \Delta t) = \left[ 1 - \frac{\beta(t + \Delta t) \cdot \Delta t}{2} \right] x(t) + \sqrt{\beta(t + \Delta t)} \cdot \sqrt{\Delta t} \ \varepsilon(t)
+$$
+
+减去 $x(t)$ 得到：
+
+$$
+\mathrm dx = -\frac{\beta(t) \cdot x(t)}{2} \mathrm dt + \sqrt{\beta(t)} \cdot \sqrt{\mathrm dt} \cdot \varepsilon(t)
+$$
+
+取 $f[x(t), t] = -\dfrac{\beta(t) \cdot x(t)}{2}，g(t) = \sqrt{\beta(t)}，\mathrm dw = \varepsilon(t) \cdot \sqrt{dt}$（其中 $\mathrm dw$ 为布朗运动噪声，即“扩散项”），则有：
+
+$$
+\mathrm dx = f[x(t), t] \mathrm dt + g(t) \mathrm dw
+$$
+
+这就是加噪过程满足的 SDE！
+
+那么如何获得去噪过程的反向 SDE 呢？又如何与刚才得到的得分匹配形式相联系呢？当然是利用贝叶斯公式，为此我们先将上面的 SDE 写成条件分布：
+
+$$
+p(x_{t+\Delta t} | x_t) = \mathcal{N}\bigl(x_{t+\Delta t}; \ x_t + f_x(t) \mathrm dt, \ g^2(t) \mathrm dt \cdot I\bigr)
+$$
+
+现在，就可以利用贝叶斯公式了
+
+$$
+\begin{align*}
+    p(x_t | x_{t+\Delta t}) &= \dfrac{p(x_{t+\Delta t} | x_t) \cdot p(x_t)}{p(x_{t+\Delta t})}\\
+    &= \exp\left[ \log p(x_{t+\Delta t} | x_t) + \log p(x_t) - \log p(x_{t+\Delta t}) \right]\\
+    &\propto \exp\left[ -\dfrac{1}{2 g^2(t) \Delta t} \| x_{t+\Delta t} - x_t - f_x(t) \Delta t \|^2 + \log p(x_t) - \log p(x_{t+\Delta t}) \right]
+\end{align*}
+$$
+
+为了算下去，我们要对 $\log p(x_{t+\Delta t})$ 作展开：
+
+$$
+\log p(x_{t+\Delta t}) \approx \log p(x_t) + (x_{t+\Delta t} - x_t) \cdot \nabla_x \log p(x_t) + O(\Delta t)
+$$
+
+然后作差：
+
+$$
+\log p(x_t) - \log p(x_{t+\Delta t}) = -\dfrac{1}{2 g^2(t) \Delta t} \left[ (x_{t+\Delta t} - x_t) \cdot \nabla_x \log p(x_t) \cdot 2 g^2(t) \Delta t \right] + O(\Delta t)
+$$
+
+我们的目的其实是写成一个和正态分布类似的 exp 加模平方的形式。为此，这里我们可以配一个
+
+$$
+\left[ g^2(t) \Delta t \cdot \nabla_x \log p(x_t) \right]^2 + 2 \left[ g^2(t) \nabla_x \log p(x_t) \Delta t \right] \times f_x(t) \Delta t
+$$
+
+因为它们都是 $\Delta t$ 的二阶项，最后都能消失。不过，配上之后就变成了完全平方式：
+
+$$
+p(x_t | x_{t+\Delta t}) = \exp\left[ -\frac{1}{2 g^2(t) \Delta t} \left\| x_{t+\Delta t} - x_t - \left[ f_x(t) - g^2(t) \nabla_x \log p(x_t) \right] \Delta t \right\|^2 \right]
+$$
+
+写成正态分布形式：
+
+$$
+p(x_t | x_{t+\Delta t})\sim \mathcal{N}\bigl( x_t; \ x_{t+\Delta t} - \left[ f_x(t) - g^2(t) \nabla_x \log p(x_{t+\Delta t}) \right] \Delta t, \ g^2(t+\Delta t) \Delta t \cdot I \bigr)
+$$
+
+求极限 $\Delta t\rightarrow 0$，再由条件分布转化为 SDE，得到：
+
+$$
+\mathrm dx = \left[ f[x(t), t] - g^2(t) \nabla_x \log p(x_t) \right] \mathrm dt + g^2(t) \mathrm dw
+$$
+
+这就是反向过程的 SDE 了。
+
+对于 $f, g$ 而言，它们完全确定，因此我们需要估计得分函数 $\nabla_x \log p(x_t)$；或者换成离散形式的记号：$\nabla \log p(x_i)$。
+
 使用一个神经网络 $s_\theta(x_i, i)$ 来拟合得分函数，就得到目标函数：
-$\sum_{i=1}^T \lambda_i \mathbb{E}_{x_i \sim p(x_i)} \left[ \| s_\theta(x_i, i) - \nabla \log p(x_i) \|^2 \right] = \mathcal{L}_{\text{DDPM}}$
+
+$$
+\sum_{i=1}^T \lambda_i \mathbb{E}_{x_i \sim p(x_i)} \left[ \| s_\theta(x_i, i) - \nabla \log p(x_i) \|^2 \right] = \mathcal{L}_{\mathrm{DDPM}}
+$$
+
 这里 $\lambda_i$ 是基于 $p(x_i)$ 引入“噪声尺度不一”的归一化因子。
-至此，DDPM、得分匹配和 SDE 的理论已然打通。
+
+至此，DDPM、得分匹配和 SDE 的理论已然打通。我们就可以基于丰富发展的 SDE 理论，玩一些花活了。
