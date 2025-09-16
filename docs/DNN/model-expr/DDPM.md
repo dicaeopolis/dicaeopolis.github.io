@@ -172,6 +172,8 @@ $$
 
 ## From the perspective of SDE
 
+### 从 DDPM 到得分匹配
+
 为此，回顾前向过程 $p(x_i | x_{i-1}) = \mathcal{N}(x_i; \hat{\alpha}_i x_0, \hat{\beta}_i^2 I)$
 
 我们需要往回估计反向过程。考虑正态分布 $p(x|\theta) = \mathcal{N}(\theta, \sigma^2 I)$
@@ -217,15 +219,34 @@ $$
 
 若 $x$ 为向量，则写作 $x + \sigma^2 \nabla \log p(x)$，此即为 Tweedie's Formula．
 
-把这个估计去回前向过程，即 $\hat{\alpha}_i x_{i-1} = x_i + \hat{\beta}_i^2 \nabla \log p(x_i)$
-让我们回顾一下；$x_i = \hat{\alpha}_i x_{i-1} + \hat{\beta}_i \varepsilon_i$，代上去可得，$\nabla \log p(x_i) = -\frac{\varepsilon_i}{\hat{\beta}_i}$
-现在回到那 ELBO 的那个平方式：$\| x_{i-1} - \mu(x_i) \|^2$，我们有：
-$\begin{cases} x_{i-1} = \frac{1}{\hat{\alpha}_i} (x_i - \hat{\beta}_i \varepsilon_i) \\ \mu(x_i) = \frac{1}{\hat{\alpha}_i} (x_i - \hat{\beta}_i \varepsilon_\theta(x_i, i)) \end{cases} \implies = \frac{\hat{\beta}_i^2}{\hat{\alpha}_i^2} \| \varepsilon_\theta(x_i, i) - \varepsilon_i \|^2$
-由 $-\varepsilon_i = \hat{\beta}_i \nabla \log p(x_i)$，我们取 $s_\theta(x_i, i) = -\frac{1}{\hat{\beta}_i} \varepsilon_\theta(x_i, i)$，可得
-$\frac{\hat{\beta}_i^4}{\hat{\alpha}_i^2 \sigma_i^2} \| s_\theta(x_i, i) - \nabla \log p(x_i) \|^2$，注意此时它只和 $x_i$ 有关了．
+把这个估计代回前向过程，即 ${\alpha}_i x_{i-1} = x_i + {\beta}_i^2 \nabla \log p(x_i)$
+
+让我们回顾一下：$x_i = {\alpha}_i x_{i-1} + {\beta}_i \varepsilon_i$，代上去可得，$\nabla \log p(x_i) = -\frac{\varepsilon_i}{{\beta}_i}$
+
+回顾一下之前的推导，从 $\| x_{i-1} - \mu(x_i) \|^2$，我们有：
+
+$$
+\begin{cases} x_{i-1} = \frac{1}{\hat{\alpha}_i} (x_i - \hat{\beta}_i \varepsilon_i) \\ \mu(x_i) = \frac{1}{\hat{\alpha}_i} (x_i - \hat{\beta}_i \varepsilon_\theta(x_i, i)) \end{cases} \implies \| x_{i-1} - \mu(x_i) \|^2 = \frac{\hat{\beta}_i^2}{\hat{\alpha}_i^2} \| \varepsilon_\theta(x_i, i) - \varepsilon_i \|^2
+$$
+
+由 $-\varepsilon_i = \hat{\beta}_i \nabla \log p(x_i)$，我们取 $s_\theta(x_i, i) = -\dfrac{1}{\hat{\beta}_i} \varepsilon_\theta(x_i, i)$，可得
+
+$$
+\| x_{i-1} - \mu(x_i) \|^2=\dfrac{\hat{\beta}_i^4}{\hat{\alpha}_i^2 \sigma_i^2} \| s_\theta(x_i, i) - \nabla \log p(x_i) \|^2
+$$
+
+注意，此时它只和 $x_i$ 有关了。
+
 我们可以写出损失函数了：
-$\mathcal{L}_{\text{DDPM}} = \sum_{i=1}^T \frac{\beta_i^4}{\alpha_i^2 \sigma_i^2} \mathbb{E}_{x \sim p(x)} \left[ \| s_\theta(x_i, i) - \nabla \log p(x_i) \|^2 \right]$.
-这就是得分匹配形式的损失函数．
+
+$$
+\mathcal{L}_{\text{DDPM}} = \sum_{i=1}^T \dfrac{\beta_i^4}{\alpha_i^2 \sigma_i^2} \mathbb{E}_{x_i \sim p(x_i)} \left[ \| s_\theta(x_i, i) - \nabla \log p(x_i) \|^2 \right]
+$$
+
+这就是得分匹配形式的损失函数。我们需要训练一个网络 $s_\theta(x_i, i)$ 去匹配这个得分函数 $\nabla \log p(x_i)$。
+
+### 关联上随机微分方程
+
 下面，将加噪过程视作一个 SDE：
 令 $x_i = x(t)，\alpha_i = \sqrt{1 - \frac{1}{T} \beta\left(t + \frac{1}{T}\right)} = \sqrt{1 - \delta t \cdot \beta(t + \delta t)}$；
 $x_{i+1} = x\left(t + \frac{1}{T}\right) = x(t + \delta t)，\beta_i = \sqrt{\frac{1}{T}} \beta\left(t + \frac{1}{T}\right) = \sqrt{\delta t \cdot \beta(t + \delta t)}$．
