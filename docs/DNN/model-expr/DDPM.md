@@ -1,6 +1,6 @@
 # DDPM 理论: 从多阶段变分自编码器到基于得分匹配的随机微分方程
 
-## VAE's Revenge
+## VAE's revenge
 
 让我们回顾一下 VAE 的建模过程：
 
@@ -26,7 +26,7 @@ $$
 x_i=\alpha_i x_{i-1}+\beta_i\varepsilon_i,\quad \varepsilon_i\sim\mathcal{N}(0,I)
 $$
 
-这里的 $\alpha_i$ 和 $\beta_i$ 是事前给定的参数，需要满足 $\alpha_i^2+\beta_i^2=1$。为什么要满足这个条件呢？让我们考虑把 $x_i$ 一直展开到 $x_0$：
+这里的 $\alpha_i$ 和 $\beta_i$ 是事前给定的参数（其实 $\dfrac{\alpha_i}{\beta_i}$ 可以理解成信噪比），需要满足 $\alpha_i^2+\beta_i^2=1$。为什么要满足这个条件呢？让我们考虑把 $x_i$ 一直展开到 $x_0$：
 
 $$
 \begin{align*}
@@ -131,7 +131,9 @@ $$
 \end{align*}
 $$
 
-当然，我们也可以让损失不依赖于 $x_i$，对其展开一下：
+这个损失函数的意思是，我们输入每一步的带噪图片 $x_i$ 以及时间参数 $i$，用来预测噪声。
+
+当然，我们也可以让损失不依赖于 $x_i$ 而是像之前一样直接从 $x_0$ 获取，对其展开一下：
 
 $$
 \begin{align*}
@@ -164,7 +166,7 @@ $$
 \mathbb{E}_{w \sim \mathcal{N}(0, I), \varepsilon \sim \mathcal{N}(0, I)} \left[\| \frac{\beta_i \varepsilon - \alpha_i \hat{\beta}_{i-1} w}{\hat{\beta}_i} - \varepsilon_\theta\left( \hat{\alpha}_i x_0 + \beta_i \varepsilon, i \right)\|^2 \right]
 $$
 
-由于 $w$ 和 $\varepsilon$ 独立，先对 $w$ 求期望得一常数，去掉之后，就得到了 DPPM 的损失：
+由于 $w$ 和 $\varepsilon$ 独立，先对 $w$ 求期望得一常数，去掉之后，就得到了原论文 DPPM 的损失：
 
 $$
 \mathcal{L}_{\mathrm{DPPM}} = \sum_{i=1}^T \frac{\beta_i^4}{\hat{\beta}_i^2 \alpha_i^2 \sigma_i^2} \mathbb{E}_{\varepsilon \sim \mathcal{N}(0, I), x_0 \sim p(x_0)} \left[ \| \varepsilon - \frac{\hat{\beta}_i}{\beta_i} \varepsilon_\theta\left( \hat{\alpha}_i x_0 + \beta_i \varepsilon, i \right) \|^2 \right]
@@ -226,13 +228,13 @@ $$
 回顾一下之前的推导，从 $\| x_{i-1} - \mu(x_i) \|^2$，我们有：
 
 $$
-\begin{cases} x_{i-1} = \frac{1}{\hat{\alpha}_i} (x_i - \hat{\beta}_i \varepsilon_i) \\ \mu(x_i) = \frac{1}{\hat{\alpha}_i} (x_i - \hat{\beta}_i \varepsilon_\theta(x_i, i)) \end{cases} \implies \| x_{i-1} - \mu(x_i) \|^2 = \frac{\hat{\beta}_i^2}{\hat{\alpha}_i^2} \| \varepsilon_\theta(x_i, i) - \varepsilon_i \|^2
+\begin{cases} x_{i-1} = \frac{1}{{\alpha}_i} (x_i - {\beta}_i \varepsilon_i) \\ \mu(x_i) = \frac{1}{{\alpha}_i} (x_i - {\beta}_i \varepsilon_\theta(x_i, i)) \end{cases} \implies \| x_{i-1} - \mu(x_i) \|^2 = \frac{{\beta}_i^2}{{\alpha}_i^2} \| \varepsilon_\theta(x_i, i) - \varepsilon_i \|^2
 $$
 
-由 $-\varepsilon_i = \hat{\beta}_i \nabla \log p(x_i)$，我们取 $s_\theta(x_i, i) = -\dfrac{1}{\hat{\beta}_i} \varepsilon_\theta(x_i, i)$，可得
+由 $-\varepsilon_i = {\beta}_i \nabla \log p(x_i)$，我们取 $s_\theta(x_i, i) = -\dfrac{1}{{\beta}_i} \varepsilon_\theta(x_i, i)$，可得
 
 $$
-\| x_{i-1} - \mu(x_i) \|^2=\dfrac{\hat{\beta}_i^4}{\hat{\alpha}_i^2 \sigma_i^2} \| s_\theta(x_i, i) - \nabla \log p(x_i) \|^2
+\| x_{i-1} - \mu(x_i) \|^2=\dfrac{{\beta}_i^4}{{\alpha}_i^2 \sigma_i^2} \| s_\theta(x_i, i) - \nabla \log p(x_i) \|^2
 $$
 
 注意，此时它只和 $x_i$ 有关了。
@@ -243,14 +245,22 @@ $$
 \mathcal{L}_{\text{DDPM}} = \sum_{i=1}^T \dfrac{\beta_i^4}{\alpha_i^2 \sigma_i^2} \mathbb{E}_{x_i \sim p(x_i)} \left[ \| s_\theta(x_i, i) - \nabla \log p(x_i) \|^2 \right]
 $$
 
-这就是得分匹配形式的损失函数。我们需要训练一个网络 $s_\theta(x_i, i)$ 去匹配这个得分函数 $\nabla \log p(x_i)$。
+这就是得分匹配形式的损失函数。我们需要训练一个网络 $s_\theta(x_i, i)$ 接受每一步的图像 $x_i$ 和时间 $i$ 去匹配这个得分函数 $\nabla \log p(x_i)$。
+
+这里提一嘴，网上很多 DDPM 的得分匹配形式的推导，用的得分函数是 $\nabla_{x_i}\log p(x_i|x_0)=-\dfrac{\hat\varepsilon_i}{\hat\beta_i}$。不过这样推过来就稍显复杂。只要注意到
+
+$$
+p(x_i)=\int p(x_i|x_0)p(x_0)\mathrm dx_0=\mathbb{E}_{x_0\sim p(x_0)}[p(x_i|x_0)]
+$$
+
+再带入得分函数，就可以知道两者等价了。
 
 ### 关联上随机微分方程
 
 下面的任务是，将加噪和去噪的过程关联上随机微分方程。为此我们考虑把一共 $T$ 步的离散过程，转化为对 $t\in[0,1]$ 的连续过程的微元近似，为此我们先做换元，引入连续量：
 
 $$
-x_i = x(t),\quad\alpha_i = \sqrt{1 - \frac{1}{T} \beta\left(t + \frac{1}{T}\right)} = \sqrt{1 - \Delta t \cdot \beta(t + \Delta t)}\\
+x_i = x(t),\quad\alpha_i = \sqrt{1 - \frac{1}{T} \beta\left(t + \frac{1}{T}\right)} = \sqrt{1 - \Delta t \cdot \beta(t + \Delta t)},\\
 x_{i+1} = x\left(t + \frac{1}{T}\right) = x(t + \Delta t),\quad\beta_i = \sqrt{\frac{1}{T}} \beta\left(t + \frac{1}{T}\right) = \sqrt{\Delta t \cdot \beta(t + \Delta t)}
 $$
 
@@ -268,11 +278,13 @@ $$
 \mathrm dx = -\frac{\beta(t) \cdot x(t)}{2} \mathrm dt + \sqrt{\beta(t)} \cdot \sqrt{\mathrm dt} \cdot \varepsilon(t)
 $$
 
-取 $f[x(t), t] = -\dfrac{\beta(t) \cdot x(t)}{2}，g(t) = \sqrt{\beta(t)}，\mathrm dw = \varepsilon(t) \cdot \sqrt{dt}$（其中 $\mathrm dw$ 为布朗运动噪声，即“扩散项”），则有：
+取 $f[x(t), t] = -\dfrac{\beta(t) \cdot x(t)}{2}，g(t) = \sqrt{\beta(t)}，\mathrm dw = \varepsilon(t) \cdot \sqrt{\mathrm dt}$（其中 $\mathrm dw$ 为布朗运动噪声，即“扩散项”），则有：
 
 $$
 \mathrm dx = f[x(t), t] \mathrm dt + g(t) \mathrm dw
 $$
+
+（为什么布朗运动的噪声和 $\sqrt{\mathrm dt}$ 有关呢？请参阅本文附录 I）
 
 这就是加噪过程满足的 SDE！
 
@@ -341,3 +353,51 @@ $$
 这里 $\lambda_i$ 是基于 $p(x_i)$ 引入“噪声尺度不一”的归一化因子。
 
 至此，DDPM、得分匹配和 SDE 的理论已然打通。我们就可以基于丰富发展的 SDE 理论，玩一些花活了。
+
+### 将 SDE 变成 ODE
+
+()
+
+## Appendices
+
+### I. 布朗运动的二次变分
+
+我们要推导一个布朗运动 $B(t)$ 满足 $\mathrm dB=\sqrt{\mathrm dt}$，即 $(\mathrm{d}B)^2=\mathrm{d}t$。
+
+我们换成积分式，也就是在 $[0,T]$ 内有
+
+$$
+\int_0^T (\mathrm{d}B)^2=\int_0^T\mathrm{d}t=T
+$$
+
+换成定义式，也就是对该区间的一个划分 $\Pi$，最大步长记作 $|\Pi|$，然后证明极限：
+
+$$
+\lim_{|\Pi|\rightarrow0}\sum_{i}[B(t_{i+1})-B(t_i)]^2=\lim_{|\Pi|\rightarrow0} S_n=T
+$$
+
+这就是布朗运动的**二次变分**。由于布朗运动的独立性，有
+
+$$
+B(t_{i+1})-B(t_i)=\Delta B_i\sim N(0,\Delta t_i)
+$$
+
+则根据正态分布二阶矩的性质， $\mathbb{E}[(\Delta B_i)^2]=\Delta t_i$，叠在一起就可以得到
+
+$$
+\mathbb{E}[S_n]=\sum\Delta t_i=\int_0^T\mathrm{d}t=T
+$$
+
+而 $\mathrm{Var}[(\Delta B_i)^2]=\mathbb{E}[(\Delta B_i)^4]-\mathbb{E}[(\Delta B_i)^2]^2=3(\Delta t_i)^2-(\Delta t_i)^2=2(\Delta t_i)^2$，即
+
+$$
+\mathrm{Var}[S_n]=\sum 2(\Delta t_i)^2\le 2|\Pi|T
+$$
+
+故 $|\Pi|\to 0$ 则 $\mathrm{Var}[S_n]\to 0$，根据大数定律，
+
+$$
+\lim_{|\Pi|\rightarrow0} S_n=\lim_{|\Pi|\rightarrow0} \mathbb{E}[S_n]=T
+$$
+
+这样就得到了 $(\mathrm{d}B)^2=\mathrm{d}t$。
