@@ -1,23 +1,112 @@
 # DDPM 理论: 从多阶段变分自编码器到基于得分匹配的随机微分方程
 
-（手稿转写，待整理）
+## VAE's Revenge
 
-联合分布：$p(x_0, \cdots, x_T) = p(x_T | x_{T-1}) p(x_{T-1} | x_{T-2}) \cdots p(x_1 | x_0) p(x_0)$
-$q(x_0, \cdots, x_T) = q(x_0 | x_1) q(x_1 | x_2) \cdots q(x_{T-1} | x_T) q(x_T)$
-变分推断即最小化 KL 散度 \quad Decoder：去噪
-$KL(p \Vert q) = \int p \log \frac{p}{q} dx_T \cdots dx_0$
-$= \int p(x_T | x_{T-1}) \cdots p(x_1 | x_0) p(x_0) \log \frac{p(x_T | x_{T-1}) \cdots p(x_1 | x_0) p(x_0)}{q(x_0 | x_1) \cdots q(x_{T-1} | x_T) q(x_T)} dx_T \cdots dx_0$
-其中，$p(x_t | x_{t-1}) = \mathcal{N}(x_t; \alpha_t x_{t-1}, \beta_t^2 I)，\alpha_t^2 + \beta_t^2 = 1$
-即：加噪过程仅采样，不含任何可学习的参数。
-即：$\int p \log \frac{p}{q} dx_T \cdots dx_0 = \underbrace{\int p \log p dx_T \cdots dx_0}_{\text{常数}} - \int p \log q dx_T \cdots dx_0$
-于是我们得到了近似的 ELBO：
-$- \int \left[ p(x_T | x_{T-1}) \cdots p(x_1 | x_0) p(x_0) \right] \left( \sum_{i=1}^T \log q(x_{i-1} | x_i) + \underbrace{\log q(x_T)}_{\text{常数（正态分布）}} \right) d\cdots$
-$= - \sum_{i=1}^T \int p(x_T | x_{T-1}) \cdots p(x_1 | x_0) p(x_0) \log q(x_{i-1} | x_i) d\cdots$
-对 $x_{i+1} \cdots x_T$ 而言，这部分积分中的 $\int p(x_T | x_{T-1}) \cdots p(x_{i+1} | x_i)$ 因为上面一项和 $x_i$ 无关，可以先积出来 $\times \text{Const.} \ d\cdots$
-对 $x_i \cdots x_0$ 而言，$p(x_i | x_{i-1}) \cdots p(x_1 | x_0) p(x_0) = p(x_i | x_{i-1}) p(x_{i-1} | x_0) p(x_0)$
-$= - \sum_{i=1}^T \int p(x_i | x_{i-1}) p(x_{i-1} | x_0) p(x_0) \log q(x_{i-1} | x_i) d\cdots$
-对 $q$ 的建模：（在 $x_i$ 上“去噪”）
-$q(x_{i-1} | x_i) = \mathcal{N}(x_{i-1}; x_i, \sigma_t^2)$
+让我们回顾一下 VAE 的建模过程：
+
+为了拟合目标分布 $p(x)$，我们引入一个隐变量 $z$，这样对其的建模就变成了 $p(x,z)=p(x|z)p(z)$，而反过来，我们也需要对原变量编码进隐变量中，也就是建模 $q(x,z)=q(z|x)q(x)$。然后我们求这两个联合分布的 KL 散度，也就是 $KL(q(x,z)||p(x,z))$ 来衡量拟合分布和原分布的相似性。然后我们引入强先验的正态性假设，把这个 KL 散度拆出常数得到 $ELBO$，再拆成 MSE 和 KLD 两项。
+
+在对 VAE 的讨论中，我们也详细介绍了由于其强制引入的正态性假设，导致压缩率过高，生成的图像很糊。
+
+这就引入了我们介绍 DDPM 的动机——从纯噪声的 $p(z)$ 一步迈到多样的真实分布 $p(x)$，这一步多少迈得有点大了。但是如果我们使用从 $x_0, x_1, \cdots, x_T$ 的多步解码来代替 VAE 的单步解码呢？
+
+也就是，引入联合分布：$p(x_0, x_1, \cdots, x_T) = p(x_T | x_{T-1}) p(x_{T-1} | x_{T-2}) \cdots p(x_1 | x_0) p(x_0)$ 为我们的“编码器”，负责将 $x_0$ 逐步映射到纯噪声分布 $x_T\sim\mathcal N(0,I)$，然后反过来是“解码器” $q(x_0, \cdots, x_T) = q(x_0 | x_1) q(x_1 | x_2) \cdots q(x_{T-1} | x_T) q(x_T)$ 负责将噪声逐步还原到原图像。
+
+下面，让我们开始进行变分推断吧。首先是 KL 散度：
+
+$$
+\begin{align*}
+    KL(p \Vert q) &= \int p \log \frac{p}{q} \mathrm dx_T \cdots \mathrm dx_0\\&= \int p(x_T | x_{T-1}) \cdots p(x_1 | x_0) p(x_0) \log \frac{p(x_T | x_{T-1}) \cdots p(x_1 | x_0) p(x_0)}{q(x_0 | x_1) \cdots q(x_{T-1} | x_T) q(x_T)} \mathrm dx_T \cdots \mathrm dx_0
+\end{align*}
+$$
+
+现在我们仍然需要对“编码过程” $p$ 引入归纳偏置。由于我们是将图像转化为纯噪声，所以我们可以把每一步 $p$ 看作是一个**逐步加噪**的过程：
+
+$$
+x_i=\alpha_i x_{i-1}+\beta_i\varepsilon_i,\quad \varepsilon_i\sim\mathcal{N}(0,I)
+$$
+
+这里的 $\alpha_i$ 和 $\beta_i$ 是事前给定的参数，需要满足 $\alpha_i^2+\beta_i^2=1$。为什么要满足这个条件呢？让我们考虑把 $x_i$ 一直展开到 $x_0$：
+
+$$
+\begin{align*}
+    x_i&=\alpha_i x_{i-1}+\beta_i\varepsilon_i\\
+    &=\alpha_i (\alpha_{i-1} x_{i-2}+\beta_{i-1}\varepsilon_{i-1})+\beta_i\varepsilon_i\\
+    &=(\alpha_i\alpha_{i-1}\cdots\alpha_1)x_0+\beta_i\varepsilon_i+\alpha_i\beta_{i-1}\varepsilon_{i-1}+\cdots+(\alpha_i\alpha_{i-1}\cdots\alpha_2)\beta_1\varepsilon_1
+\end{align*}
+$$
+
+由于诸 $\varepsilon$ 是独立的正态分布，可以叠加：
+
+$$
+\beta_i\varepsilon_i+\alpha_i\beta_{i-1}\varepsilon_{i-1}+\cdots+(\alpha_i\alpha_{i-1}\cdots\alpha_2)\beta_1\varepsilon_1=\hat\beta_i\hat\varepsilon_i,\quad\hat\varepsilon_i\sim\mathcal{N}(0,I)
+$$
+
+如果我们取 $\hat\alpha_i^2=(\alpha_i\alpha_{i-1}\cdots\alpha_1)^2$，且由正态分布方差的叠加得到 $\hat\beta_i^2=\beta_i^2+\alpha_i^2\beta_{i-1}^2+\cdots+(\alpha_i\alpha_{i-1}\cdots\alpha_2)^2\beta_1^2$，然后把它们加起来：
+
+$$
+\begin{align*}
+    \hat\alpha_i^2+\hat\beta_i^2&=\beta_i^2+\alpha_i^2\beta_{i-1}^2+\cdots+(\alpha_i\alpha_{i-1}\cdots\alpha_2)^2\beta_1^2+(\alpha_i\alpha_{i-1}\cdots\alpha_1)^2\hat\beta_i^2\\
+    &=\beta_i^2+\alpha_i^2\beta_{i-1}^2+\cdots+(\alpha_i\alpha_{i-1}\cdots\alpha_2)^2(\beta_1^2+\alpha_1^2)
+\end{align*}
+$$
+
+这样我们就发现，如果满足 $\alpha_i^2+\beta_i^2=1$，那么就有点像高中学过的裂项相消“点鞭炮”，从后面一直算到前面，最终推出 $\hat\alpha_i^2+\hat\beta_i^2=1$。
+
+这有什么用呢？刚刚的推导中，我们其实得到了一个非常有用的式子：
+
+$$
+x_i=\hat\alpha_i x_0+\hat\beta_i\hat\varepsilon_i,\quad\hat\varepsilon_i\sim\mathcal{N}(0,I),\ \hat\alpha_i^2+\hat\beta_i^2=1
+$$
+
+这就意味着，为了获取加噪的中间结果，我们可以一步从 $x_0$ 获得。
+
+现在让我们回过头来，看看单步加噪过程 $x_i=\alpha_i x_{i-1}+\beta_i\varepsilon_i$，我们其实可以把它看作是 $\varepsilon_i$ 这个**正态分布的重参数化**！
+
+也就是，我们可以把加噪过程的递推式写成条件分布的形式：$p(x_i | x_{i-1}) = \mathcal{N}(x_i; \alpha_t x_{i-1}, \beta_i^2 I)，\alpha_i^2 + \beta_i^2 = 1$
+
+基于此，我们初步来整理一下 KL 散度的式子：
+$$\int p \log \frac{p}{q} \mathrm dx_T \cdots \mathrm dx_0 = \int p \log p \mathrm dx_T \cdots \mathrm dx_0 - \int p \log q \mathrm dx_T \cdots \mathrm dx_0
+$$
+
+注意到对 $p$ 而言，所有参数和分布都是定死的，没有可学习的参数，那么上式的第一部分就是一个常数，可以丢掉。
+
+下面我们着重算第二部分：
+$$
+\begin{align*}
+    ELBO &=- \int \left[ p(x_T | x_{T-1}) \cdots p(x_1 | x_0) p(x_0) \right] \left( \sum_{i=1}^T \log q(x_{i-1} | x_i) + \log q(x_T) \right) \mathrm dx_T \cdots \mathrm dx_0\\
+    &= - \sum_{i=1}^T \int p(x_T | x_{T-1}) \cdots p(x_1 | x_0) p(x_0) \log q(x_{i-1} | x_i) \mathrm dx_T \cdots \mathrm dx_0
+\end{align*}
+$$
+
+这里把 $\log q(x_T)$ 丢掉，是因为 $q(x_T)$ 是加噪后的图像，也没有可学习的参数。
+
+对 $x_{i+1} \cdots x_T$ 而言，这部分积分：
+
+$$
+\int p(x_T | x_{T-1}) \cdots p(x_{i+1} | x_i)\mathrm dx_T \cdots \mathrm dx_0
+$$
+
+因为这一块和真正待学习的 $x_i, x_{i-1}$ 无关，可以先积出来一个常数，然后就可以丢掉了。
+
+而对 $x_i \cdots x_0$ 而言，我们有
+
+$$
+p(x_i | x_{i-1}) \cdots p(x_1 | x_0) p(x_0) = p(x_i | x_{i-1}) p(x_{i-1} | x_0) p(x_0)
+$$
+
+也就是刚刚提到的多步并一步的加噪。现在改写得到的 ELBO 如下：
+
+$$
+ELBO= - \sum_{i=1}^T \int p(x_i | x_{i-1}) p(x_{i-1} | x_0) p(x_0) \log q(x_{i-1} | x_i) \mathrm dx_T \cdots \mathrm dx_0
+$$
+
+下面我们要对 $q$ 进行建模了，我们还是借鉴从 VAE 里面学到的观点，它虽然作为一个在 $x_i$ 上“去噪”的过程，但仍然可以将其建模成一个正态分布：
+
+$$
+q(x_{i-1} | x_i) = \mathcal{N}(x_{i-1}; x_i, \sigma_t^2)
+$$
+
 $-\log q(x_{i-1} | x_i) \propto \frac{1}{2\sigma_t^2} \| x_{i-1} - \mu(x_i) \|^2$
 在生成时，$x_i = \alpha_i x_{i-1} + \beta_i \varepsilon_i \implies x_{i-1} = \frac{1}{\alpha_i}(x_i - \beta_i \varepsilon_i)$
 由此可取 $\mu(x_i) = \frac{1}{\alpha_i} \left[ x_i - \beta_i \varepsilon_\theta(x_i, i) \right] \quad$ 可学习的去噪
