@@ -72,6 +72,7 @@ $$
 注意到对 $p$ 而言，所有参数和分布都是定死的，没有可学习的参数，那么上式的第一部分就是一个常数，可以丢掉。
 
 下面我们着重算第二部分：
+
 $$
 \begin{align*}
     ELBO &=- \int \left[ p(x_T | x_{T-1}) \cdots p(x_1 | x_0) p(x_0) \right] \left( \sum_{i=1}^T \log q(x_{i-1} | x_i) + \log q(x_T) \right) \mathrm dx_T \cdots \mathrm dx_0\\
@@ -107,21 +108,70 @@ $$
 q(x_{i-1} | x_i) = \mathcal{N}(x_{i-1}; x_i, \sigma_t^2)
 $$
 
-$-\log q(x_{i-1} | x_i) \propto \frac{1}{2\sigma_t^2} \| x_{i-1} - \mu(x_i) \|^2$
-在生成时，$x_i = \alpha_i x_{i-1} + \beta_i \varepsilon_i \implies x_{i-1} = \frac{1}{\alpha_i}(x_i - \beta_i \varepsilon_i)$
-由此可取 $\mu(x_i) = \frac{1}{\alpha_i} \left[ x_i - \beta_i \varepsilon_\theta(x_i, i) \right] \quad$ 可学习的去噪
-$\implies \| x_{i-1} - \mu(x_i) \|^2 = \| x_{i-1} - \frac{1}{\alpha_i} \left[ \alpha_i x_{i-1} + \beta_i \varepsilon_i - \beta_i \varepsilon_\theta(x_i, i) \right] \|^2$
-$= \frac{\beta_i^2}{\alpha_i^2} \| \varepsilon_\theta(x_i, i) - \varepsilon_i \|^2$
-又 $x_i = \alpha_i x_{i-1} + \beta_i \varepsilon_i = \alpha_i \left( \hat{\alpha}_{i-1} x_0 + \hat{\beta}_{i-1} \hat{\varepsilon}_{i-1} \right) + \beta_i \varepsilon_i$
-$= \hat{\alpha}_i x_0 + \alpha_i \hat{\beta}_{i-1} \hat{\varepsilon}_{i-1} + \beta_i \varepsilon_i$
-$-ELBO \implies \sum_{i=1}^T \frac{\beta_i^2}{\alpha_i^2 \sigma_i^2} \mathbb{E}_{\substack{x_0 \sim p(x_0), \\ \hat{\varepsilon}_{i-1}, \varepsilon_i \sim \mathcal{N}(0, I)}} \left[ \| \varepsilon_i - \varepsilon_\theta\left( \hat{\alpha}_i x_0 + \alpha_i \hat{\beta}_{i-1} \hat{\varepsilon}_{i-1} + \beta_i \varepsilon_i, i \right) \|^2 \right]$
-对 $\alpha_i \hat{\beta}_{i-1} \hat{\varepsilon}_{i-1} + \beta_i \varepsilon_i$ 而言，可写作一个正态分布 $\mathcal{N}\left( 0, \sqrt{\alpha_i^2 \hat{\beta}_{i-1}^2 + \beta_i^2} \right)，其中\alpha_i^2 (1 - \hat{\alpha}_{i-1}^2) + \beta_i^2 = 1 - \hat{\alpha}_i^2 = \hat{\beta}_i^2$
-这里需要配一个 $w$，主要用2条性质：
-$\begin{cases} \hat{\beta}_i w, \ w \sim \mathcal{N}(0, I) \\ \mathbb{E}[\varepsilon w^\top] = 0 \end{cases}$（也可用 $\hat{\varepsilon}_{i-1}, \varepsilon_i$ 表达）。考虑到 $\hat{\varepsilon}_{i-1}和\varepsilon_i$ 的独立性，交换 $\varepsilon$ 中的系数，取 $\hat{\beta}_i w = \beta_i \hat{\varepsilon}_{i-1} - \alpha_i \hat{\beta}_{i-1} \varepsilon_i$，再从 $\varepsilon, w$ 中解出 $\varepsilon_i = \frac{\beta_i \varepsilon - \alpha_i \hat{\beta}_{i-1} w}{\hat{\beta}_i}$（利用 $\sigma_i^2 \hat{\beta}_i^2 = \beta_i^2$ ），故：
-$-ELBO = \mathbb{E}_{\substack{w \sim \mathcal{N}(0, I), \\ \varepsilon \sim \mathcal{N}(0, I)}} \left[ \frac{\beta_i \varepsilon - \alpha_i \hat{\beta}_{i-1} w}{\hat{\beta}_i} - \varepsilon_\theta\left( \hat{\alpha}_i x_0 + \beta_i \varepsilon, i \right) \right]^2$
-由于 $w$ 和 $\varepsilon$ 独立，先对 $w$ 求期望（得一常数，可去掉），得到DPPM的损失：
-$\mathcal{L}_{\text{DPPM}} = \sum_{i=1}^T \frac{\beta_i^4}{\hat{\beta}_i^2 \alpha_i^2 \sigma_i^2} \mathbb{E}_{\substack{\varepsilon \sim \mathcal{N}(0, I), \\ x_0 \sim p(x_0)}} \left[ \| \varepsilon - \frac{\hat{\beta}_i}{\beta_i} \varepsilon_\theta\left( \hat{\alpha}_i x_0 + \beta_i \varepsilon, i \right) \|^2 \right]$
-现在引入 Score - Based SDE.
+简单展开一下然后取个对数：
+
+$$
+-\log q(x_{i-1} | x_i) \propto \frac{1}{2\sigma_t^2} \| x_{i-1} - \mu(x_i) \|^2
+$$
+
+下面，我们对均值 $\mu(x_i)$ 进行讨论。
+
+由于在生成时，$x_i = \alpha_i x_{i-1} + \beta_i \varepsilon_i$，也就是 $x_{i-1} = \frac{1}{\alpha_i}(x_i - \beta_i \varepsilon_i)$。我们希望去噪之后，尽量贴合原分布 $x_{i-1}$，也就是取
+
+$$
+\mu(x_i) = \frac{1}{\alpha_i} \left[ x_i - \beta_i \varepsilon_\theta(x_i, i) \right]
+$$
+
+这里的 $\varepsilon_\theta(x_i, i)$ 就是可学习的去噪网络。由此可得：
+
+$$
+\begin{align*}
+    \| x_{i-1} - \mu(x_i) \|^2 &= \| x_{i-1} - \frac{1}{\alpha_i} \left[ \alpha_i x_{i-1} + \beta_i \varepsilon_i - \beta_i \varepsilon_\theta(x_i, i) \right] \|^2\\
+    &= \frac{\beta_i^2}{\alpha_i^2} \| \varepsilon_\theta(x_i, i) - \varepsilon_i \|^2
+\end{align*}
+$$
+
+当然，我们也可以让损失不依赖于 $x_i$，对其展开一下：
+
+$$
+\begin{align*}
+    x_i &= \alpha_i x_{i-1} + \beta_i \varepsilon_i = \alpha_i \left( \hat{\alpha}_{i-1} x_0 + \hat{\beta}_{i-1} \hat{\varepsilon}_{i-1} \right) + \beta_i \varepsilon_i\\
+    &= \hat{\alpha}_i x_0 + \alpha_i \hat{\beta}_{i-1} \hat{\varepsilon}_{i-1} + \beta_i \varepsilon_i
+\end{align*}
+$$
+
+这样，我们的损失就只依赖于固定的原分布 $p(x_0)$ 以及两个随机变量，代回来得到损失函数：
+
+$$
+\sum_{i=1}^T \frac{\beta_i^2}{\alpha_i^2 \sigma_i^2} \mathbb{E}_{x_0 \sim p(x_0), \hat{\varepsilon}_{i-1}, \varepsilon_i \sim \mathcal{N}(0, I)} \left[ \| \varepsilon_i - \varepsilon_\theta\left( \hat{\alpha}_i x_0 + \alpha_i \hat{\beta}_{i-1} \hat{\varepsilon}_{i-1} + \beta_i \varepsilon_i, i \right) \|^2 \right]$$
+
+对 $\alpha_i \hat{\beta}_{i-1} \hat{\varepsilon}_{i-1} + \beta_i \varepsilon_i$ 而言,其为两个正态分布的叠加，就可写作一个正态分布 $\mathcal{N}\left( 0, \sqrt{\alpha_i^2 \hat{\beta}_{i-1}^2 + \beta_i^2} \right)$，其中 $\alpha_i^2 (1 - \hat{\alpha}_{i-1}^2) + \beta_i^2 = 1 - \hat{\alpha}_i^2 = \hat{\beta}_i^2$，因此，我们可以写成：
+
+$$
+\alpha_i \hat{\beta}_{i-1} \hat{\varepsilon}_{i-1} + \beta_i \varepsilon_i=\hat{\beta}_i^2\varepsilon,\quad\varepsilon\sim\mathcal{N}(0,I)
+$$
+
+为了消掉 $\hat{\varepsilon}_{i-1}, \varepsilon_i$ 中的一个，这里需要配一个 $w$，主要用2条性质：
+$\begin{cases} \hat{\beta}_i w, \ w \sim \mathcal{N}(0, I) \\ \mathbb{E}[\varepsilon w^\top] = 0 \end{cases}$
+
+而 $w$ 也需要能用 $\hat{\varepsilon}_{i-1}, \varepsilon_i$ 表达。考虑到 $\hat{\varepsilon}_{i-1}和\varepsilon_i$ 的独立性，交换 $\varepsilon$ 中的系数，取 $\hat{\beta}_i w = \beta_i \hat{\varepsilon}_{i-1} - \alpha_i \hat{\beta}_{i-1} \varepsilon_i$ 即可满足以上要求。
+
+再从 $\varepsilon, w$ 中解出 $\varepsilon_i = \frac{\beta_i \varepsilon - \alpha_i \hat{\beta}_{i-1} w}{\hat{\beta}_i}$（利用 $\beta^2_t+\alpha^2_t\hat\beta^2_{t−1} = \hat\beta_i^2$ ）
+
+这样期望项变成了：
+
+$$
+\mathbb{E}_{w \sim \mathcal{N}(0, I), \varepsilon \sim \mathcal{N}(0, I)} \left[\| \frac{\beta_i \varepsilon - \alpha_i \hat{\beta}_{i-1} w}{\hat{\beta}_i} - \varepsilon_\theta\left( \hat{\alpha}_i x_0 + \beta_i \varepsilon, i \right)\|^2 \right]
+$$
+
+由于 $w$ 和 $\varepsilon$ 独立，先对 $w$ 求期望得一常数，去掉之后，就得到了 DPPM 的损失：
+
+$$
+\mathcal{L}_{\mathrm{DPPM}} = \sum_{i=1}^T \frac{\beta_i^4}{\hat{\beta}_i^2 \alpha_i^2 \sigma_i^2} \mathbb{E}_{\varepsilon \sim \mathcal{N}(0, I), x_0 \sim p(x_0)} \left[ \| \varepsilon - \frac{\hat{\beta}_i}{\beta_i} \varepsilon_\theta\left( \hat{\alpha}_i x_0 + \beta_i \varepsilon, i \right) \|^2 \right]
+$$
+
+## From the perspective of SDE
+
 为此，回顾前向过程 $p(x_i | x_{i-1}) = \mathcal{N}(x_i; \hat{\alpha}_i x_0, \hat{\beta}_i^2 I)$
 我们需要往回估计反向过程。考虑正态分布 $p(x|\theta) = \mathcal{N}(\theta, \sigma^2 I)$
 其边缘分布 $p(x) = \int p(x|\theta) p(\theta) d\theta$，现在已知 $x$，求 $\theta$，
