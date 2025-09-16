@@ -173,17 +173,50 @@ $$
 ## From the perspective of SDE
 
 为此，回顾前向过程 $p(x_i | x_{i-1}) = \mathcal{N}(x_i; \hat{\alpha}_i x_0, \hat{\beta}_i^2 I)$
+
 我们需要往回估计反向过程。考虑正态分布 $p(x|\theta) = \mathcal{N}(\theta, \sigma^2 I)$
-其边缘分布 $p(x) = \int p(x|\theta) p(\theta) d\theta$，现在已知 $x$，求 $\theta$，
-即 $\mathbb{E}[\theta | x] = \int \theta p(\theta | x) d\theta = \int \theta \frac{p(x|\theta) p(\theta)}{p(x)} d\theta -- p(x)$ 已知，则
-$= \frac{1}{p(x)} \int \theta \cdot \frac{1}{\sigma \sqrt{2\pi}} \exp\left[ -\frac{\|x - \theta\|^2}{2\sigma^2} \right] p(\theta) d\theta$
-这里我们凑一个 $\frac{d p(x|\theta)}{d x} = \frac{\theta - x}{\sigma^2} \cdot p(x|\theta)$
-$= \frac{\sigma^2}{p(x)} \int \frac{\theta - x}{\sigma^2} p(x|\theta) p(\theta) + \frac{x}{\sigma^2} p(x|\theta) p(\theta) d\theta$
-$= \frac{\sigma^2}{p(x)} \int \frac{d p(x|\theta)}{d x} p(\theta) d\theta + \frac{\sigma^2}{p(x)} \int \frac{x}{\sigma^2} p(x|\theta) p(\theta) d\theta$
-由于 $\frac{d}{d x}$ 和 $\theta$ 无关，$\int \frac{d}{d x} p(x|\theta) p(\theta) d\theta = \frac{d}{d x} \int p(x|\theta) p(\theta) d\theta = \frac{d p(x)}{d x}$
-同理，后面一半可以提出 $x$ 得到 $\frac{x}{p(x)} \int p(x|\theta) p(\theta) d\theta = x$
-因此 $\mathbb{E}[\theta | x] = x + \frac{\sigma^2}{p(x)} \frac{d}{d x} p(x) = x + \sigma^2 \frac{d}{d x} \log p(x)．$
+
+其边缘分布 $p(x) = \int p(x|\theta) p(\theta) d\theta$，现在已知 $x$，我们要求 $\theta$ 即：
+
+$$
+\mathbb{E}[\theta | x] = \int \theta p(\theta | x) \mathrm d\theta = \int \theta \frac{p(x|\theta) p(\theta)}{p(x)} \mathrm d\theta
+$$
+
+由于 $p(x)$ 已知，可以提到积分号外：
+
+$$
+\mathbb{E}[\theta | x]= \frac{1}{p(x)} \int \theta \cdot \frac{1}{\sigma \sqrt{2\pi}} \exp\left[ -\frac{\|x - \theta\|^2}{2\sigma^2} \right] p(\theta) \mathrm d\theta
+$$
+
+这里我们凑一个 $\dfrac{\mathrm d p(x|\theta)}{\mathrm d x} = \dfrac{\theta - x}{\sigma^2} \cdot p(x|\theta)$，然后接着往下推：
+
+$$
+\begin{align*}
+    \mathbb{E}[\theta | x]&= \frac{\sigma^2}{p(x)} \int \frac{\theta - x}{\sigma^2} p(x|\theta) p(\theta) + \frac{x}{\sigma^2} p(x|\theta) p(\theta) \mathrm d\theta\\
+    &= \frac{\sigma^2}{p(x)} \int \frac{\mathrm d p(x|\theta)}{\mathrm d x} p(\theta) \mathrm d\theta + \frac{\sigma^2}{p(x)} \int \frac{x}{\sigma^2} p(x|\theta) p(\theta) \mathrm d\theta
+\end{align*}
+$$
+
+由于 $\dfrac{\mathrm d}{\mathrm d x}$ 和 $\theta$ 无关，则
+
+$$
+\int \frac{\mathrm d}{\mathrm d x} p(x|\theta) p(\theta) \mathrm d\theta = \frac{\mathrm d}{\mathrm d x} \int p(x|\theta) p(\theta) \mathrm d\theta = \frac{\mathrm d p(x)}{\mathrm d x}
+$$
+
+同理，后面一半可以提出 $x$，得到
+
+$$
+\frac{x}{p(x)} \int p(x|\theta) p(\theta) \mathrm d\theta = x
+$$
+
+因此：
+
+$$
+\mathbb{E}[\theta | x] = x + \frac{\sigma^2}{p(x)} \frac{\mathrm d}{\mathrm d x} p(x) = x + \sigma^2 \frac{\mathrm d}{\mathrm d x} \log p(x)
+$$
+
 若 $x$ 为向量，则写作 $x + \sigma^2 \nabla \log p(x)$，此即为 Tweedie's Formula．
+
 把这个估计去回前向过程，即 $\hat{\alpha}_i x_{i-1} = x_i + \hat{\beta}_i^2 \nabla \log p(x_i)$
 让我们回顾一下；$x_i = \hat{\alpha}_i x_{i-1} + \hat{\beta}_i \varepsilon_i$，代上去可得，$\nabla \log p(x_i) = -\frac{\varepsilon_i}{\hat{\beta}_i}$
 现在回到那 ELBO 的那个平方式：$\| x_{i-1} - \mu(x_i) \|^2$，我们有：
