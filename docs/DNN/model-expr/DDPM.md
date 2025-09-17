@@ -1,4 +1,6 @@
-# DDPM 理论: 从多阶段变分自编码器到基于得分匹配的随机微分方程
+# 扩散模型理论篇: 从多阶段变分自编码器到基于得分匹配的随机微分方程
+
+观前提示：本文 $\alpha$ 和 $\beta$ 的定义和原论文差了一个平方的阶，以及 $q$ 和 $p$ 的定义和原论文相反。
 
 ## VAE's revenge
 
@@ -102,7 +104,7 @@ $$
 ELBO= - \sum_{i=1}^T \int p(x_i | x_{i-1}) p(x_{i-1} | x_0) p(x_0) \log q(x_{i-1} | x_i) \mathrm dx_T \cdots \mathrm dx_0
 $$
 
-下面我们要对 $q$ 进行建模了，我们还是借鉴从 VAE 里面学到的观点，它虽然作为一个在 $x_i$ 上“去噪”的过程，但仍然可以将其建模成一个正态分布：
+下面我们要对 $q$ 进行建模了，我们还是借鉴从 VAE 里面学到的观点，它虽然作为一个在 $x_i$ 上“去噪”的过程，但仍然可以将其建模成一个条件正态分布：
 
 $$
 q(x_{i-1} | x_i) = \mathcal{N}(x_{i-1}; x_i, \sigma_t^2)
@@ -174,9 +176,23 @@ $$
 
 ## From the perspective of SDE
 
+Yang Song 的文章 arXiv: 2011.13456 将扩散模型和得分匹配相联系，并且引入了随机微分方程作为它们共同的理论基础。这就大大提升了 DDPM 的理论高度，使之不局限于“加噪——去噪”的原初思路。
+
+引入 SDE 的意义不仅在于找到一个数学工具来研究扩散模型，更在于其可以直接转化为概率流 ODE 进行求解，这就可以将 ODE 的数值解法用来加速扩散模型的收敛。这就催生了诸如 Euler, DPM Solver 等一众采样器。
+
+让我们开始介绍论文第一部分的工作：联系 DDPM 和得分匹配。这一节的目的，是关联上得分匹配算法的损失函数
+
+$$
+\| s_\theta(x_i, i) - \nabla \log p(x_i) \|^2
+$$
+
+其中 $\nabla \log p(x_i)$ 被称作得分函数。感性理解，我们是在拟合一个梯度场，让这个梯度场去指引我们的生成。
+
 ### 从 DDPM 到得分匹配
 
-为此，回顾前向过程 $p(x_i | x_{i-1}) = \mathcal{N}(x_i; \hat{\alpha}_i x_0, \hat{\beta}_i^2 I)$
+为了推出得分匹配形式的损失，我们先引入 Tweddie's Formula。
+
+回顾前向过程 $p(x_i | x_{i-1}) = \mathcal{N}(x_i; \hat{\alpha}_i x_0, \hat{\beta}_i^2 I)$
 
 我们需要往回估计反向过程。考虑正态分布 $p(x|\theta) = \mathcal{N}(\theta, \sigma^2 I)$
 
@@ -223,7 +239,7 @@ $$
 
 把这个估计代回前向过程，即 ${\alpha}_i x_{i-1} = x_i + {\beta}_i^2 \nabla \log p(x_i)$
 
-让我们回顾一下：$x_i = {\alpha}_i x_{i-1} + {\beta}_i \varepsilon_i$，代上去可得，$\nabla \log p(x_i) = -\frac{\varepsilon_i}{{\beta}_i}$
+让我们回顾一下：$x_i = {\alpha}_i x_{i-1} + {\beta}_i \varepsilon_i$，代上去可得，$\nabla \log p(x_i) = -\dfrac{\varepsilon_i}{{\beta}_i}$。 这里已经有点味道了：之前我们已经讨论过 DDPM 的去噪过程是去学习每一步的噪声 $\varepsilon_i$，而这个得分函数恰巧也是这个形式，最多差一个系数。
 
 回顾一下之前的推导，从 $\| x_{i-1} - \mu(x_i) \|^2$，我们有：
 
@@ -253,11 +269,13 @@ $$
 p(x_i)=\int p(x_i|x_0)p(x_0)\mathrm dx_0=\mathbb{E}_{x_0\sim p(x_0)}[p(x_i|x_0)]
 $$
 
-再带入得分函数，就可以知道两者等价了。
+再带入得分函数，就可以知道两者等价了。[此事在科学空间中已有记载](https://kexue.fm/archives/9509)。
 
 ### 关联上随机微分方程
 
-下面的任务是，将加噪和去噪的过程关联上随机微分方程。为此我们考虑把一共 $T$ 步的离散过程，转化为对 $t\in[0,1]$ 的连续过程的微元近似，为此我们先做换元，引入连续量：
+下面我们开始介绍论文第二部分：将加噪和去噪的过程关联上随机微分方程。
+
+为此，我们考虑把一共 $T$ 步的离散过程，转化为对 $t\in[0,1]$ 的连续过程的微元近似，因此我们先做换元，引入连续量：
 
 $$
 x_i = x(t),\quad\alpha_i = \sqrt{1 - \frac{1}{T} \beta\left(t + \frac{1}{T}\right)} = \sqrt{1 - \Delta t \cdot \beta(t + \Delta t)},\\
@@ -356,7 +374,15 @@ $$
 
 ### 将 SDE 变成 ODE
 
-()
+这一节的目的是将
+
+$$
+\mathrm dx = \left[ f[x(t), t] - g^2(t) \nabla_x \log p(x_t) \right] \mathrm dt + g^2(t) \mathrm dw
+$$
+
+转化为概率流 ODE。
+
+### DDIM, ODE Solvers
 
 ## Appendices
 
@@ -401,3 +427,15 @@ $$
 $$
 
 这样就得到了 $(\mathrm{d}B)^2=\mathrm{d}t$。
+
+题外话：由于布朗运动是处处连续处处不可导的，这才导致了其二次变分的值不为零。考虑一个连续函数 $f$，我们来考虑其二次变分，利用中值定理：
+
+$$
+\begin{align*}
+    \lim_{|\Pi|\rightarrow0}\sum_{i}[f(t_{i+1})-f(t_i)]^2&=\lim_{|\Pi|\rightarrow0}\sum_{i}[\Delta t_i f'(s_i)]^2\\
+    &\le \lim_{|\Pi|\rightarrow0}|\Pi|\sup_{x\in[0,T]} f(x) \sum_i\Delta t_i\\
+    &=\lim_{|\Pi|\rightarrow0}|\Pi|\sup_{x\in[0,T]} f(x) T\\
+    &=\lim_{|\Pi|\rightarrow0}O(|\Pi|)\\
+    &=0
+\end{align*}
+$$
