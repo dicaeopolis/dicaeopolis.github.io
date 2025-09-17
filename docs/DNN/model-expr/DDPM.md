@@ -263,12 +263,6 @@ $$
 
 这就是得分匹配形式的损失函数。我们需要训练一个网络 $s_\theta(x_i, i)$ 接受每一步的图像 $x_i$ 和时间 $i$ 去匹配这个得分函数 $\nabla \log p(x_i)$。
 
-当然，也有很多工作（比如 DPM Solver 那篇）会选择把方差 $\sigma_i$ 丢进平方里面。如图：
-
-![alt text](image-37.png)
-
-（这里放的是概率流 ODE，不过反正都差不多）
-
 这里提一嘴，网上很多 DDPM 的得分匹配形式的推导，用的得分函数是 $\nabla_{x_i}\log p(x_i|x_0)=-\dfrac{\hat\varepsilon_i}{\hat\beta_i}$。不过这样推过来就稍显复杂。只要注意到
 
 $$
@@ -308,7 +302,7 @@ $$
 \mathrm dx = f[x(t), t] \mathrm dt + g(t) \mathrm dw
 $$
 
-（为什么布朗运动的噪声和 $\sqrt{\mathrm dt}$ 有关呢？请参阅本文附录 I）
+（为什么布朗运动的噪声和 $\sqrt{\mathrm dt}$ 有关呢？请参阅本文[附录 I](https://dicaeopolis.github.io/DNN/model-expr/DDPM/#i)）
 
 这就是加噪过程满足的 SDE！
 
