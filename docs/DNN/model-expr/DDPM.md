@@ -467,13 +467,45 @@ $$
 \dfrac{\partial p}{\partial t}=-\nabla_x [f(t)x_t p(x_t)]+\dfrac 12g^2(t)\nabla_x^2p(x_t)
 $$
 
+#### 时间反演
+
 注意到整个推导是和前向过程的 $\mathrm dt$ 前面的系数无关的，因此对于反向过程我们也可以带进去得到：
 
 $$
-\dfrac{\partial p}{\partial t}=-\nabla_x [ \left[ f[x(t), t] - g^2(t) \nabla_x \log p(x_t) \right] p(x_t)]+\dfrac 12g^2(t)\nabla_x^2p(x_t)
+\dfrac{\partial p}{\partial t}=\nabla_x [ \left[ f[x(t), t] - g^2(t) \nabla_x \log p(x_t) \right] p(x_t)]+\dfrac 12g^2(t)\nabla_x^2p(x_t)
 $$
 
-由于二阶项前面的系数直接对应 $\mathrm dw$ 前面的系数，这样就给了我们操作空间，也就是引入一个 $\dfrac 12\sigma^2(t)\nabla_x^2p(x_t)$
+**但是反向过程是时间反演的，因此我们要对第一项加负号！**
+
+由于二阶项前面的系数直接对应 $\mathrm dw$ 前面的系数，这样就给了我们操作空间，也就是引入一个 $\dfrac 12\sigma^2(t)\nabla_x^2p(x_t)$：
+
+$$
+\begin{align*}
+    \dfrac{\partial p}{\partial t}&=\nabla_x [ \left[ f[x(t), t] - g^2(t) \nabla_x \log p(x_t) \right] p(x_t)]+\dfrac 12\nabla_x\left([g^2(t)-\sigma^2(t)]\nabla_x p(x_t)\right)+\dfrac 12\sigma^2(t)\nabla_x^2p(x_t)\\
+    &=\nabla_x [ \left[ f[x(t), t] - g^2(t) \nabla_x \log p(x_t) \right] p(x_t)+\dfrac{1}{2}[g^2(t)-\sigma^2(t)]\nabla_x p(x_t)]+\dfrac 12\sigma^2(t)\nabla_x^2p(x_t)\\
+    &=\nabla_x [ \left[ f[x(t), t] - \dfrac 12\left(g^2(t)+\sigma^2(t)\right) \nabla_x \log p(x_t) \right] p(x_t)]+\dfrac 12\sigma^2(t)\nabla_x^2p(x_t)
+\end{align*}
+$$
+
+那么我们根据这个 Fokker-Planck 方程，就可以写出对应的 SDE 了，但是这一次，方差由我们控制：
+
+$$
+\mathrm dx = \left[ f[x(t), t] - \dfrac 12\left(g^2(t)+\sigma^2(t)\right) \nabla_x \log p(x_t) \right] \mathrm dt + \sigma(t) \mathrm dw
+$$
+
+那么我们让方差变成 $0$，就可以得到对应的**概率流 ODE** 了：
+
+$$
+\mathrm dx = \left[ f(t)x(t) - \dfrac 12g^2(t)\nabla_x \log p(x_t) \right] \mathrm dt
+$$
+
+事实上根据之前的结果，我们是在用神经网络 $s_{\theta}(x_t,t)$ 来拟合得分函数 $\nabla_x \log p(x_t)$，也就是说，我们真正需要对付的 ODE 是这个：
+
+$$
+\mathrm dx = \left[ f(t)x(t) - \dfrac 12g^2(t)s_{\theta}(x_t,t) \right] \mathrm dt
+$$
+
+这一结果为后面的诸多采样器奠定了基础。因为我们可以用各种方法来解出 $x$，也就是我们期望生成的图片，而收敛更快的采样器可以花费更少的计算代价得到更精确的解，也就是质量的图片。
 
 ## Samplers
 
