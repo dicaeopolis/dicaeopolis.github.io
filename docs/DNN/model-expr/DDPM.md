@@ -263,13 +263,15 @@ $$
 
 这就是得分匹配形式的损失函数。我们需要训练一个网络 $s_\theta(x_i, i)$ 接受每一步的图像 $x_i$ 和时间 $i$ 去匹配这个得分函数 $\nabla \log p(x_i)$。
 
-这里提一嘴，网上很多 DDPM 的得分匹配形式的推导，用的得分函数是 $\nabla_{x_i}\log p(x_i|x_0)=-\dfrac{\hat\varepsilon_i}{\hat\beta_i}$。不过这样推过来就稍显复杂。只要注意到
+这里提一嘴，网上很多 DDPM 的得分匹配形式的推导，用的得分函数是这个条件得分函数 $\nabla_{x_i}\log p(x_i|x_0)=-\dfrac{\hat\varepsilon_i}{\hat\beta_i}$。不过这样推过来就稍显复杂。只要注意到
 
 $$
 p(x_i)=\int p(x_i|x_0)p(x_0)\mathrm dx_0=\mathbb{E}_{x_0\sim p(x_0)}[p(x_i|x_0)]
 $$
 
 再带入得分函数，就可以知道两者等价了。[此事在科学空间中已有记载](https://kexue.fm/archives/9509)。
+
+事实上这个形式才更常用。因为扩散模型的一个关键 trick 就是从初始状态 $x_0$ 一步推到任意状态 $x_i$，因此在以后的讨论中我们沿用这一得分函数。
 
 ### 关联上随机微分方程
 
@@ -510,6 +512,36 @@ $$
 ## Samplers
 
 本节主要介绍 arXiv:2206.00927 的工作，也就是 DPM Solver。
+
+在此之前，让我们收集一下前面的理论成果。
+
+首先，经过漫长的理论推导，我们得到了这个概率流 ODE：
+
+$$
+\mathrm dx = \left[ f(t)x(t) - \dfrac 12g^2(t)s_{\theta}(x_t,t) \right] \mathrm dt
+$$
+
+其中出现了很多函数，还有一个神经网络。在“变量替换”这一小节，我们得到：
+
+$$
+f(t)=-\dfrac{\beta(t)}{2}=\dfrac{\mathrm d \log\hat\alpha(t)}{\mathrm dt}
+$$
+
+以及
+
+$$
+g^2(t)=\beta(t)=\dfrac{\mathrm d \hat \beta^2(t)}{\mathrm dt}-\dfrac{2\mathrm d \log\hat\alpha(t)}{\mathrm dt}\hat \beta^2(t)
+$$
+
+其中的参数函数 $\hat\alpha$ 和 $\hat\beta$ 是固定的，可以通过我们的参数调度 $\alpha_i$ 和 $\beta_i$ 轻松计算出来。
+
+其中的神经网络 $s_\theta(x_t,t)$ 是通过得分匹配得到的，也就是利用 $\mathcal{L}_\mathrm{DDPM}$ 来近似得分函数：
+
+$$
+s_\theta(x_t,t)\sim\nabla_{x_t}\log p(x_t|x_0)=-\dfrac{\hat\varepsilon_t}{\hat\beta_t}
+$$
+
+现在这个网络已经训练好了（如果还没有，快去训练！），也就是概率流 ODE 里面的 $f$, $g^2$ 以及 $s_\theta$ 已经确定了，就剩我们的样本 $x$ 需要生成了。
 
 ## Appendices
 
