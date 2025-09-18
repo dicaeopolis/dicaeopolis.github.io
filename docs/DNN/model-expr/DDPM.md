@@ -340,7 +340,7 @@ $$
 如果我们对 $\hat \beta^2(t)$ 求导：
 
 $$
-\dfrac{\mathrm d \hat \beta^2(t)}{\mathrm dt}=\beta(t)\left(-\exp(-\int_0^t\beta(t) \mathrm dt)\right)=\beta(t)(1+\hat \beta^2(t))=\beta(t)+\beta(t)\hat \beta^2(t)
+\dfrac{\mathrm d \hat \beta^2(t)}{\mathrm dt}=\beta(t)\left(\exp(-\int_0^t\beta(t) \mathrm dt)\right)=\beta(t)(1-\hat \beta^2(t))=\beta(t)-\beta(t)\hat \beta^2(t)
 $$
 
 也就是
@@ -352,7 +352,7 @@ $$
 在此意义下我们的 SDE 写成：
 
 $$
-\mathrm dx=f(t)x(t)\mathrm dt+g^2(t)\mathrm dw
+\mathrm dx=f(t)x(t)\mathrm dt+g(t)\mathrm dw
 $$
 
 引入这部分推导，主要是和之前 DDPM 多步并一步的目的是一样的，我们要消去比较麻烦的 $\beta(t)$，转化为可以一步得到的 $\hat\beta(t)$ 和 $\hat\alpha(t)$，同时，也是为后面 DPM Solver 的推导服务。
@@ -408,7 +408,7 @@ $$
 求极限 $\Delta t\rightarrow 0$，再由条件分布转化为 SDE，得到：
 
 $$
-\mathrm dx = \left[ f[x(t), t] - g^2(t) \nabla_x \log p(x_t) \right] \mathrm dt + g^2(t) \mathrm dw
+\mathrm dx = \left[ f[x(t), t] - g^2(t) \nabla_x \log p(x_t) \right] \mathrm dt + g(t) \mathrm dw
 $$
 
 这就是反向过程的 SDE 了。
@@ -432,10 +432,48 @@ $$
 也就是，将
 
 $$
-\mathrm dx = \left[ f[x(t), t] - g^2(t) \nabla_x \log p(x_t) \right] \mathrm dt + g^2(t) \mathrm dw
+\mathrm dx = \left[ f[x(t), t] - g^2(t) \nabla_x \log p(x_t) \right] \mathrm dt + g(t) \mathrm dw
 $$
 
 转化为概率流 ODE。
+
+我们**肯定不能**直接把 $g(t) \mathrm dw$ 项给丢掉，因为方差影响了 SDE 诸多解的“弥散程度”。因此我们需要考虑这一项对总体趋势的影响。或者我们也可以这样看：能不能使用什么手段，手动引入一个可控的方差也就是 $\sigma(t) \mathrm dw$ 来代替原来扩散项，这样就能间接实现整合。
+
+这个手段就是 Fokker-Planck 方程。
+
+#### 前向过程的 Fokker-Planck 方程
+
+考虑让 $y$ 和 $x$ 一一对应，那么
+
+$$
+p(x)=\int \delta(x-y)p(y)\mathrm dy=\mathbb E_{y}[\delta(x-y)]
+$$
+
+那么对于 $p(x_{t+\Delta t})$ 而言：
+
+$$
+\begin{align*}
+    p(x_{t+\Delta t})&=\mathbb E_{x_{t+\Delta t}}[\delta(x-x_{t+\Delta t})]\\
+    &=\mathbb E_{x_{t+\Delta t}}[\delta(x-x_{t}-\Delta x)]\\
+    &\approx\mathbb E_{x_{t+\Delta t}}[\delta(x-x_{t})-\Delta x\cdot\nabla_x\delta(x-x_{t})+\dfrac 12 \Delta x^2\cdot\nabla_x^2\delta(x-x_{t})]\\
+    &=\mathbb E_{x_{t+\Delta t}}[\delta(x-x_{t})-(f(t)x_t\mathrm dt)\cdot\nabla_x\delta(x-x_{t})+\dfrac 12 g^2(t)\mathrm dt\cdot\nabla_x^2\delta(x-x_{t})]\\
+    &=p(x_t)-\nabla_x [f(t)x_t p(x_t)\mathrm dt]+\dfrac 12g^2(t)\mathrm dt\nabla_x^2p(x_t)
+\end{align*}
+$$
+
+此即为 Fokker-Planck 方程：
+
+$$
+\dfrac{\partial p}{\partial t}=-\nabla_x [f(t)x_t p(x_t)]+\dfrac 12g^2(t)\nabla_x^2p(x_t)
+$$
+
+注意到整个推导是和前向过程的 $\mathrm dt$ 前面的系数无关的，因此对于反向过程我们也可以带进去得到：
+
+$$
+\dfrac{\partial p}{\partial t}=-\nabla_x [ \left[ f[x(t), t] - g^2(t) \nabla_x \log p(x_t) \right] p(x_t)]+\dfrac 12g^2(t)\nabla_x^2p(x_t)
+$$
+
+由于二阶项前面的系数直接对应 $\mathrm dw$ 前面的系数，这样就给了我们操作空间，也就是引入一个 $\dfrac 12\sigma^2(t)\nabla_x^2p(x_t)$
 
 ## Samplers
 
