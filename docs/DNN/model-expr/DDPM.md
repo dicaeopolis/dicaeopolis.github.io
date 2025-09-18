@@ -429,7 +429,10 @@ $$
 
 在此之前，让我们看看一个在 Anime Face Dataset 训练的 DDPM 采样 100 步的动图吧：
 
-![alt text](anim_ddim_s50.gif)
+<div style="text-align: center; margin: 20px 0;">
+
+![alt text](anim_ddpm_s100.gif)
+</div>
 
 ### 将 SDE 变成 ODE
 
