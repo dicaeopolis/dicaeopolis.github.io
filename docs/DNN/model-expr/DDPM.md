@@ -1,6 +1,6 @@
 # 扩散模型理论篇: 从多阶段变分自编码器到概率流常微分方程采样器系列
 
-观前提示：本文 $\alpha$ 和 $\beta$ 的定义和原论文差了一个平方的阶，以及 $q$ 和 $p$ 的定义和原论文相反。
+观前提示：本文 $\alpha$ 的定义和原论文差了一个平方的阶，以及 $q$ 和 $p$ 的定义和原论文相反。
 
 ## VAE's revenge
 
@@ -168,10 +168,10 @@ $$
 \mathbb{E}_{w \sim \mathcal{N}(0, I), \varepsilon \sim \mathcal{N}(0, I)} \left[\| \frac{\beta_i \varepsilon - \alpha_i \hat{\beta}_{i-1} w}{\hat{\beta}_i} - \varepsilon_\theta\left( \hat{\alpha}_i x_0 + \beta_i \varepsilon, i \right)\|^2 \right]
 $$
 
-由于 $w$ 和 $\varepsilon$ 独立，先对 $w$ 求期望得一常数，去掉之后，就得到了原论文 DPPM 的损失：
+由于 $w$ 和 $\varepsilon$ 独立，先对 $w$ 求期望得一常数，去掉之后，就得到了原论文 DDPM 的损失：
 
 $$
-\mathcal{L}_{\mathrm{DPPM}} = \sum_{i=1}^T \frac{\beta_i^4}{\hat{\beta}_i^2 \alpha_i^2 \sigma_i^2} \mathbb{E}_{\varepsilon \sim \mathcal{N}(0, I), x_0 \sim p(x_0)} \left[ \| \varepsilon - \frac{\hat{\beta}_i}{\beta_i} \varepsilon_\theta\left( \hat{\alpha}_i x_0 + \beta_i \varepsilon, i \right) \|^2 \right]
+\mathcal{L}_{\mathrm{DDPM}} = \sum_{i=1}^T \frac{\beta_i^4}{\hat{\beta}_i^2 \alpha_i^2 \sigma_i^2} \mathbb{E}_{\varepsilon \sim \mathcal{N}(0, I), x_0 \sim p(x_0)} \left[ \| \varepsilon - \frac{\hat{\beta}_i}{\beta_i} \varepsilon_\theta\left( \hat{\alpha}_i x_0 + \beta_i \varepsilon, i \right) \|^2 \right]
 $$
 
 ## From the perspective of SDE

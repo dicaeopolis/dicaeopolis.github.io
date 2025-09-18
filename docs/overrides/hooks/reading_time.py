@@ -322,7 +322,7 @@ def on_page_markdown(markdown, **kwargs):
     creation_statement = page.meta.get('statement', '')
     no_info = page.meta.get('noinfo', '')
     reading_info = f"""!!! info "📖 阅读信息"
-    阅读时间约 **{reading_time}** 分钟　|　约 **{chinese_chars}** 字"""
+    阅读时间约 **{reading_time+fomula_count//10+code_lines//100}** 分钟　|　约 **{chinese_chars}** 字"""
     if chinese_chars > 10000: reading_info += f"""　⚠️ 万字长文，请慢慢阅读"""
     if fomula_count > 0: reading_info += f"""　|　约 **{fomula_count}** 个公式"""
     if code_lines > 0: reading_info += f"""　|　约 **{code_lines}** 行代码
