@@ -273,6 +273,8 @@ $$
 
 ### 关联上随机微分方程
 
+#### 前向过程
+
 下面我们开始介绍 Song 的论文第二部分：将加噪和去噪的过程关联上随机微分方程。
 
 为此，我们考虑把一共 $T$ 步的离散过程，转化为对 $t\in[0,1]$ 的连续过程的微元近似，因此我们先做换元，引入连续量：
@@ -304,7 +306,58 @@ $$
 
 （为什么布朗运动的噪声和 $\sqrt{\mathrm dt}$ 有关呢？请参阅本文[附录 I](https://dicaeopolis.github.io/DNN/model-expr/DDPM/#i)）
 
-这就是加噪过程满足的 SDE！
+这就是加噪过程满足的 SDE。在原论文中对应 VP-SDE 那一节，也就是离散近似的 SDE。
+
+#### 变量替换
+
+我们对这个 SDE 做一些变换，导出其更有用的形式。
+
+从 $\alpha_i \sim 1 - \dfrac{\beta(t + \Delta t) \cdot \Delta t}{2}$ 也就是 $\alpha_i = 1 - \dfrac{\beta(t_i)}{2}\mathrm dt$
+
+让我们计算 $\hat \alpha_i$ 在连续意义上的对应 $\hat \alpha(t)$，由于涉及到连乘，我们两边取对数：
+
+$$
+\begin{align*}
+    \log \hat \alpha(t)&=\sum_{k=1}^i\log \alpha_i\\
+    &=\sum_{k=1}^i\log (1 - \dfrac{\beta(t_i)}{2}\mathrm dt)\\
+    &\sim \sum_{k=1}^i - \dfrac{\beta(t_i)}{2}\mathrm dt\\
+    &=-\frac 12\int_0^t\beta(t) \mathrm dt
+\end{align*}
+$$
+
+这里利用了 $\log$ 的一阶泰勒展开。对应的，我们有
+
+$$
+\hat \beta^2(t)=1-\hat \alpha^2(t)=1-\exp(-\int_0^t\beta(t) \mathrm dt)
+$$
+
+以及
+
+$$
+f(t)=-\dfrac{\beta(t)}{2}=\dfrac{\mathrm d \log\hat\alpha(t)}{\mathrm dt}
+$$
+
+如果我们对 $\hat \beta^2(t)$ 求导：
+
+$$
+\dfrac{\mathrm d \hat \beta^2(t)}{\mathrm dt}=\beta(t)\left(-\exp(-\int_0^t\beta(t) \mathrm dt)\right)=\beta(t)(1+\hat \beta^2(t))=\beta(t)+\beta(t)\hat \beta^2(t)
+$$
+
+也就是
+
+$$
+g^2(t)=\beta(t)=\dfrac{\mathrm d \hat \beta^2(t)}{\mathrm dt}-\dfrac{2\mathrm d \log\hat\alpha(t)}{\mathrm dt}\hat \beta^2(t)
+$$
+
+在此意义下我们的 SDE 写成：
+
+$$
+\mathrm dx=f(t)x(t)\mathrm dt+g^2(t)\mathrm dw
+$$
+
+引入这部分推导，主要是和之前 DDPM 多步并一步的目的是一样的，我们要消去比较麻烦的 $\beta(t)$，转化为可以一步得到的 $\hat\beta(t)$ 和 $\hat\alpha(t)$，同时，也是为后面 DPM Solver 的推导服务。
+
+#### 反向过程
 
 那么如何获得去噪过程的反向 SDE 呢？又如何与刚才得到的得分匹配形式相联系呢？当然是利用贝叶斯公式，为此我们先将上面的 SDE 写成条件分布：
 
