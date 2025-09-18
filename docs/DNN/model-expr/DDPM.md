@@ -282,7 +282,7 @@ $$
 为此，我们考虑把一共 $T$ 步的离散过程，转化为对 $t\in[0,1]$ 的连续过程的微元近似，因此我们先做换元，引入连续量：
 
 $$
-x_i = x(t),\quad\alpha_i = \sqrt{1 - \frac{1}{T} \beta\left(t + \frac{1}{T}\right)} = \sqrt{1 - \Delta t \cdot \beta(t + \Delta t)},\\
+x_i = x(t),\quad\alpha_i = \sqrt{1 - \frac{1}{T} \beta\left(t + \frac{1}{T}\right)} = \sqrt{1 - \Delta t \cdot \beta(t + \Delta t)},\quad\\
 x_{i+1} = x\left(t + \frac{1}{T}\right) = x(t + \Delta t),\quad\beta_i = \sqrt{\frac{1}{T}} \beta\left(t + \frac{1}{T}\right) = \sqrt{\Delta t \cdot \beta(t + \Delta t)}
 $$
 
@@ -535,7 +535,7 @@ $$
 
 其中的参数函数 $\hat\alpha$ 和 $\hat\beta$ 是固定的，可以通过我们的参数调度 $\alpha_i$ 和 $\beta_i$ 轻松计算出来。
 
-其中的神经网络 $s_\theta(x_t,t)$ 是通过得分匹配得到的，也就是利用 $\mathcal{L}_\mathrm{DDPM}$ 来近似得分函数：
+其中的神经网络 $s_\theta(x_t,t)$ 是通过得分匹配得到的，也就是利用 $\mathcal{L}_\mathrm{DDPM}$ 来预测噪声也就是近似得分函数：
 
 $$
 s_\theta(x_t,t)\sim\nabla_{x_t}\log p(x_t|x_0)=-\dfrac{\hat\varepsilon_t}{\hat\beta_t}

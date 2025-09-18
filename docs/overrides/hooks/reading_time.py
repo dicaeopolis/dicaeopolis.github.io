@@ -140,6 +140,173 @@ def generate_citation(page, config):
 """
     return citation
 
+def count_fomula(text: str) -> int:
+    """
+    统计文本中以 $...$（行内）与 $$...$$（行间）包裹的 LaTeX 公式数量。
+    规则与处理：
+      - 忽略代码块内容：支持 ``` 与 ~~~ 围栏代码块（fenced code block）
+      - 忽略行内代码：`...`（支持任意数量反引号作为定界符）
+      - 处理转义：被反斜杠转义的 $（如 \$）不作为定界符
+      - $$...$$ 可跨行，$...$ 也可跨行（若未闭合则不计数）
+      - 仅统计使用 $ 或 $$ 作为定界符的公式，其他如 KATEX_INLINE_OPEN KATEX_INLINE_CLOSE 不计
+
+    参数:
+        text: 原始 Markdown 文本
+
+    返回:
+        int: 公式总数
+    """
+    n = len(text)
+    i = 0
+    count = 0
+
+    in_fenced = False
+    fence_char = ''
+    fence_len = 0
+
+    in_inline_code = False
+    inline_tick_len = 0
+
+    in_math_inline = False
+    in_math_display = False
+
+    def is_escaped(pos: int) -> bool:
+        # 判断 text[pos] 是否被奇数个反斜杠转义
+        bs = 0
+        j = pos - 1
+        while j >= 0 and text[j] == '\\':
+            bs += 1
+            j -= 1
+        return (bs % 2) == 1
+
+    while i < n:
+        sol = (i == 0 or text[i - 1] == '\n')  # start of line
+
+        # 1) 已在围栏代码块中：仅在行首检查关闭围栏
+        if in_fenced:
+            if sol:
+                j = i
+                # 跳过最多 3 个空白（CommonMark 允许最多 3 个缩进）
+                spaces = 0
+                while j < n and text[j] in ' \t' and spaces < 3:
+                    j += 1
+                    spaces += 1
+                if j < n and text[j] == fence_char:
+                    k = j
+                    while k < n and text[k] == fence_char:
+                        k += 1
+                    if (k - j) >= fence_len:
+                        # 关闭围栏：跳到本行行尾
+                        while k < n and text[k] != '\n':
+                            k += 1
+                        i = k + 1 if k < n else k
+                        in_fenced = False
+                        continue
+            # 未遇到关闭围栏，逐字符跳过
+            i += 1
+            continue
+
+        # 2) 行首检查开启围栏代码块
+        if not in_inline_code and not in_math_inline and not in_math_display and sol:
+            j = i
+            spaces = 0
+            while j < n and text[j] in ' \t' and spaces < 3:
+                j += 1
+                spaces += 1
+            if j < n and text[j] in ('`', '~'):
+                c = text[j]
+                k = j
+                while k < n and text[k] == c:
+                    k += 1
+                run = k - j
+                if run >= 3:
+                    # 开启围栏：记录围栏信息并跳到本行末
+                    in_fenced = True
+                    fence_char = c
+                    fence_len = run
+                    while k < n and text[k] != '\n':
+                        k += 1
+                    i = k + 1 if k < n else k
+                    continue
+
+        # 3) 行内代码 `...`（支持可变数量反引号）
+        if in_inline_code:
+            if text[i] == '`':
+                k = i
+                while k < n and text[k] == '`':
+                    k += 1
+                run = k - i
+                if run == inline_tick_len:
+                    in_inline_code = False
+                    i = k
+                    continue
+                else:
+                    i += 1
+                    continue
+            else:
+                i += 1
+                continue
+        else:
+            if text[i] == '`' and not in_math_inline and not in_math_display:
+                k = i
+                while k < n and text[k] == '`':
+                    k += 1
+                inline_tick_len = k - i
+                in_inline_code = True
+                i = k
+                continue
+
+        # 4) 数学模式
+        if not in_math_inline and not in_math_display:
+            if text[i] == '$' and not is_escaped(i):
+                # 统计连续 $ 的个数
+                k = i
+                while k < n and text[k] == '$':
+                    k += 1
+                run = k - i
+                if run >= 2:
+                    # $$ 开启行间数学
+                    in_math_display = True
+                    i += 2
+                    continue
+                else:
+                    # $ 开启行内数学
+                    in_math_inline = True
+                    i += 1
+                    continue
+            else:
+                i += 1
+                continue
+
+        # 行内数学：寻找单个未转义的 $ 作为闭合
+        if in_math_inline:
+            if text[i] == '$' and not is_escaped(i):
+                in_math_inline = False
+                count += 1
+                i += 1
+                continue
+            else:
+                i += 1
+                continue
+
+        # 行间数学：寻找未转义的 $$ 作为闭合
+        if in_math_display:
+            if text[i] == '$' and not is_escaped(i):
+                if i + 1 < n and text[i + 1] == '$':
+                    in_math_display = False
+                    count += 1
+                    i += 2
+                    continue
+                else:
+                    # 单个 $ 在行间数学内视作普通字符
+                    i += 1
+                    continue
+            else:
+                i += 1
+                continue
+
+    return count
+
 def on_page_markdown(markdown, **kwargs):
     page = kwargs['page']
     config = kwargs['config']
@@ -151,11 +318,13 @@ def on_page_markdown(markdown, **kwargs):
     if page_type in EXCLUDE_TYPES: return markdown
     if len(markdown) < 300: return markdown
     reading_time, chinese_chars, code_lines = calculate_reading_stats(markdown)
+    fomula_count = count_fomula(markdown)
     creation_statement = page.meta.get('statement', '')
     no_info = page.meta.get('noinfo', '')
     reading_info = f"""!!! info "📖 阅读信息"
     阅读时间约 **{reading_time}** 分钟　|　约 **{chinese_chars}** 字"""
     if chinese_chars > 10000: reading_info += f"""　⚠️ 万字长文，请慢慢阅读"""
+    if fomula_count > 0: reading_info += f"""　|　约 **{fomula_count}** 个公式"""
     if code_lines > 0: reading_info += f"""　|　约 **{code_lines}** 行代码
 
 """
