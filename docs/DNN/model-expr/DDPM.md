@@ -685,8 +685,9 @@ $$
 
 我们取前 $k$ 阶泰勒展开得到的采样器，就叫做 DPM-Solver-k。具体的积分计算，可以交给 Mathematica 得到闭式解。于是可以得到论文里面的采样器流程了：
 
+DPM-Solver-2:
+
 $$
-\mathrm{DPM-Solver-2}\\
 \begin{align*}
 &\mathrm{Require}: \text{ initial value } x_T, \text{ time steps } \{t_i\}_{i=0}^M, \text{ model } \epsilon_\theta \\
 &\tilde{x}_{t_0} \leftarrow x_T \\
@@ -699,10 +700,9 @@ $$
 \end{align*}
 $$
 
-以及
+以及 DPM-SOlver-3:
 
 $$
-\mathrm{DPM-Solver-3}\\
 \begin{align*}
 &\mathrm{Require}: \text{ initial value } x_T, \text{ time steps } \{t_i\}_{i=0}^M, \text{ model } \epsilon_\theta \\
 &\tilde{x}_{t_0} \leftarrow x_T, \ r_1 \leftarrow \frac{1}{3}, \ r_2 \leftarrow \frac{2}{3} \\
