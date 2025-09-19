@@ -161,6 +161,8 @@ nav:
       - 符号梯度下降: 'DNN/optimizer/SignGD.md'
       - 自适应学习率改进策略: 'DNN/optimizer/Adaptive.md'
       - SGD 系列算法: 'DNN/optimizer/SGD.md'
+    - 深度学习模型攻击理论与复现归档:
+      - 'DNN/model-attack/index.md'
   - 校内课程知识:
     - 'campus-sources/index.md'
     - 《计算机组成原理》理论课程作业与笔记归档: 'campus-sources/SDC_assignments.md'
