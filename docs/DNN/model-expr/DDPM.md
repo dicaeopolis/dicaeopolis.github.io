@@ -427,12 +427,6 @@ $$
 
 至此，DDPM、得分匹配和 SDE 的理论已然打通。我们就可以基于丰富发展的 SDE 理论，玩一些花活了。
 
-在此之前，让我们看看一个在 Anime Face Dataset 训练的 DDPM 采样 100 步的动图吧：
-
-<div style="text-align: center; margin: 20px 0;">
-    <img src = "../anim_ddpm_s100.gif" />
-</div>
-
 ### 将 SDE 变成 ODE
 
 这一节介绍 Song 的论文的第三部分：概率流 ODE 的推导。
@@ -517,6 +511,36 @@ $$
 
 ## Inference: Samplers
 
+### DDPM
+
+回忆一下 DDPM 的训练：
+
+$$
+x_{i-1}=\mu(x_i) = \frac{1}{\alpha_i} \left[ x_i - \beta_i \varepsilon_\theta(x_i, i) \right]
+$$
+
+使用的损失：
+
+$$
+\| \varepsilon - \frac{\hat{\beta}_i}{\beta_i} \varepsilon_\theta\left( \hat{\alpha}_i x_0 + \beta_i \varepsilon, i \right) \|^2=\|\varepsilon-s_\theta\|^2
+$$
+
+但实际上我们训练的是预测噪声，因此得到的是 $s_\theta$，所以要得到 $x_{i-1}$ 就需要：
+
+$$
+x_{i-1}= \frac{1}{\alpha_i} \left[ x_i - \dfrac{\beta_i^2}{\hat\beta_i} s_\theta(x_i, i) \right]+\sigma_i z,\quad z\sim\mathcal{N}(0,I)
+$$
+
+引入的噪声项是基于和反向过程的完全对应。这就得到了 DDPM 的采样公式。从 $\mathcal N(0,1)$ 中采样一个 $x_T$，然后逐步往前推，就能生成图片了。
+
+让我们看看一个在 Anime Face Dataset 训练的 DDPM 采样 100 步的动图吧：
+
+<div style="text-align: center; margin: 20px 0;">
+    <img src = "../anim_ddpm_s100.gif" />
+</div>
+
+### Euler, DDIM, DPM Solver
+
 本节主要介绍 arXiv:2206.00927 的工作，也就是 DPM Solver。
 
 在此之前，让我们收集一下前面的理论成果。
@@ -548,6 +572,151 @@ s_\theta(x_t,t)\sim\nabla_{x_t}\log p(x_t|x_0)=-\dfrac{\hat\varepsilon_t}{\hat\b
 $$
 
 现在这个网络已经训练好了（如果还没有，快去训练！），也就是概率流 ODE 里面的 $f$, $g^2$ 以及 $s_\theta$ 已经确定了，就剩我们的样本 $x$ 需要生成了。
+
+#### 简单 Euler 法
+
+最简单最朴实的方法就是将概率流 ODE 看成
+
+$$
+\mathrm{d}x = \epsilon_\theta(x_t, t)\mathrm{d} t
+$$
+
+然后离散化：
+
+$$
+\Delta x = \epsilon_\theta(x_t, t)\Delta t\Rightarrow x_{t-1}=x_t+\epsilon_\theta(x_t, t)\Delta t=[1-\dfrac{\beta(t)}{2T}]x_t-\dfrac{\beta(t)}{2T}s_\theta
+$$
+
+最后得到
+
+$$
+x_{t-1}=[1-\dfrac{\beta(t)}{2T}]x_t-\dfrac{\beta(t)}{2T\hat\beta_t}\varepsilon_\theta
+$$
+
+当然这里的离散化我只挑了最简单的线性近似，当然可以使用 Runge-Kutta 法求解。同时还可以像 DDPM 采样器一样，添入一个噪声项得到祖先采样器（名字后面带 a 的）。
+
+#### DDIM
+
+概率流 ODE 相对比较特殊，它可以拆成两半，前面不含神经网络参数，后面只含有神经网络参数：
+
+$$
+\mathrm dx = \underbrace{f(t)x(t)\mathrm dt}_{\mathrm{Linear\ part}} - \underbrace{\dfrac 12g^2(t)s_{\theta}(x_t,t)  \mathrm dt}_\mathrm{Neural\ part}
+$$
+
+由于 $f$ 已知，所以前面的线性项可以精确地积出来！也就是利用常数变易法：
+
+$$
+x_t=\exp\left(\int_s^tf(\tau)\mathrm{d}\tau\right)x_s-\int_s^t\left(\exp(\int_\tau^tf(r)\mathrm{d}r)\cdot \dfrac 12g^2(\tau)s_{\theta}(x_\tau,\tau)\right)\mathrm{d}\tau
+$$
+
+然后第一项就可以直接积出来了：
+
+$$
+f(t)=\dfrac{\mathrm d \log\hat\alpha(t)}{\mathrm dt}\Rightarrow \exp\left(\int_s^tf(\tau)\mathrm{d}\tau\right)=\dfrac{\hat\alpha(t)}{\hat\alpha(s)}
+$$
+
+对 $g^2$ 做一个换元：
+
+$$
+g^2(t)=\dfrac{\mathrm d \hat \beta^2(t)}{\mathrm dt}-\dfrac{2\mathrm d \log\hat\alpha(t)}{\mathrm dt}\hat \beta^2(t)=2\hat\beta^2(t)\left(\dfrac{\mathrm d\log\hat\beta(t)}{\mathrm dt}-\dfrac{\mathrm d \log\hat\alpha(t)}{\mathrm dt}\right):=-2\hat\beta^2(t)\dfrac{\mathrm d\lambda(t)}{\mathrm dt}
+$$
+
+丢进前面的式子：
+
+$$
+\begin{align*}
+    x_t&=\exp\left(\int_s^tf(\tau)\mathrm{d}\tau\right)x_s-\int_s^t\left(\exp(\int_\tau^tf(r)\mathrm{d}r)\cdot \dfrac 12g^2(\tau)s_{\theta}(x_\tau,\tau)\right)\mathrm{d}\tau\\
+    &=\dfrac{\hat\alpha(t)}{\hat\alpha(s)}x_s+\int^t_s\left(\dfrac{\hat\alpha(t)}{\hat\alpha(\tau)}\hat\beta^2(\tau)\dfrac{\mathrm d\lambda(\tau)}{\mathrm d\tau}s_{\theta}(x_\tau,\tau)\right)\mathrm{d}\tau\\
+    &=\dfrac{\hat\alpha(t)}{\hat\alpha(s)}x_s-\hat\alpha(t)\int^t_s\left(\dfrac{\hat\beta(\tau)}{\hat\alpha(\tau)}\dfrac{\mathrm d\lambda(\tau)}{\mathrm d\tau}\varepsilon_{\theta}(x_\tau,\tau)\right)\mathrm{d}\tau\\
+    &=\dfrac{\hat\alpha(t)}{\hat\alpha(s)}x_s-\hat\alpha(t)\int^{\lambda_t}_{\lambda_s}e^{-\lambda}\varepsilon_{\theta}(x_{\lambda},\lambda)\mathrm{d}\lambda
+\end{align*}
+$$
+
+最后一步是换元，利用了：
+
+$$
+\dfrac{\mathrm d\log\hat\beta(t)}{\mathrm dt}-\dfrac{\mathrm d \log\hat\alpha(t)}{\mathrm dt}=\dfrac{\mathrm d \log\dfrac{\hat\beta(t)}{\hat\alpha(t)}}{\mathrm dt}=-\dfrac{\mathrm d\lambda(t)}{\mathrm dt}
+$$
+
+下面的任务是对积分
+
+$$
+\int^{\lambda_t}_{\lambda_s}e^{-\lambda}\varepsilon_{\theta}(x_{\lambda},\lambda)\mathrm{d}\lambda
+$$
+
+进行近似。我们考虑最简单的近似法，把神经网络的参数看作常量：
+
+$$
+\begin{align*}
+    \int^{\lambda_t}_{\lambda_s}e^{-\lambda}\varepsilon_{\theta}(x_{\lambda},\lambda)\mathrm{d}\lambda&\approx\varepsilon_{\theta}(x_{\lambda_s},\lambda_s)\int^{\lambda_t}_{\lambda_s}e^{-\lambda}\mathrm{d}\lambda\\
+    &=(e^{-\lambda_s}-e^{-\lambda_t})\varepsilon_{\theta}(x_{\lambda_s},\lambda_s)\\
+    &=e^{-\lambda_t}(e^{h_i}-1)\varepsilon_{\theta}(x_{\lambda_s},\lambda_s)\\
+    &=\dfrac{\hat\beta(t)}{\hat\alpha(t)}(e^{h_i}-1)\varepsilon_{\theta}(x_{\lambda_s},\lambda_s),\quad h_i=\lambda_t-\lambda_s
+\end{align*}
+$$
+
+这样我们就得到了**一阶近似**，也就是 DDIM 采样器：
+
+$$
+x_{t-1}=\dfrac{\hat\alpha(t)}{\hat\alpha(t-1)}x_t-\hat\beta(t)(e^{h_i}-1)\varepsilon_{\theta}(x_{\lambda_{t-1}},\lambda_{t-1}),\quad h_i=\lambda_t-\lambda_{t-1}
+$$
+
+#### DPM Solvers
+
+其实这个积分
+
+$$
+\int^{\lambda_t}_{\lambda_s}e^{-\lambda}\varepsilon_{\theta}(x_{\lambda},\lambda)\mathrm{d}\lambda
+$$
+
+还有更好的近似方法。刚刚是把 $\varepsilon_{\theta}(x_{\lambda},\lambda)$ 估计成常数，但我们也可以对其进行泰勒展开：
+
+$$
+\varepsilon_{\theta}(x_{\lambda},\lambda)=\sum^{k-1}_{n=0}\varepsilon_{\theta}^{(n)}(x_{\lambda_{i-1}},\lambda_{i-1})\cdot\dfrac{(\lambda-\lambda_{i-1})^n}{n!}
+$$
+
+对各阶导数估计到常数，就只剩下了
+
+$$
+\int^{\lambda_t}_{\lambda_s}e^{-\lambda}\dfrac{(\lambda-\lambda_{i-1})^n}{n!}\mathrm{d}\lambda
+$$
+
+要求出来，而这是一个正整数次数多项式乘以指数的积分，**完全可以使用分部积分法解出解析解**！
+
+我们取前 $k$ 阶泰勒展开得到的采样器，就叫做 DPM-Solver-k。具体的积分计算，可以交给 Mathematica 得到闭式解。于是可以得到论文里面的采样器流程了：
+
+$$
+\mathrm{DPM-Solver-2}\\
+\begin{align*}
+&\mathrm{Require}: \text{ initial value } x_T, \text{ time steps } \{t_i\}_{i=0}^M, \text{ model } \epsilon_\theta \\
+&\tilde{x}_{t_0} \leftarrow x_T \\
+&\mathrm{for} \ i \leftarrow 1 \ \mathrm{to} \ M \ \mathrm{do} \\
+&\quad s_i \leftarrow \lambda \left( \frac{\lambda t_{i-1} + \lambda t_i}{2} \right) \\
+&\quad u_i \leftarrow \frac{\alpha_{s_i}}{\alpha_{t_{i-1}}} \tilde{x}_{t_{i-1}} - \sigma_{s_i} \left( e^{\frac{h_i}{2}} - 1 \right) \epsilon_\theta(\tilde{x}_{t_{i-1}}, t_{i-1}) \\
+&\quad \tilde{x}_{t_i} \leftarrow \frac{\alpha_{t_i}}{\alpha_{t_{i-1}}} \tilde{x}_{t_{i-1}} - \sigma_{t_i} \left( e^{h_i} - 1 \right) \epsilon_\theta(u_i, s_i) \\
+&\mathrm{end \ for} \\
+&\mathrm{return} \ \tilde{x}_{t_M}
+\end{align*}
+$$
+
+以及
+
+$$
+\mathrm{DPM-Solver-3}\\
+\begin{align*}
+&\mathrm{Require}: \text{ initial value } x_T, \text{ time steps } \{t_i\}_{i=0}^M, \text{ model } \epsilon_\theta \\
+&\tilde{x}_{t_0} \leftarrow x_T, \ r_1 \leftarrow \frac{1}{3}, \ r_2 \leftarrow \frac{2}{3} \\
+&\mathrm{for} \ i \leftarrow 1 \ \mathrm{to} \ M \ \mathrm{do} \\
+&\quad s_{2i-1} \leftarrow t_\lambda \left( \lambda t_{i-1} + r_1 h_i \right), \quad s_{2i} \leftarrow t_\lambda \left( \lambda t_{i-1} + r_2 h_i \right) \\
+&\quad u_{2i-1} \leftarrow \frac{\alpha_{s_{2i-1}}}{\alpha_{t_{i-1}}} \tilde{x}_{t_{i-1}} - \sigma_{s_{2i-1}} \left( e^{r_1 h_i} - 1 \right) \epsilon_\theta(\tilde{x}_{t_{i-1}}, t_{i-1}) \\
+&\quad D_{2i-1} \leftarrow \epsilon_\theta(u_{2i-1}, s_{2i-1}) - \epsilon_\theta(\tilde{x}_{t_{i-1}}, t_{i-1}) \\
+&\quad u_{2i} \leftarrow \frac{\alpha_{s_{2i}}}{\alpha_{t_{i-1}}} \tilde{x}_{t_{i-1}} - \sigma_{s_{2i}} \left( e^{r_2 h_i} - 1 \right) \epsilon_\theta(\tilde{x}_{t_{i-1}}, t_{i-1}) - \frac{\sigma_{s_{2i}} r_2}{r_1} \left( \frac{e^{r_2 h_i} - 1}{r_2 h_i} - 1 \right) D_{2i-1} \\
+&\quad D_{2i} \leftarrow \epsilon_\theta(u_{2i}, s_{2i}) - \epsilon_\theta(\tilde{x}_{t_{i-1}}, t_{i-1}) \\
+&\quad \tilde{x}_{t_i} \leftarrow \frac{\alpha_{t_i}}{\alpha_{t_{i-1}}} \tilde{x}_{t_{i-1}} - \sigma_{t_i} \left( e^{h_i} - 1 \right) \epsilon_\theta(\tilde{x}_{t_{i-1}}, t_{i-1}) - \frac{\sigma_{t_i}}{r_2} \left( \frac{e^{h_i} - 1}{h_i} - 1 \right) D_{2i} \\
+&\mathrm{end \ for} \\
+&\mathrm{return} \ \tilde{x}_{t_M}
+\end{align*}
+$$
 
 ## Appendices
 
