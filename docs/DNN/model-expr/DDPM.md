@@ -700,7 +700,7 @@ $$
 \end{align*}
 $$
 
-以及 DPM-SOlver-3:
+以及 DPM-Solver-3:
 
 $$
 \begin{align*}
