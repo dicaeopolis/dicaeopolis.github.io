@@ -8,7 +8,7 @@
 
 ![alt text](image-15.png)
 
-记 2 + 2 = 4 为 p，3 + 3 = 6 为 q。
+记 2 \lor 2 = 4 为 p，3 \lor 3 = 6 为 q。
 
 - (1) $p\rightarrow q$, 真
 - (2) $p\rightarrow \neg q$，假
@@ -47,3 +47,79 @@
 - (2) $((p \to q) \land (q \to p)) \leftrightarrow (p \leftrightarrow q)=(p \leftrightarrow q)\leftrightarrow(p \leftrightarrow q)=1$ 为重言式。
 - (3) $(\neg p \to q) \to (q \to \neg p)=(\neg(\neg p) \lor q)\to (\neg q \lor \neg p)$
 $=(p \lor q)\to \neg(q \land p)=\neg(p \lor q)\lor \neg(q \land p)=\neg(p \lor q\land q \land p)=\neg(p\land q)$ 为可满足式。
+
+## 第二周作业
+
+![alt text](image-22.png)
+
+(1)
+主析取范式：
+$$
+\begin{align*}
+    (p\lor(q\land r))\to (p\land q\land r)&\Leftrightarrow \neg(p\lor(q\land r))\lor (p\land q\land r)\\
+    &\Leftrightarrow(\neg p \land (\neg q\lor \neg r))\lor (p\land q\land r)\\
+    &\Leftrightarrow(\neg p\neg q(r\lor\neg r)\lor\neg p\neg r(q\lor\neg q))\lor(pqr)\\
+    &\Leftrightarrow(\neg p\land \neg q\land r)\lor(\neg p\land \neg q\land \neg r)\lor(\neg p\land q\land \neg r)\lor (p\land q\land r)
+\end{align*}
+$$
+
+由此得到成真赋值和成假赋值：
+
+$$
+pqr_{\mathrm{成真赋值}} = \{000, 001, 010, 111\}\\
+pqr_{\mathrm{成假赋值}} = \{011, 100, 101, 110\}
+$$
+
+主合取范式可由成假赋值直接得到：
+
+$$
+(p\lor(q\land r))\to (p\land q\land r)\Leftrightarrow(\neg p\lor q\lor r)\land(p\lor \neg q\land \neg r)\land(p\lor \neg q\lor r)\land (p\lor q\lor \neg r)
+$$
+
+(2)
+主析取范式：
+$$
+\begin{align*}
+    (\neg p\to q)\to(\neg q\lor p)&\Leftrightarrow\neg(p\lor q)\lor(\neg q\lor p)\\
+    &\Leftrightarrow(\neg p\land \neg q)\lor(\neg q\lor p)\\
+    &\Leftrightarrow(\neg p\land \neg q)\lor(\neg q\land(p\lor \neg p)\lor p\land(q\lor \neg q))\\
+    &\Leftrightarrow(\neg p\land \neg q)\lor(p\land \neg q)\lor(p\land q)
+\end{align*}
+$$
+
+由此得到成真赋值和成假赋值：
+
+$$
+pq_{\mathrm{成真赋值}} = \{00,10,11\}\\
+pq_{\mathrm{成假赋值}} = \{01\}
+$$
+
+主合取范式可由成假赋值直接得到：
+
+$$
+(\neg p\to q)\to(\neg q\lor p)\Leftrightarrow p\land\neg q
+$$
+
+(3)
+主析取范式：
+$$
+\begin{align*}
+    \neg (p\to q)\land q\land r&\Leftrightarrow \neg (\neg p\lor q)\land q\land r\\
+    &\Leftrightarrow(p\land \neg q)\land q\land r\\
+    &\Leftrightarrow0
+\end{align*}
+$$
+
+由此得到成真赋值和成假赋值：
+
+$$
+pq_{\mathrm{成真赋值}} = \{\}\\
+pq_{\mathrm{成假赋值}} = \{000,001,010,011,100,101,110,111\}
+$$
+
+主合取范式可由成假赋值直接得到：
+
+$$
+\neg (p\to q)\land q\land r\Leftrightarrow\\
+(p \lor q \lor r) \land (p \lor q \lor \neg r) \land (p \lor \neg q \lor r) \land (p \lor \neg q \lor \neg r) \land (\neg p \lor q \lor r) \land (\neg p \lor q \lor \neg r) \land (\neg p \lor \neg q \lor r) \land (\neg p \lor \neg q \lor \neg r)
+$$
