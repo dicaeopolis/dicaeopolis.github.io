@@ -27,3 +27,70 @@ $$
 $$
 P=\dfrac{B\cap (A\cup \bar B)}{A\cup \bar B}=\dfrac{\mathrm{II}}{\mathrm{I+II+IV}}=\dfrac{0.2}{0.5+0.2+0.1}=\dfrac{1}{4}
 $$
+
+## 第二周作业
+
+![alt text](image-19.png)
+
+(1)
+
+第一次取分为两个步骤：选箱子+选零件。
+
+$$
+P(A)=\dfrac{1}{2}\times\dfrac{10}{50}+\dfrac{1}{2}\times\dfrac{18}{30}=\dfrac{2}{5}
+$$
+
+(2)
+
+根据条件概率公式：
+
+$$
+P(B|A)=\dfrac{P(AB)}{P(A)}
+$$
+
+其中
+
+$$
+P(AB)=\dfrac{1}{2}\times\dfrac{10}{50}\times\dfrac{9}{49}+\dfrac{1}{2}\times\dfrac{18}{30}\times\dfrac{17}{29}=\dfrac{276}{1421}
+$$
+
+则
+
+$$
+P(B|A)=\dfrac{276}{1421}\times\dfrac{5}{2}=\dfrac{690}{1421}
+$$
+
+![alt text](image-20.png)
+
+(1) 和 (2) 必然假。 $P(AB)=P(A)P(B)=0$ 与 $P(A)>0, P(B)>0$ 矛盾
+
+(3) 必然假。 若 $B$ 与 $A$ 不相容则必然 $P(B)<1-P(A)$，这就矛盾。
+
+(4) 可能对。考虑随机变量 $x$ 服从一个 $[0,1]$ 上的均匀分布。
+
+成立的情形：
+
+$$
+P(A)=P(0<x<0.6)\\
+P(B)=P(0.24<x<0.84)
+$$
+
+则 $P(AB)=P(A)P(B)=0.36$
+
+不成立的情形：
+
+$$
+P(A)=P(0<x<0.6)\\
+P(B)=P(0.4<x<1)
+$$
+
+则 $P(AB)=0.2\neq P(A)P(B)=0.36$
+
+![alt text](image-21.png)
+
+$$
+P(B)=\underbrace{0.8\times(1-2\%)^3}_{P(BA_1)}+\underbrace{0.15\times(1-10\%)^3}_{P(BA_2)}+\underbrace{0.05\times(1-90\%)^3}_{P(BA_3)}=0.8623536\\
+P(A_1|B)=\dfrac{P(BA_1)}{P(B)}=0.8731378868250795\\
+P(A_2|B)=\dfrac{P(BA_2)}{P(B)}=0.12680413231880752\\
+P(A_3|B)=\dfrac{P(BA_3)}{P(B)}=0.00005798085611285204\\
+$$
