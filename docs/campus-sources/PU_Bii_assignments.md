@@ -21,3 +21,21 @@
 ![alt text](image-10.png)
 
 ![alt text](187AF4A017965A9A6F181613A56E091B.jpg)
+
+## 第二周作业
+
+![alt text](image-23.png)
+
+![alt text](image-24.png)
+
+![alt text](image-25.png)
+
+![alt text](b3323ea4860d2f8dde53dff5f9aedecf.jpeg)
+
+![alt text](image-26.png)
+
+![alt text](image-27.png)
+
+![alt text](image-28.png)
+
+![alt text](c3ac2b4536e1e88ef004fef63f530319.jpeg)
