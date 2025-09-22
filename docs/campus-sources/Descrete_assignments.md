@@ -54,6 +54,7 @@ $=(p \lor q)\to \neg(q \land p)=\neg(p \lor q)\lor \neg(q \land p)=\neg(p \lor q
 
 (1)
 主析取范式：
+
 $$
 \begin{align*}
     (p\lor(q\land r))\to (p\land q\land r)&\Leftrightarrow \neg(p\lor(q\land r))\lor (p\land q\land r)\\
@@ -78,6 +79,7 @@ $$
 
 (2)
 主析取范式：
+
 $$
 \begin{align*}
     (\neg p\to q)\to(\neg q\lor p)&\Leftrightarrow\neg(p\lor q)\lor(\neg q\lor p)\\
@@ -102,6 +104,7 @@ $$
 
 (3)
 主析取范式：
+
 $$
 \begin{align*}
     \neg (p\to q)\land q\land r&\Leftrightarrow \neg (\neg p\lor q)\land q\land r\\
