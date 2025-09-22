@@ -34,7 +34,7 @@ $$
 
 $$
 \begin{align*}
-    \tilde x_{L_2}&=x+\epsilon g_x\\
+    \tilde x_{L_2}&=x+\epsilon g_x/\|g_x\|^2\\
     \tilde x_{L_\infty}&=x+\epsilon \mathrm{sign}(g_x)\\
     \tilde x_{L_\mathrm{spec}}&=x+\epsilon \mathrm{msign}(g_x)
 \end{align*}
