@@ -34,7 +34,7 @@ $$
 
 $$
 \begin{align*}
-    \tilde x_{L_2}&=x+\epsilon g_x/\|g_x\|^2\\
+    \tilde x_{L_2}&=x+\epsilon g_x/\|g_x\|\\
     \tilde x_{L_\infty}&=x+\epsilon \mathrm{sign}(g_x)\\
     \tilde x_{L_\mathrm{spec}}&=x+\epsilon \mathrm{msign}(g_x)
 \end{align*}
@@ -74,11 +74,11 @@ $$
 
 为什么呢？我们来估算一下 $w^\top\eta$。假定 $w\sim\mathcal{N}(0,I_n)$，$\eta=\epsilon w$，那么这个点乘的结果就是 $\epsilon n\mathrm{Var}[w_i]=\epsilon n$，也就是说维度越高，即使保持一个比较小的 $\epsilon$，也可以积累起很大的扰动。
 
-P.S. 这里我要 diss 一下原论文这一节里面这句话：
+原论文这一节里面是这样说明的：
 
 > If $w$ has $n$ dimensions and the average magnitude of an element of the weight vector is $m$, then the activation will grow by $\epsilon mn$.
 
-这里是拿 $\eta=\mathrm{sign}(w)$ 算的，但是按理说一个降维映射的中间层，其参数大小分布理应近似服从正态分布的，这里取符号函数相当于把这个扰动项全都变成正值，也就是单算大于 0 的部分的均值，不能直接拿原来的均值算的（因为按理说是 0）……
+这里是拿 $\eta=\mathrm{sign}(w)$ 算的，但是按理说一个降维映射的中间层，其参数大小分布理应近似服从正态分布的，这里取符号函数相当于把这个扰动项全都变成正值，也就是单算大于 0 的部分的均值。因此这里的 "average magnitude" 还不能理解成均值而是绝对值的均值……
 
 这也就导致了基于 ReLU 的浅层神经网络相当容易被攻击，而基于 sigmoid 的神经网络呢？嘿嘿想逃是逃不掉的——为了防止梯度消失，你在训练的时候就要把权重压到 0 附近，这正是 sigmoid 近似线性的地方。
 
