@@ -8,7 +8,7 @@
 
 ![alt text](image-15.png)
 
-记 2 \lor 2 = 4 为 p，3 \lor 3 = 6 为 q。
+记 2 + 2 = 4 为 p，3 + 3 = 6 为 q。
 
 - (1) $p\rightarrow q$, 真
 - (2) $p\rightarrow \neg q$，假
