@@ -9,13 +9,13 @@
 FGSM 攻击是一种**白盒攻击**，必须拿到模型对输入的梯度，也就是
 
 $$
-g_x=\nabla_x \mathcal L(\theta;x)
+g_x=\nabla_x \mathcal L(\theta;x,y)
 $$
 
 这里很微妙的一点是，在优化器领域，我们是基于计算
 
 $$
-g_\theta=\nabla_\theta \mathcal L(\theta;x)
+g_\theta=\nabla_\theta \mathcal L(\theta;x,y)
 $$
 
 来实现对参数的快速更新的。这里的“快速”意即利用尽可能少的迭代次数得到尽可能小的损失，即让模型参数 $\theta$ 在固定的输入 $x$ 构建的损失地形上实现快速下降。
