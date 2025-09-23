@@ -12,10 +12,10 @@ ii. 由 $P(A)=P(AB)+P(A\bar B)$ 可得 $P(A\bar B)=3/8$
 
 ![alt text](image-12.png)
 
-11 取 7 排列，这个 7 字母词有两个 i 可以互换都满足条件，所以
+11 取 7 排列，这个 7 字母词有两个 i 以及两个 b 可以互换都满足条件，所以
 
 $$
-P=\dfrac{2}{A^7_{11}}=\dfrac{2}{5\times6\times7\times8\times9\times10\times11}=\dfrac{1}{831600}
+P=\dfrac{2\times2}{A^7_{11}}=\dfrac{2\times2}{5\times6\times7\times8\times9\times10\times11}=\dfrac{1}{415800}
 $$
 
 ![alt text](image-13.png)
