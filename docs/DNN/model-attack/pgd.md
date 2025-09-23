@@ -35,13 +35,13 @@ PGD 这篇文章的着眼点并不完全是提出 PGD 这个方法而是提供�
 作者给出的框架分成两部分，第一部分是作为攻击者，我们考虑一个可行的扰动集合 $\delta\in\mathcal{S}$，需要最大化损失也就是
 
 $$
-\argmax_{\delta\in\mathcal{S}}\mathcal{L}(\theta;x+\delta,y)
+\max_{\delta\in\mathcal{S}}\mathcal{L}(\theta;x+\delta,y)
 $$
 
 第二部分是作为防御方，需要针对攻击做出防御，也就是对于正确的分类样本-标签对分布 $(x,y)\sim\mathcal{D}$ 要最小化攻击效果：
 
 $$
-\argmin_{\theta}\mathbb{E}_{(x,y)\sim\mathcal{D}}[\argmax_{\delta\in\mathcal{S}}\mathcal{L}(\theta;x+\delta,y)]
+\min_{\theta}\mathbb{E}_{(x,y)\sim\mathcal{D}}[\max_{\delta\in\mathcal{S}}\mathcal{L}(\theta;x+\delta,y)]
 $$
 
 然后整个攻防过程就抽象成了这么一个鞍点上的 min-max 博弈。
