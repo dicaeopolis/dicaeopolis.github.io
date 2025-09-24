@@ -39,3 +39,9 @@
 ![alt text](image-28.png)
 
 ![alt text](c3ac2b4536e1e88ef004fef63f530319.jpeg)
+
+## 第三周作业
+
+任务：推导载流线圈的磁矩力矩。
+
+![alt text](3c7c1a0ef61ad7156d287ca687cbc195_720.jpg)
