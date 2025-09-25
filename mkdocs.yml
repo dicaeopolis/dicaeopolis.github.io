@@ -149,6 +149,7 @@ extra_javascript:
 nav:
   - 校内课程知识:
     - 'campus-sources/index.md'
+    - <i class="fas fa-calculator"></i> 二进制乘法可视化工具: 'campus-sources/binmul.md'
     - 《大学物理B下》课程作业与笔记归档: 'campus-sources/PU_Bii_assignments.md'
     - 《概率论与数理统计》课程作业与笔记归档: 'campus-sources/Prob_Stats_assignments.md'
     - 《离散数学》课程作业与笔记归档: 'campus-sources/Descrete_assignments.md'
@@ -157,7 +158,6 @@ nav:
     - 《数据结构》划重点笔记: 'campus-sources/ds-keynote.md'
     - 《数据结构》期末复习题题解: 'campus-sources/ds-write-up.md'
     - 自动签到脚本: 'campus-sources/autosignin.md'
-    - <i class="fas fa-calculator"></i> 二进制乘法可视化工具: 'campus-sources/binmul.md'
   - 深度神经网络:
     - 'DNN/index.md'
     - 深度学习模型攻击理论与复现归档:
