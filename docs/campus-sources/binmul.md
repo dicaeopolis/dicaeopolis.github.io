@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>二进制乘法可视化工具</title>
 <style> .md-sidebar.md-sidebar--secondary { display: none !important; } </style>
+<style> .md-sidebar.md-sidebar--primary { display: none !important; } </style>
 <style>
   :root{
     --primary-color:#3498db;
@@ -22,7 +23,7 @@
   body{
     font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
     max-width:1200px;margin:0 auto;padding:20px;
-    background:#f9f9f9;color:#333;line-height:1.6;
+    background:#303341;color:#333;line-height:1.6;
   }
   h1,h2,h3{color:var(--dark-color);margin-bottom:15px}
   .header{
