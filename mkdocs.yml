@@ -165,6 +165,7 @@ nav:
       - C&W 攻击: 'DNN/model-attack/CandW.md'
       - PGD 攻击: 'DNN/model-attack/pgd.md'
       - FGSM 攻击: 'DNN/model-attack/fgsm.md'
+      - HSJA 攻击: 'DNN/model-attack/hsja.md'
     - 深度学习相关模型理论与复现归档:
       - 'DNN/model-expr/index.md'
       - '扩散模型理论篇: 从多阶段变分自编码器到概率流常微分方程采样器系列': 'DNN/model-expr/DDPM.md'
