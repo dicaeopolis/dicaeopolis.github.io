@@ -8,7 +8,7 @@
 
 现在模型变成黑盒了，拿不到梯度信息了，咋办？
 
-HSJA 提出的方案是：利用先分类结果重构梯度信息，然后再逼近原始图像。
+HSJA 提出的方案是：先在决策边界逼近原始图像，然后再利用分类结果重构梯度信息，逐步迭代生成。
 
 ## 二分逼近
 
@@ -32,7 +32,9 @@ $$
 
 对于有目标 $c^\dagger$ 的攻击，我们需要最大化这个类别的 logits 而最小化其他类别的 logits；对于无目标 $c^*$ 的攻击，我们需要最大化其他类别的 logits 而最小化这个类别的 logits。也就是原文的式 (1)：
 
-![alt text](image-16.png)
+<div style="text-align: center; margin: 20px 0;">
+    <img src = "./image-16.png" />
+</div>
 
 我们的目的就是在 $S$ 上做梯度上升，而现在的问题是，我们只有样本的分类信息（也就是 $\phi$ 就是 $S$ 的符号函数），我们需要基于此估计梯度信息。
 
@@ -84,7 +86,9 @@ $$
 
 首先，作者针对基于梯度的一般迭代过程给出了定理一：
 
-![alt text](image-13.png)
+<div style="text-align: center; margin: 20px 0;">
+    <img src = "./image-13.png" />
+</div>
 
 这里 $\xi_t$ 就是往梯度方向移动的步长，离目标越近，时间越久，步长越小，因此用图中的式子进行建模，最后可以得到源图像和对抗样本的余弦相似度可以被 bound 进这个范围内，为了尽可能使得余弦相似度快速收敛，选择 $q=\dfrac 12$。于是就有了：
 
@@ -94,13 +98,17 @@ $$
 
 紧接着，作者又约束了估计梯度和真实梯度的相似性，通过这个夹角余弦值衡量：
 
-![alt text](image-12.png)
+<div style="text-align: center; margin: 20px 0;">
+    <img src = "./image-12.png" />
+</div>
 
 由此，作者要推导 $\delta$ 和 $\theta$ 的变化式，我们先来感性理解一下，$\delta$ 是扰动的探测步长，当我们很接近源图像时，应该更精细地估计梯度，也就是同样带一个 $\|x_t-x^*\|_p$ 来做保证收敛。
 
 事实上，作者考虑了 $S_{x^*}(x_t+\delta_t u)$ 在 $x_t$ 处的泰勒展开，只对一阶项里面，分为原类别的球冠做分析，最后得到落入球冠的概率和 $c$ 有关，并得到了 $c$ 的估计：
 
-![alt text](image-14.png)
+<div style="text-align: center; margin: 20px 0;">
+    <img src = "./image-14.png" />
+</div>
 
 为了让近似误差和维度无关，这个概率要控制在 $\mathcal O(1)$ 的级别，结合上定理 2 出现的 $(\delta d)^2$，作者选择
 
@@ -108,7 +116,9 @@ $$
 \theta=d^{-q-1},\quad \delta_t=d^{-1}\|x_t-x^*\|_p
 $$
 
-![alt text](image-15.png)
+<div style="text-align: center; margin: 20px 0;">
+    <img src = "./image-15.png" />
+</div>
 
 最后，基于定理 3，可以得到梯度估计的方差大概是 $\mathcal{O}(B^{-2})$，因此作者选择 $B_t=B_0\sqrt t$，能够使得方差以 $t^{-1}$ 的阶下降。
 
