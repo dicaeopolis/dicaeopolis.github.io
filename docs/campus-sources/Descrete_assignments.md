@@ -187,7 +187,7 @@ $$
     &\lor (x_1\land \neg x_2\land x_3\land \neg x_4)\\
     &\lor ( x_1\land\neg x_2\land x_3\land x_4)\\
     &\lor (x_1\land x_2\land\neg x_3\land\neg x_4)\\
-    =&\quad (x_1\land x_2)\lor(x_1\land \neg x_2\land x_3)
+    =&\quad (\neg x_3\land \neg x_4)\lor(x_1\land \neg x_2\land x_3)
 \end{align*}
 $$
 
@@ -208,3 +208,107 @@ $$
 $$
 
 为重言式，因此推理正确。
+
+## 第四次作业
+
+![alt text](image-51.png)
+
+![alt text](image-52.png)
+
+Notations:
+
+$F(x):=(x+1)^2=x^2+2x+1$，$G(x):=x+2=0$，$H(x):=5x=1$
+
+(1)
+
+$$
+\forall x F(x)
+$$
+
+在 (a), (b), (c) 中都为真。
+
+(2)
+
+$$
+\exist xG(x)
+$$
+
+在 (a) 中为假，在 (b), (c) 中为真。
+
+(3)
+
+$$
+\exist xH(x)
+$$
+
+在 (a), (b) 中为假，在 (c) 中为真。
+
+![alt text](image-53.png)
+
+(1)
+
+我们知道假命题蕴含真命题为真但是假命题合取真命题结果为假，因此我们可以构造 $I_1$ 如下：
+
+- 个体域：$\{0\}$
+- 谓词 $F(0)=0, G(0)=1$
+
+这样两个式子就变成了
+
+$F(0)\to G(0)=1$ 和 $F(0)\land G(0)=0$ 是具有不同的真值。
+
+(2)
+
+易得 $I_1$ 也满足 (2) 的条件，直接可以当成 $I_2$：
+
+- 个体域：$\{0\}$
+- 谓词 $F(0)=0, G(0)=1$
+
+这样两个式子就变成了
+
+$F(0)\to G(0)=1$ 和 $F(0)\land G(0)=0$ 是具有不同的真值。
+
+![alt text](image-54.png)
+
+(1)
+
+$$
+\begin{align*}
+    \forall xF(f(a,x),a)&\iff \forall x(a-x <a)\\
+    &\iff \forall x(x>0)\\
+    &\iff 0>0\\
+    &\iff 0
+\end{align*}
+$$
+
+(2)
+
+$$
+\begin{align*}
+    \forall xF(f(x,y),x)\to\exist y\neg F(x,f(y,z))&\iff \forall x(x-y<x)\to\exist y\neg (x<y-z)\\
+    &\iff y>0 \to \exist y\neg(0<y-2)\\
+    &\iff 1\to 1\quad (y=1)\\
+    &\iff 1
+\end{align*}
+$$
+
+(3)
+
+$$
+\begin{align*}
+    \forall x(F(x,y)\to\forall y(F(y,z)\to\forall zF(x,z)))&\iff \forall x((x<y)\to\forall y((y<z)\to\forall z(x<z)))\\
+    &\iff \forall x((x<y)\to\forall y((y<z)\to 0))\\
+    &\iff \forall x((x<y)\to 0)\\
+    &\iff 0
+\end{align*}
+$$
+
+(4)
+
+$$
+\begin{align*}
+    \forall x\exist yF(x,f(f(x,y),y))&\iff\forall x\exist y(x<x-y-y)\\
+    &\iff\forall x\exist y(y<0)\\
+    &\iff\forall x 1\\
+    &\iff 1
+\end{align*}
+$$

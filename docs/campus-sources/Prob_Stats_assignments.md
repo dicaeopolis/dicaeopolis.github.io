@@ -126,10 +126,10 @@ $$
 
 (3)
 
-和 (1) 一样平移一下的几何分布。
+和 (1) 一样的几何分布。
 
 $$
-P(X=n) = p(1-p)^n
+P(X=n) = p(1-p)^{n-1}
 $$
 
 由此
@@ -137,13 +137,13 @@ $$
 $$
 \begin{align*}
     P(x\in\mathrm{Even.})&=\sum_{i=1}^\infty P(X=2i)\\
-    &=p[(1-p)^0+(1-p)^2+\cdots]\\
-    &=p\times\dfrac{1}{1-(1-p)^2}\\
-    &=\dfrac{1}{2-p}
+    &=p[(1-p)^1+(1-p)^3+\cdots]\\
+    &=p\times\dfrac{1-p}{1-(1-p)^2}\\
+    &=\dfrac{1-p}{2-p}
 \end{align*}
 $$
 
-带入即可得到值为 $0.6451612903225806$
+带入即可得到值为 $0.3548387096774194$
 
 ![alt text](image-43.png)
 
@@ -204,8 +204,8 @@ $$
 \begin{align*}
     (4K)^2-4\times4\times(K+2)\ge 0&\iff K^2-K-2\ge 0\\
     &\iff (K-2)(K+1)\ge 0\\
-    &\iff K\in (0,2)
+    &\iff K\in (2,5)
 \end{align*}
 $$
 
-因此 $P=2/5$
+因此 $P=3/5$
