@@ -2,9 +2,7 @@
 
 供存档和复习用。
 
-## 第一周作业
-
-李琰，2024302183007
+## 第一次作业
 
 ![alt text](image-15.png)
 
@@ -48,7 +46,7 @@
 - (3) $(\neg p \to q) \to (q \to \neg p)=(\neg(\neg p) \lor q)\to (\neg q \lor \neg p)$
 $=(p \lor q)\to \neg(q \land p)=\neg(p \lor q)\lor \neg(q \land p)=\neg(p \lor q\land q \land p)=\neg(p\land q)$ 为可满足式。
 
-## 第二周作业
+## 第二次作业
 
 ![alt text](image-22.png)
 
@@ -126,3 +124,87 @@ $$
 \neg (p\to q)\land q\land r\Leftrightarrow\\
 (p \lor q \lor r) \land (p \lor q \lor \neg r) \land (p \lor \neg q \lor r) \land (p \lor \neg q \lor \neg r) \land (\neg p \lor q \lor r) \land (\neg p \lor q \lor \neg r) \land (\neg p \lor \neg q \lor r) \land (\neg p \lor \neg q \lor \neg r)
 $$
+
+## 第三次作业
+
+![alt text](image-46.png)
+
+![alt text](image-47.png)
+
+$$
+\begin{align*}
+    p\uparrow q &\iff \neg(p\land q)\\
+    &\iff \neg p \lor \neg q\\
+    &\iff \neg p(q\lor\neg q)\lor \neg q(p\lor \neg p)\\
+    &\iff (\neg p\land q) \lor (p\land\neg q) \lor (\neg p\land\neg q)
+\end{align*}
+$$
+
+$$
+\begin{align*}
+    p\downarrow q &\iff \neg(p\lor q)\\
+    &\iff \neg p \land \neg q\\
+    &\iff \neg p(q\lor\neg q)\land \neg q\\
+    &\iff (\neg p\land \neg q)
+\end{align*}
+$$
+
+因此不等值。
+
+![alt text](image-48.png)
+
+![alt text](image-49.png)
+
+直接求成真赋值：
+
+
+化简：
+
+首先分组，然后进行合并：
+
+- 0 个 1: 0000
+- 1 个 1: 1000, 0100 => -000, 0-00 => 0-00
+- 2 个 1: 1010, 1100 => 10-0, -100 => 10-0, --00
+- 3 个 1: 1011 => 101-
+
+这样得到了主蕴含项，然后列覆盖表：
+
+```text
+     0 4 8 10 11 12
+0-00 x x
+10-0     x x  
+--00 x x x       x
+101-       x  x
+```
+
+可见 --00 + 101- 可以完全覆盖，因此化简得到
+
+$$
+\begin{align*}
+    F=&\quad (\neg x_1\land\neg x_2\land\neg x_3\land\neg x_4)\\
+    &\lor (\neg x_1\land x_2\land\neg x_3\land\neg x_4)\\
+    &\lor ( x_1\land\neg x_2\land\neg x_3\land\neg x_4)\\
+    &\lor (x_1\land \neg x_2\land x_3\land \neg x_4)\\
+    &\lor ( x_1\land\neg x_2\land x_3\land x_4)\\
+    &\lor (x_1\land x_2\land\neg x_3\land\neg x_4)\\
+    =&\quad (x_1\land x_2)\lor(x_1\land \neg x_2\land x_3)
+\end{align*}
+$$
+
+![alt text](image-50.png)
+
+Notation:
+
+$L$：他是理科学生；$S$：他学好数学；$W$：他是文科学生。
+
+推理即：
+
+$$
+\begin{align*}
+    (L\to S)\land(\neg W\to L)\land(\neg S)\to(W)&\iff (\neg L\lor S)\land(W\lor L)\land(\neg S)\to(W)\\
+    &\iff (\neg L)\land (W\lor L)\to W\\
+    &\iff W\to W
+\end{align*}
+$$
+
+为重言式，因此推理正确。

@@ -2,7 +2,7 @@
 
 供存档和复习用。
 
-## 第一周作业
+## 第一次作业
 
 ![alt text](image-11.png)
 
@@ -28,7 +28,7 @@ $$
 P=\dfrac{B\cap (A\cup \bar B)}{A\cup \bar B}=\dfrac{\mathrm{II}}{\mathrm{I+II+IV}}=\dfrac{0.2}{0.5+0.2+0.1}=\dfrac{1}{4}
 $$
 
-## 第二周作业
+## 第二次作业
 
 ![alt text](image-19.png)
 
@@ -90,9 +90,122 @@ $$
 
 $$
 P(B)=\underbrace{0.8\times(1-2\%)^3}_{P(BA_1)}+\underbrace{0.15\times(1-10\%)^3}_{P(BA_2)}+\underbrace{0.05\times(1-90\%)^3}_{P(BA_3)}=0.8623536\\
-P(A_1|B)=\dfrac{P(BA_1)}{P(B)}=0.8731378868250795\\
-P(A_2|B)=\dfrac{P(BA_2)}{P(B)}=0.12680413231880752\\
-P(A_3|B)=\dfrac{P(BA_3)}{P(B)}=0.00005798085611285204\\
+$$
+
+拿 Python 算了一下数值解：
+
+$$
+\begin{align*}
+    P(A_1|B)=\dfrac{P(BA_1)}{P(B)}&=0.8731378868250795\\
+P(A_2|B)=\dfrac{P(BA_2)}{P(B)}&=0.12680413231880752\\
+P(A_3|B)=\dfrac{P(BA_3)}{P(B)}&=0.00005798085611285204\\
+\end{align*}
 $$
 
 什么是随机变量：如果一个变量 $x$ 在每一次观测时的值不能被完全先验地确定则称其为一个随机变量。
+
+## 第三次作业
+
+![alt text](image-42.png)
+
+(1)
+
+$$
+X\sim Ge(p)\Leftrightarrow P(X=n)=p(1-p)^{n-1}
+$$
+
+也就是在前 $n-1$ 次尝试都失败了，最后一次成功就收手。
+
+(2)
+
+$$
+P(X=n)=C_{n-1}^{r-1} p^r(1-p)^{n-r}
+$$
+
+最后一次尝试必须成功然后收手，前面的 $n-1$ 次尝试里面可以任意安排 $r-1$ 次成功尝试的位置。
+
+(3)
+
+和 (1) 一样平移一下的几何分布。
+
+$$
+P(X=n) = p(1-p)^n
+$$
+
+由此
+
+$$
+\begin{align*}
+    P(x\in\mathrm{Even.})&=\sum_{i=1}^\infty P(X=2i)\\
+    &=p[(1-p)^0+(1-p)^2+\cdots]\\
+    &=p\times\dfrac{1}{1-(1-p)^2}\\
+    &=\dfrac{1}{2-p}
+\end{align*}
+$$
+
+带入即可得到值为 $0.6451612903225806$
+
+![alt text](image-43.png)
+
+题目是要让我们用泊松分布近似二项分布。出事故的车辆数 $X$ 满足：
+
+$$
+X\sim B(1000,0.0001)
+$$
+
+近似即
+
+$$
+X\sim Po(0.1)
+$$
+
+由泊松分布公式：$P(x=k) =\dfrac{\lambda^k\mathrm{e}^{-\lambda}}{k!}$ 可得：
+
+$$
+\begin{align*}
+    P(X\ge 2)&=1-P(x=1)-P(x=0)\\
+    &=1-\dfrac{0.1^1\exp(-0.1)}{1!}-\dfrac{0.1^0\exp(-0.1)}{0!}\\
+    &=1-1.1\exp(-0.1)\\
+    &=0.00467884016044440
+\end{align*}
+$$
+
+![alt text](image-44.png)
+
+(1)
+
+根据定义：
+
+$$
+\begin{align*}
+    P(x<2)&=F(2)=\ln 2\\
+    P(0<x\le 3)&=F(3)-F(0)=1\\
+    P(2<x<5/2)&=F(5/2)-F(2)=\ln 5-2\ln 2
+\end{align*}
+$$
+
+(2)
+
+直接求导即可：
+
+$$
+f(x)=
+\begin{cases}
+    0,&x<1,x\ge \mathrm{e}\\
+    \dfrac{1}{x},&1\le x<\mathrm{e}\\
+\end{cases}
+$$
+
+![alt text](image-45.png)
+
+几何概型。成立的事件域为：
+
+$$
+\begin{align*}
+    (4K)^2-4\times4\times(K+2)\ge 0&\iff K^2-K-2\ge 0\\
+    &\iff (K-2)(K+1)\ge 0\\
+    &\iff K\in (0,2)
+\end{align*}
+$$
+
+因此 $P=2/5$
