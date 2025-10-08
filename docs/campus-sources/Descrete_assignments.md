@@ -230,7 +230,7 @@ $$
 (2)
 
 $$
-\exist xG(x)
+\exists xG(x)
 $$
 
 在 (a) 中为假，在 (b), (c) 中为真。
@@ -238,7 +238,7 @@ $$
 (3)
 
 $$
-\exist xH(x)
+\exists xH(x)
 $$
 
 在 (a), (b) 中为假，在 (c) 中为真。
@@ -284,8 +284,8 @@ $$
 
 $$
 \begin{align*}
-    \forall xF(f(x,y),x)\to\exist y\neg F(x,f(y,z))&\iff \forall x(x-y<x)\to\exist y\neg (x<y-z)\\
-    &\iff y>0 \to \exist y\neg(0<y-2)\\
+    \forall xF(f(x,y),x)\to\exists y\neg F(x,f(y,z))&\iff \forall x(x-y<x)\to\exists y\neg (x<y-z)\\
+    &\iff y>0 \to \exists y\neg(0<y-2)\\
     &\iff 1\to 1\quad (y=1)\\
     &\iff 1
 \end{align*}
@@ -306,8 +306,8 @@ $$
 
 $$
 \begin{align*}
-    \forall x\exist yF(x,f(f(x,y),y))&\iff\forall x\exist y(x<x-y-y)\\
-    &\iff\forall x\exist y(y<0)\\
+    \forall x\exists yF(x,f(f(x,y),y))&\iff\forall x\exists y(x<x-y-y)\\
+    &\iff\forall x\exists y(y<0)\\
     &\iff\forall x 1\\
     &\iff 1
 \end{align*}
