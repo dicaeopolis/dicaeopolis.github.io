@@ -160,6 +160,7 @@ nav:
     - 自动签到脚本: 'campus-sources/autosignin.md'
   - 深度神经网络:
     - 'DNN/index.md'
+    - RL学习笔记: 'DNN/RL.md'
     - 深度学习模型攻击理论与复现归档:
       - 'DNN/model-attack/index.md'
       - BadNets: 'DNN/model-attack/BadNets.md'
