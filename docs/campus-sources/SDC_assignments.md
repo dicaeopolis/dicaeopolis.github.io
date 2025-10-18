@@ -373,3 +373,219 @@ M = 0000 1000 0000 .... 0000
  = 1.0000 1000 * 2^6
 也就是 66
 ```
+
+## 第四次作业
+
+![alt text](image-76.png)
+
+零地址指令、单地址指令和二地址指令满足
+
+$$
+k_0+2^6 k_1+2^{12}k_2=2^{16}
+$$
+
+我们没有必要像课件那样考虑怎么分配前缀才能使得编码不混淆，因为只要满足上面的等式，就必然能够不重不漏地为这三种编码分配编码空间。于是
+
+$$
+k_1=2^{10}-2^6k_2-\dfrac{k_0}{2^6}
+$$
+
+![alt text](image-77.png)
+
+(1) OP 占 12 到 15 位，一共 4 bits，支持 $2^4=16$ 条指令；单个操作数 6 bits，其中前 3 bits 拿来定义寻址方式，后 3 bits 就应该是寄存器编号，支持 $2^3=8$ 个通用寄存器。由于主存 128KiB，也就是 $2^{16}$ 个字长（1 word = 2 bytes），因此需要 16 bits 的地址寄存器 MAR，由于机器字长 16 bits，因此需要 16 bits 的数据寄存器 MDR。
+
+(2) 转移采用补码也就是 $[PC-32767,PC+32768]$。
+
+(3)
+机器码如下：
+
+```text
+0010 001 100 010 101
+ ADD  ()  R4 ()+  R5
+0010 0011 0001 0101B = 0x2315
+```
+
+按指令执行，取 R4 内容 1234H 指向的地址内容 5678H，取 R5 内容 5678H 指向的地址内容 1234H，相加之后将结果 68ACH 存到地址 5678H 内（**第一处改变**），然后 R5 寄存器自增 1 就是 5679H（**第二处改变**）。
+
+![alt text](image-78.png)
+
+这里的关键是 A_lower_12 进行符号扩展之后，如果 A_lower_12 的最高位是 1 就会出问题，扩展之后高 20 位全部都变成 1 了，因此这个时候我们要在高20位最后一位多加一个 1，就能把刚刚的符号扩展“翻回来”。即：
+
+```text
+A_upper20_adjusted = A_upper20 + A_lower12[11]
+```
+
+![alt text](image-79.png)
+
+首先需要指出题目设计的这个算法的 Bug，如果 a0 和 a1 中间没有 0，那这个算法就会越界访问内存。
+
+```asm
+        addi    t0, zero, 0     ;初始化 t0 <- 0
+loop:   lw      t1, 0(a0)       ;t1 存放 a0 内容
+
+        sw      t1, 0(a1)       ;将 t1 的值（a0的内容）存在 a1 里面，也就是拷贝
+        addi    a0, a0, 4       ;a0 往后挪 1 个 int
+        addi    a1, a1, 4       ;a1 往后挪 1 个 int 
+        beq     t1, zero, loop  ;若 t1 = 0 则跳回 loop
+        mv      a0, t0          ;把 t0 放到 a0
+```
+
+首先我们可以大体上知道这个代码想干什么但是失败了，我把这个意图用 C 语言简单写一下：
+
+```c
+int memcpy_0(void* src, void* dst)// a0 -> src, a1 -> dst
+{
+  int cnt = 0; //t0 <- 0
+  //loop:
+  while(*src != 0)
+  //lw t1, 0(a0); t1 = *src
+  //bne t1, zero, ret; *src !=0 then loop otherwise jump to ret
+  {
+    *dst = *src;//sw t1, 0(a1)
+    ++src;//addi a0, a0, 4
+    ++dst;//addi a1, a1, 4
+    ++cnt;//addi t0, t0, 1
+    //j loop
+  }
+  //ret: mv a0, t0
+  return cnt;
+}
+```
+
+翻译成汇编如下：
+
+```asm
+      addi  t0, zero, 0
+loop: lw    t1, 0(a0)
+      bne   t1, zero, ret
+      sw    t1, 0(a1)
+      addi  a0, a0, 4
+      addi  a1, a1, 4
+      addi  t0, t0, 1
+      j     loop
+ret:  mv    a0, t0
+```
+
+![alt text](image-80.png)
+
+![alt text](image-81.png)
+
+(1) 8位或者说一个字节，数组每个元素 4 字节。因为第一行 R[t1] = i * 4 说明一个 int 占 4 字节，这样就能正确算出基于字节地址的偏移量。
+
+(2) i 放在 s3 里面，左移两位就是 i * 4，然后放进 t1 备用。
+
+(3) R 型指令对应三个操作数的加减位运算，opcode = 0110011B = 51，也就是第二条位于内存 40004 处的指令。
+
+I 型指令对应立即数和两个操作数的加减位运算，opcode = 0010011B = 19，也就是第一条位于内存 40000 处的指令和第五条位于内存 40016 处的指令，以及 lw 指令，opcode = 0000011B = 3 也就是第三条位于内存 40008 处的指令。
+
+B 型指令就是以 B 打头的指令也就是第四条位于内存 40012 处的指令。
+
+J 型指令为最后一条位于内存 40020 处的指令。
+
+(4) 由 lw t0, 0(t1) 对应的机器码可知 t0 的编号是 5，由 add t1, t1, s6 对应的机器码可知 s6 的编号是 22。
+
+(5) jal x0, loop。操作码为 1101111
+
+(6) 如下：
+
+```text
+0=0000000 = 0 | 000000
+12=01100 = 0110 | 0
+offset = 0 0 0000 0110 0 = 12
+exit = PC + offset = 40024
+```
+
+(7) 按理说应该是 40000 也就是带 loop 标号的内存地址，但按机器码如下：
+
+```text
+0 | 0111011010 | 1 | 001 10011 | 111 |  0111
+0001 1001 1101 1101 1010 = 105946 （？？？）
+```
+
+![alt text](image-82.png)
+
+```text
+        .file   "test.c"
+        .option nopic
+        .attribute arch, "rv32i2p1"
+        .attribute unaligned_access, 0
+        .attribute stack_align, 16
+        .text
+        .globl  sum
+        .section        .sbss,"aw",@nobits
+        .align  2
+        .type   sum, @object
+        .size   sum, 4
+sum:
+        .zero   4
+        .text
+        .align  2
+        .globl  sum_array
+        .type   sum_array, @function
+sum_array:
+        addi    sp,sp,-48
+        sw      ra,44(sp)
+        sw      s0,40(sp)
+        addi    s0,sp,48
+        sw      a0,-36(s0)
+        sw      a1,-40(s0)
+        sw      zero,-20(s0)
+        j       .L2
+.L4:
+        lw      a5,-20(s0)
+        addi    a5,a5,1
+        mv      a1,a5
+        lw      a0,-40(s0)
+        call    compare
+        mv      a5,a0
+        beq     a5,zero,.L3
+        lw      a5,-20(s0)
+        slli    a5,a5,2
+        lw      a4,-36(s0)
+        add     a5,a4,a5
+        lw      a4,0(a5)
+        lui     a5,%hi(sum)
+        lw      a5,%lo(sum)(a5)
+        add     a4,a4,a5
+        lui     a5,%hi(sum)
+        sw      a4,%lo(sum)(a5)
+.L3:
+        lw      a5,-20(s0)
+        addi    a5,a5,1
+        sw      a5,-20(s0)
+.L2:
+        lw      a4,-20(s0)
+        lw      a5,-40(s0)
+        blt     a4,a5,.L4
+        lui     a5,%hi(sum)
+        lw      a5,%lo(sum)(a5)
+        mv      a0,a5
+        lw      ra,44(sp)
+        lw      s0,40(sp)
+        addi    sp,sp,48
+        jr      ra
+        .size   sum_array, .-sum_array
+        .align  2
+        .globl  compare
+        .type   compare, @function
+compare:
+        addi    sp,sp,-32
+        sw      s0,28(sp)
+        addi    s0,sp,32
+        sw      a0,-20(s0)
+        sw      a1,-24(s0)
+        lw      a4,-20(s0)
+        lw      a5,-24(s0)
+        ble     a4,a5,.L7
+        li      a5,1
+        j       .L8
+.L7:
+        li      a5,0
+.L8:
+        mv      a0,a5
+        lw      s0,28(sp)
+        addi    sp,sp,32
+        jr      ra
+        .size   compare, .-compare
+        .ident  "GCC: (13.2.0-11ubuntu1+12) 13.2.0"
+```
