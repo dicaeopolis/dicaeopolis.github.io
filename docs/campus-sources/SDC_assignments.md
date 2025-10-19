@@ -512,90 +512,116 @@ exit = PC + offset = 40024
 
 ![alt text](image-82.png)
 
-下面是机器生成的汇编：
+首先处理 `compare` 函数，这是一个叶子函数所以可以不用特意分配栈帧：
 
-```text
-        .file   "test.c"
-        .option nopic
-        .attribute arch, "rv32i2p1"
-        .attribute unaligned_access, 0
-        .attribute stack_align, 16
-        .text
-        .globl  sum
-        .section        .sbss,"aw",@nobits
-        .align  2
-        .type   sum, @object
-        .size   sum, 4
-sum:
-        .zero   4
-        .text
-        .align  2
-        .globl  sum_array
-        .type   sum_array, @function
-sum_array:
-        addi    sp,sp,-48
-        sw      ra,44(sp)
-        sw      s0,40(sp)
-        addi    s0,sp,48
-        sw      a0,-36(s0)
-        sw      a1,-40(s0)
-        sw      zero,-20(s0)
-        j       .L2
-.L4:
-        lw      a5,-20(s0)
-        addi    a5,a5,1
-        mv      a1,a5
-        lw      a0,-40(s0)
-        call    compare
-        mv      a5,a0
-        beq     a5,zero,.L3
-        lw      a5,-20(s0)
-        slli    a5,a5,2
-        lw      a4,-36(s0)
-        add     a5,a4,a5
-        lw      a4,0(a5)
-        lui     a5,%hi(sum)
-        lw      a5,%lo(sum)(a5)
-        add     a4,a4,a5
-        lui     a5,%hi(sum)
-        sw      a4,%lo(sum)(a5)
-.L3:
-        lw      a5,-20(s0)
-        addi    a5,a5,1
-        sw      a5,-20(s0)
-.L2:
-        lw      a4,-20(s0)
-        lw      a5,-40(s0)
-        blt     a4,a5,.L4
-        lui     a5,%hi(sum)
-        lw      a5,%lo(sum)(a5)
-        mv      a0,a5
-        lw      ra,44(sp)
-        lw      s0,40(sp)
-        addi    sp,sp,48
-        jr      ra
-        .size   sum_array, .-sum_array
-        .align  2
-        .globl  compare
-        .type   compare, @function
+```c
+int compare(int a, int b)
+// a0 <- a, a1 <- b, ret -> a0
+{
+  //blt a1, a0, ret1
+  if (a > b)
+    return 1; // ret1 :addi a0, zero, 1; ret
+  else
+    return 0; // addi a0, zero, 0; ret
+}
+```
+
+组织一下：
+
+```asm
 compare:
-        addi    sp,sp,-32
-        sw      s0,28(sp)
-        addi    s0,sp,32
-        sw      a0,-20(s0)
-        sw      a1,-24(s0)
-        lw      a4,-20(s0)
-        lw      a5,-24(s0)
-        ble     a4,a5,.L7
-        li      a5,1
-        j       .L8
-.L7:
-        li      a5,0
-.L8:
-        mv      a0,a5
-        lw      s0,28(sp)
-        addi    sp,sp,32
-        jr      ra
-        .size   compare, .-compare
-        .ident  "GCC: (13.2.0-11ubuntu1+12) 13.2.0"
+  blt a1, a0, ret1
+  addi a0, zero 0
+  ret
+
+ret1:
+  addi a0, zero, 1
+  ret
+```
+
+然后看一下 `sum_array`：
+
+```c
+int sum = 0; //t0 <- sum
+int sum_array ( int array[], int num )
+// a0 <- array, a1 <- num
+{
+    int i;// t2 <- i
+    for (i = 0; i < num; i++)
+    //addi t2, zero, 0
+    //loop:
+    //
+        if compare (num, i+1) sum += array[i];
+    //addi t2, t2, 1
+    //bne t2, a1, loop
+    return sum;
+}
+```
+
+```asm
+# int sum_array ( int array[], int num )
+# array in a0, num in a1
+# sum in t0 (global)
+sum_array:
+    # --- Prologue: 设置栈帧 ---
+    addi sp, sp, -20        # 分配 20 字节栈空间
+    sw ra, 16(sp)           # 保存返回地址
+    sw s0, 12(sp)           # 保存 s0 (将被用于存储 array 基地址)
+    sw s1, 8(sp)            # 保存 s1 (将被用于存储 num)
+    sw s2, 4(sp)            # 保存 s2 (将被用于存储 i)
+
+    # --- 初始化 ---
+    mv s0, a0               # s0 = array
+    mv s1, a1               # s1 = num
+    li t0, 0                # sum = 0 (初始化全局变量)
+    li s2, 0                # i = 0
+
+for_loop:
+    # --- 循环条件: for (i = 0; i < num; i++) ---
+    bge s2, s1, loop_end    # if (i >= num) goto loop_end
+
+    # --- 准备调用 compare(num, i+1) ---
+    mv a0, s1               # 第一个参数 a = num
+    addi a1, s2, 1          # 第二个参数 b = i + 1
+    
+    # 调用前，保存调用者保存寄存器 t0 (sum)
+    sw t0, 0(sp)
+    
+    jal compare             # 调用 compare 函数
+    
+    # 调用后，恢复调用者保存寄存器 t0 (sum)
+    lw t0, 0(sp)
+
+    # --- if (compare(...) != 0) ---
+    # compare 的返回值在 a0 中
+    beq a0, zero, skip_add  # if (return_value == 0) goto skip_add
+
+    # --- sum += array[i] ---
+    # 1. 计算 array[i] 的地址
+    slli t1, s2, 2          # t1 = i * 4 (每个 int 4 字节)
+    add t1, s0, t1          # t1 = &array[i] (基地址 + 偏移)
+    
+    # 2. 加载 array[i] 的值
+    lw t2, 0(t1)            # t2 = array[i]
+    
+    # 3. 更新 sum
+    add t0, t0, t2          # sum = sum + array[i]
+
+skip_add:
+    # --- 循环增量: i++ ---
+    addi s2, s2, 1          # i = i + 1
+    j for_loop              # 跳转回循环开始
+
+loop_end:
+    # --- 返回值 ---
+    mv a0, t0               # 将 sum (在 t0 中) 移动到返回值寄存器 a0
+
+    # --- Epilogue: 恢复栈和寄存器 ---
+    lw s2, 4(sp)            # 恢复 s2
+    lw s1, 8(sp)            # 恢复 s1
+    lw s0, 12(sp)           # 恢复 s0
+    lw ra, 16(sp)           # 恢复返回地址
+    addi sp, sp, 20         # 释放栈空间
+    
+    ret                     # 返回调用者
 ```
