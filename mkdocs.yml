@@ -147,21 +147,10 @@ extra_javascript:
   
 
 nav:
-  - 校内课程知识:
-    - 'campus-sources/index.md'
-    - 《计算机组成原理》理论课程作业与笔记归档: 'campus-sources/SDC_assignments.md'
-    - 《离散数学》课程作业与笔记归档: 'campus-sources/Descrete_assignments.md'
-    - 《大学物理B下》课程作业与笔记归档: 'campus-sources/PU_Bii_assignments.md'
-    - 《概率论与数理统计》课程作业与笔记归档: 'campus-sources/Prob_Stats_assignments.md'
-    - <i class="fas fa-calculator"></i> 二进制乘法可视化工具: 'campus-sources/binmul.md'
-    - 本科教科书电子资源: 'campus-sources/textbook.md'
-    - 《数据结构》划重点笔记: 'campus-sources/ds-keynote.md'
-    - 《数据结构》期末复习题题解: 'campus-sources/ds-write-up.md'
-    - 自动签到脚本: 'campus-sources/autosignin.md'
   - 深度神经网络:
     - 'DNN/index.md'
-    - SMO 算法的推导: 'DNN/SVM_SMO.md'
     - RL学习笔记 - 上篇: 'DNN/RL.md'
+    - SMO 算法的推导: 'DNN/SVM_SMO.md'
     - 深度学习模型攻击理论与复现归档:
       - 'DNN/model-attack/index.md'
       - HSJA 攻击: 'DNN/model-attack/hsja.md'
@@ -181,6 +170,17 @@ nav:
       - 符号梯度下降: 'DNN/optimizer/SignGD.md'
       - 自适应学习率改进策略: 'DNN/optimizer/Adaptive.md'
       - SGD 系列算法: 'DNN/optimizer/SGD.md'
+  - 校内课程知识:
+    - 'campus-sources/index.md'
+    - 《计算机组成原理》理论课程作业与笔记归档: 'campus-sources/SDC_assignments.md'
+    - 《离散数学》课程作业与笔记归档: 'campus-sources/Descrete_assignments.md'
+    - 《大学物理B下》课程作业与笔记归档: 'campus-sources/PU_Bii_assignments.md'
+    - 《概率论与数理统计》课程作业与笔记归档: 'campus-sources/Prob_Stats_assignments.md'
+    - <i class="fas fa-calculator"></i> 二进制乘法可视化工具: 'campus-sources/binmul.md'
+    - 本科教科书电子资源: 'campus-sources/textbook.md'
+    - 《数据结构》划重点笔记: 'campus-sources/ds-keynote.md'
+    - 《数据结构》期末复习题题解: 'campus-sources/ds-write-up.md'
+    - 自动签到脚本: 'campus-sources/autosignin.md'
   - 配置和杂谈笔记:
     - 'misc/index.md'
     - 功能测试页面: 'misc/test.md'
