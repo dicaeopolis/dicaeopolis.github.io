@@ -546,82 +546,142 @@ int sum = 0; //t0 <- sum
 int sum_array ( int array[], int num )
 // a0 <- array, a1 <- num
 {
-    int i;// t2 <- i
+    // Registers needed to save: s0 for array, s1 for num, s2 for i. We also need to save ra. We will also call `compare` so 
+    /*
+    Prologue:
+    addi sp, sp, -20
+    sw ra, 16(sp)
+    sw s0, 12(sp)
+    sw s1, 8(sp)
+    sw s2, 4(sp)
+    ...
+    Epilogue:
+    lw s2, 4(sp)
+    lw s1, 8(sp)
+    lw s0, 12(sp)
+    lw ra, 16(sp)
+    addi sp, sp, 20
+    */
+    int i;
+    /*
+    Initialization:
+    save parameters:
+    addi s0, a0, 0
+    addi s1, a1, 0
+    num = 0: addi t0, zero, 0
+    i = 0:   addi s2, zero, 0
+    */
     for (i = 0; i < num; i++)
-    //addi t2, zero, 0
+    //if i >= num, jump to ret: bge s2, s1, ret
     //loop:
-    //
+    /*
+    Now we will call `compare`.
+    `compare` take num(s1) as a0, i+1(s2) as a1
+    so we generate arguments:
+    addi a0, s1, 0
+    addi a1, s2, 1
+    also, we need to save t0
+    sw t0, 0(sp)
+    then call compare.
+    now resume t0: lw t0, 0(sp)
+    now a0 = compare (num, i+1)
+    if a0 = 0 we just skip sum += array[i]: beq a0, zero, skip
+    */
         if compare (num, i+1) sum += array[i];
-    //addi t2, t2, 1
-    //bne t2, a1, loop
+    /*
+    now we calculate sum += array[i].
+    firstly we get the address array + i:
+    slli t1, s2, 2
+    addi t1, s0, t1
+    then we load array[i] = *(array + i):
+    lw t2, 0(t1)
+    finally we add it to sum:
+    addi t0, t0, t2
+    */
+    //skip: addi s2, s2, 1
+    //j loop
+    //ret: addi a0, t0, 0
     return sum;
 }
 ```
 
 ```asm
-# int sum_array ( int array[], int num )
-# array in a0, num in a1
-# sum in t0 (global)
 sum_array:
-    # --- Prologue: 设置栈帧 ---
-    addi sp, sp, -20        # 分配 20 字节栈空间
-    sw ra, 16(sp)           # 保存返回地址
-    sw s0, 12(sp)           # 保存 s0 (将被用于存储 array 基地址)
-    sw s1, 8(sp)            # 保存 s1 (将被用于存储 num)
-    sw s2, 4(sp)            # 保存 s2 (将被用于存储 i)
+    ;Prologue
+    addi sp, sp, -20
+    sw ra, 16(sp)
+    sw s0, 12(sp)
+    sw s1, 8(sp)
+    sw s2, 4(sp)
 
-    # --- 初始化 ---
-    mv s0, a0               # s0 = array
-    mv s1, a1               # s1 = num
-    li t0, 0                # sum = 0 (初始化全局变量)
-    li s2, 0                # i = 0
+    ;Initialization
+    addi s0, a0, 0
+    addi s1, a1, 0
+    addi t0, zero, 0
+    addi s2, zero, 0
 
-for_loop:
-    # --- 循环条件: for (i = 0; i < num; i++) ---
-    bge s2, s1, loop_end    # if (i >= num) goto loop_end
+loop:
+    bge s2, s1, ret
 
-    # --- 准备调用 compare(num, i+1) ---
-    mv a0, s1               # 第一个参数 a = num
-    addi a1, s2, 1          # 第二个参数 b = i + 1
-    
-    # 调用前，保存调用者保存寄存器 t0 (sum)
+    addi a0, s1, 0
+    addi a1, s2, 1
+
     sw t0, 0(sp)
     
-    jal compare             # 调用 compare 函数
-    
-    # 调用后，恢复调用者保存寄存器 t0 (sum)
+    jal compare
+
     lw t0, 0(sp)
 
-    # --- if (compare(...) != 0) ---
-    # compare 的返回值在 a0 中
-    beq a0, zero, skip_add  # if (return_value == 0) goto skip_add
+    beq a0, zero, skip
 
-    # --- sum += array[i] ---
-    # 1. 计算 array[i] 的地址
-    slli t1, s2, 2          # t1 = i * 4 (每个 int 4 字节)
-    add t1, s0, t1          # t1 = &array[i] (基地址 + 偏移)
+    slli t1, s2, 2
+    add t1, s0, t1
+    lw t2, 0(t1)
+    add t0, t0, t2
+skip:
+    addi s2, s2, 1
+    j loop
+
+ret:
+    addi a0, t0, 0
+    ;Epilogue
+    lw s2, 4(sp)
+    lw s1, 8(sp)
+    lw s0, 12(sp)
+    lw ra, 16(sp)
+    addi sp, sp, 20
     
-    # 2. 加载 array[i] 的值
-    lw t2, 0(t1)            # t2 = array[i]
-    
-    # 3. 更新 sum
-    add t0, t0, t2          # sum = sum + array[i]
+    ret
+```
 
-skip_add:
-    # --- 循环增量: i++ ---
-    addi s2, s2, 1          # i = i + 1
-    j for_loop              # 跳转回循环开始
+因此调用 sum_array 前，其栈空间里面没有东西：
 
-loop_end:
-    # --- 返回值 ---
-    mv a0, t0               # 将 sum (在 t0 中) 移动到返回值寄存器 a0
+```text
+高地址->低地址，每一格 4 bytes。
+----+----+
+... |    |
+----+----+
+      ↑sp
+```
 
-    # --- Epilogue: 恢复栈和寄存器 ---
-    lw s2, 4(sp)            # 恢复 s2
-    lw s1, 8(sp)            # 恢复 s1
-    lw s0, 12(sp)           # 恢复 s0
-    lw ra, 16(sp)           # 恢复返回地址
-    addi sp, sp, 20         # 释放栈空间
-    
-    ret                     # 返回调用者
+调用 sum_array 后，调用 compare 前后：
+
+```text
+高地址->低地址，每一格 4 bytes。
+----+----+----+----+----+----+
+... | ra | s0 | s1 | s2 | t0 |
+----+----+----+----+----+----+
+                          ↑sp
+```
+
+因为 compare 特别简单不涉及栈上操作，因此栈状态不变。
+
+调用 sum_array 后，释放栈空间：
+
+```text
+高地址->低地址，每一格 4 bytes。
+----+----+
+... |    |
+----+----+
+      ↑sp
 ```
