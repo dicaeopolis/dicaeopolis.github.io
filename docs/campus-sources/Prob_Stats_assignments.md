@@ -371,7 +371,7 @@ $$
 |---|---|---|---|
 |P| $\frac{1}{4}$ | $\frac{1}{2}$ | $\frac{1}{4}$ |
 
-|   |Y=0|Y=1|Y=2|Y=2|
+|   |Y=0|Y=1|Y=2|Y=3|
 |---|---|---|---|---|
 |P| $\frac{1}{8}$ | $\frac{3}{8}$ | $\frac{3}{8}$ | $\frac{1}{8}$ |
 
@@ -400,7 +400,7 @@ $$
 
 $$
 \begin{align*}
-    P(y)&=c\int_{-\sqrt y}^{-\sqrt{y}}x^2y\mathrm{d}y=c\frac{2}{3}y^{\frac{5}{2}}\\
+    P(y)&=c\int_{-\sqrt y}^{\sqrt{y}}x^2y\mathrm{d}y=c\frac{2}{3}y^{\frac{5}{2}}\\
     \implies P(y)&=\
         \begin{cases}
             \frac{7}{2}y^{\frac{5}{2}},&y\in[0,1]\\
