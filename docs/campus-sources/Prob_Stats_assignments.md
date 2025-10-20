@@ -209,3 +209,202 @@ $$
 $$
 
 因此 $P=3/5$
+
+## 第四次作业
+
+![alt text](image-83.png)
+
+我们直接写程序计算即可：
+
+```python
+from scipy import stats
+
+# X~N(a,b^2) P(X in (M, N))
+def Gaussian_prob(a, b, M, N):
+    return stats.norm(loc=a, scale=b).cdf(N) - stats.norm(loc=a, scale=b).cdf(M)
+
+print(stats.norm(loc=110, scale=12).cdf(105))
+print(Gaussian_prob(110, 12, 100, 120))
+
+def f(x):
+    return 0.05 - (1-stats.norm(loc=110, scale=12).cdf(x))
+
+from scipy.optimize import brentq
+print(brentq(f, 70, 150))
+```
+
+计算得
+
+$$
+\begin{align*}
+    P(X\le 105)&=0.33846111951068963\\
+    P(100<X\le 120)&=0.5953432380727137\\
+    X&=129.73824352341765
+\end{align*}
+$$
+
+![alt text](image-84.png)
+
+我们直接写程序计算即可：
+
+```python
+p1=1-Gaussian_prob(120, 2, 118, 122)
+p=(1-p1)**3 * p1**2 * 10
+print(p)
+```
+
+得到
+
+$$
+P = 0.3203602052597432
+$$
+
+![alt text](image-85.png)
+
+(1)
+
+概率密度积分 $F(X)=X,X\in (0,1)$，由 $X=\ln Y$ 可得 $F(Y)=\ln Y,Y\in (1,e)$，求导可得密度：
+
+$$
+P(Y)=
+\begin{cases}
+    \dfrac{1}{Y},&Y\in(1,e)\\
+    0,&\mathrm{otherwise}
+\end{cases}
+$$
+
+(2)
+
+概率密度积分 $F(X)=X,X\in (0,1)$，由 $X=\exp(-\dfrac 12 Y)$ 可得 $F(Y)=\exp(-\dfrac 12 Y),Y\in (0,+\infty)$，求导可得密度：
+
+$$
+P(Y)=
+\begin{cases}
+    \dfrac 12\exp(-\dfrac 12 Y),&Y\in(0,+\infty)\\
+    0,&\mathrm{otherwise}
+\end{cases}
+$$
+
+## 第五次作业
+
+![alt text](image-86.png)
+
+(1)
+
+$$
+C_7^4=35
+$$
+
+可列分布律如下：
+
+|   |X=0|X=1|X=2|X=3|
+|---|---|---|---|---|
+|Y=0| $0$ | $0$ | $\frac{3}{35}$ | $\frac{2}{35}$ |
+|Y=1| $0$ | $\frac{6}{35}$ | $\frac{12}{35}$ | $\frac{2}{35}$ |
+|Y=2| $\frac{1}{35}$ | $\frac{6}{35}$ | $\frac{3}{35}$ | $0$ |
+
+(2)
+
+$$
+\begin{align*}
+    P(X>Y)&=\dfrac{1}{35}(3+2+12+2)=\dfrac{19}{35}\\
+    P(Y=2X)&=\dfrac{6}{35}\\
+    P(X+Y=3)&=\dfrac{1}{35}(6+12+2)=\dfrac{20}{35}\\
+    P(X<3-Y)&=\dfrac{1}{35}(3+6+1)=\dfrac{10}{35}
+\end{align*}
+$$
+
+![alt text](image-87.png)
+
+$$
+6-x-y=0\implies x+y=6
+$$
+
+则需要归一化条件：
+
+$$
+\begin{align*}
+    \iint_{\mathbb{R}^2}f(x,y)\mathrm{d}x\mathrm{d}y&=k\int_0^2\int_2^4(6-x-y)\mathrm{d}y\mathrm{d}x\\
+    &=k\int_0^2 2(6-x)-6\mathrm{d}x\\
+    &=8k\\
+    &=1\\
+    &\implies k = \dfrac{1}{8}
+\end{align*}
+$$
+
+$$
+\begin{align*}
+    P(X<1,Y<3)&=k\int_0^1\int_2^3(6-x-y)\mathrm{d}y\mathrm{d}x\\
+    &=3k\\
+    &=\dfrac{3}{8}
+\end{align*}
+$$
+
+$$
+\begin{align*}
+    P(X<1.5)&=k\int_0^\frac{3}{2}\int_2^4(6-x-y)\mathrm{d}y\mathrm{d}x\\
+    &=\dfrac{27}{4}k\\
+    &=\dfrac{27}{32}
+\end{align*}
+$$
+
+$$
+\begin{align*}
+    P(X+Y\le 4)&=k\int_0^2\int_2^{4-x}(6-x-y)\mathrm{d}y\mathrm{d}x\\
+    &=(\dfrac{8}{6}+4)k\\
+    &=\dfrac{2}{3}
+\end{align*}
+$$
+
+![alt text](image-88.png)
+
+枚举结果并计数即可。
+
+|   |X=0|X=1|X=2|
+|---|---|---|---|
+|Y=0| $\frac{1}{8}$ | $0$ | $0$ |
+|Y=1| $\frac{1}{8}$ | $\frac{1}{4}$ | $0$ |
+|Y=2| $0$ | $\frac{1}{4}$ | $\frac{1}{8}$ |
+|Y=3| $0$ | $0$ | $\frac{1}{8}$ |
+
+|   |X=0|X=1|X=2|
+|---|---|---|---|
+|P| $\frac{1}{4}$ | $\frac{1}{2}$ | $\frac{1}{4}$ |
+
+|   |Y=0|Y=1|Y=2|Y=2|
+|---|---|---|---|---|
+|P| $\frac{1}{8}$ | $\frac{3}{8}$ | $\frac{3}{8}$ | $\frac{1}{8}$ |
+
+![alt text](image-89.png)
+
+$$
+\begin{align*}
+    \iint_{\mathbb{R}^2}f(x,y)\mathrm{d}x\mathrm{d}y&=c\int_{-1}^1\int^1_{x^2}x^2y\mathrm{d}y\mathrm{d}x\\
+    &=c\int_{-1}^1 \frac{1}{2}x^2(1-x^4)\mathrm{d}x\\
+    &=\dfrac{4}{21}c\\
+    &=1\\
+    &\implies c = \dfrac{21}{4}
+\end{align*}
+$$
+
+$$
+\begin{align*}
+    P(x)&=c\int_{x^2}^1x^2y\mathrm{d}y=c\frac{1}{2}x^2(1-x^4)\\
+    \implies P(x)&=\
+        \begin{cases}
+            \frac{21}{8}x^2(1-x^4),&x\in[-1,1]\\
+            0,&\mathrm{otherwise}
+        \end{cases}
+\end{align*}
+$$
+
+$$
+\begin{align*}
+    P(y)&=c\int_{-\sqrt y}^{-\sqrt{y}}x^2y\mathrm{d}y=c\frac{2}{3}y^{\frac{5}{2}}\\
+    \implies P(y)&=\
+        \begin{cases}
+            \frac{7}{2}y^{\frac{5}{2}},&y\in[0,1]\\
+            0,&\mathrm{otherwise}
+        \end{cases}
+\end{align*}
+$$
