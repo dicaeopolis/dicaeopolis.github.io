@@ -435,8 +435,493 @@ Q-learning 算法选择直接基于贝尔曼最优方程进行估计，因此 $a
 
 而 Q-learning 对 $Q(s,a)$ 的更新只需要 $(s,a,s',r)$ 四元组，我们**不需要直接利用当前的动作来做更新**，甚至我们可以通过多个并行的训练场获取大量的 $(s,a,s',r)$ 四元组数据，然后相互交换数据，由于这种顺序性被打破了，因此就是**离线策略算法**。甚至我们可以手动采样这一四元组而不更新，最后再依靠数据计算 $Q$ 的估计值，这有点像先前的 MC ε-Greedy，但也是离线 RL 的雏形。
 
-## 结语
+## 第六章
 
-在本篇笔记中，我们从 0 开始建立了强化学习的基本框架。我们从最简单的 ε-Greedy 策略出发，了解了马尔可夫决策过程，经历了各种贝尔曼方程的推导，最终抵达了 Sarsa 算法和 Q-learning 算法的里程碑。
+本章主要讲 Dyna-Q 算法，其实就是对 Q-learning 做一点修补。
 
-Q-learning 是一个很重要的算法。在下一篇笔记中，我们将基于这个祖师爷，理清楚从 Q-learning 到 Dyna-Q 再到 DQN 及其改进算法的完整演变流程。Q 将会是下一篇笔记的核心字母。而我们的认知也会从传统的强化学习逐步走向深度强化学习。
+我们仔细观察上面 Q-learning 的算法会发现，**一个状态只能拿来更新一个 Q 值**。但我们知道 Q-learning 是一个离线策略，有没有更好的办法呢？Dyna-Q 的思想是，既然和环境的交互具有序贯性而难以直接从给定和当前的 $(s,a)$ 中拿到奖励，那就选择引入一个模型来模拟，即 $M(s,a)\sim r(s,a)$。如果 $r(s,a)$ 已知或者容易被模拟，这个方法就能成。所以 Dyna-Q 是一个**有模型版本的 Q-learning**。
+
+也就是说我们在执行状态转移的同时，利用模型来跑几轮模拟（被称作 **Q-planning**），那么在决策时，我们就能够基于更多经验，因而可能获得更准确的 Q 值估计。
+
+所以我们只需要把 Q-planning 加入算法即可。
+
+- 初始化动作价值函数 $Q(s,a)$
+- 基于给定的序列采样次数 $T$ 开始循环：
+    - 选择初始状态 $s$
+    - 基于设定的时间步 $N$ 开始循环：
+      - 在 $s$ 的动作空间内，基于多臂老虎机的 ε-Greedy 策略选择一个动作 $a$。
+      - 基于动作 $a$ 转移到状态 $s'$，并获得环境奖励 $r(s,a)$
+      - 进行时序差分估计：$Q(s,a)\leftarrow Q(s,a)+\alpha[\gamma \max_{a'}Q(s',a')+r(s,a)-Q(s,a)]$
+      - 开始 Q-planning，循环指定的计划步数：
+          - 随机选择先前访问过的状态 $\hat s$ 和在此状态下执行过的动作 $\hat a$。
+          - 利用模型得到奖励 $\hat r=M(\hat s,\hat a)$
+          - 进行时序差分估计：$Q(s,a)\leftarrow Q(s,a)+\alpha[\gamma \max_{a'}Q(s',a')+\hat r-Q(s,a)]$
+      - 执行更新：$s\leftarrow s'$
+
+## 第七章
+
+Q-learning 将状态-动作价值建立成一张表，称作** Q 表**。但是对于一个相对复杂的游戏或者现实环境而言，其状态是相当多的。因此我们会遇到相当熟悉的**维度灾难**，而解决方式就是引入神经网络。也就是说，我们引入 $Q_\theta(s,a)$ 来拟合状态-价值函数，并且利用神经网络的泛化性对没见过的状态进行合理的价值估计。下面的任务就是对这个网络的优化问题进行建模，然后利用端到端学习的知识进行训练和优化。
+
+回顾 Q-learning 的时序差分公式：$Q(s,a)\leftarrow Q(s,a)+\alpha[\gamma \max_{a'}Q(s',a')+r(s,a)-Q(s,a)]$，而最优策略会使得差分值为0，因此我们的目的就是最小化差分值，也就是把 Q 表换成 Q 网络，并使用 MSE 损失：
+
+$$
+\mathrm{arg}\min_{\theta\quad}[\gamma \max_{a'}Q_\theta(s',a')+r(s,a)-Q_\theta(s,a)]^2
+$$
+
+自然我们也需要收集一个 mini-batch 的数据，但是一次状态转移只能产生一组 $(s',a')$ 怎么办呢？
+
+DQN 给出的解决方案是，我们存储最近 $E$ 次的状态转移四元组 $(s,a,s',a')$，每次从里面抽样即可。因为这看起来像是在“复习”最近的 $E$ 次操作，我们把它叫做**经验重放**，其实类似于有的人干了一天的活然后晚上躺床上像放电影一样回忆这几天的事情……
+
+如果你觉得这就够了，那你可以试一下写写代码，包炸的。（我在这里就不放代码了，因为加了后面的缓解措施照样炸）
+
+从理论分析的角度，原初的 Q-learning 迭代式是一个压缩映射，谱范数小于 1，因此能够收敛到确定值。但在 DQN 中我们是从 Q 网络得到数据拿来更新 Q 网络，而这一过程含有的噪音不一定能够使得迭代的谱范数小于 1，导致谱范数变大，并快速自我恶化。因此 DQN 选择减慢更新 Q 网络的频率，让它炸得不要那么快，最好在开始爆炸之前就训练好。
+
+也就是说我们从经验重放中采样的数据并不会送入目标的 Q 网络 $Q_\theta$，而是会输入一个略微过时的 Q 网络 $\hat Q_\theta$，直到经过一定的时间步之后，再用 $Q_\theta$ 更新 $\hat{Q}_\theta$。我们把那个过时一点的网络叫做**目标网络**。
+
+**所以 DQN 不是不会训炸，而是有组织有计划、有纪律有目的地炸**。请大家欣赏一下，我在 CartPole-v1 上，利用**纯视觉输入**训练 DQN 的爆炸现场：
+
+![alt text](ema_1.png)
+
+你可能要问既然大家都用 CartPole 的状态向量喂给 DQN 为什么我要搞视觉模型呢？因为这**更难**，更容易看出模型和算法的缺陷。
+
+不过在此之前，让我们看看算法：
+
+- 初始化动作价值网络 $Q_\theta(s,a)$ 和目标网络 $\hat Q_\theta(s,a)\leftarrow Q_\theta(s,a)$
+- 基于给定的序列采样次数 $T$ 开始循环：
+    - 选择初始状态 $s$
+    - 基于设定的时间步 $N$ 开始循环：
+      - 在 $s$ 的动作空间内，基于多臂老虎机的 ε-Greedy 策略，利用 $Q_\theta$ 选择一个动作 $a$。
+      - 基于动作 $a$ 转移到状态 $s'$，并获得环境奖励 $r(s,a)$，并放入经验重放池。
+      - 在经验重放池里面进行 mini-batch 采样 $B$ 个样本，对当前网络 $Q_\theta$ 进行时序差分估计：$\dfrac{1}{2B}\mathrm{arg}\min_{\theta}[\gamma \max_{a'}\hat Q_\theta(s',a')+r(s,a)-Q_\theta(s,a)]^2$
+      - 若经过固定的同步时间，更新目标网络 $\hat Q_\theta(s,a)\leftarrow Q_\theta(s,a)$
+      - 执行更新：$s\leftarrow s'$
+
+我们来看看代码实现：
+
+<details>
+
+<summary> Original DQN </summary>
+
+```python
+import gymnasium as gym
+import numpy as np
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import torch.nn.functional as F
+from collections import deque
+import random
+import matplotlib.pyplot as plt
+import os
+import time
+from PIL import Image
+
+# 设置随机种子
+torch.manual_seed(42)
+np.random.seed(42)
+
+class ImagePreprocessor:
+    """图像预处理类"""
+    def __init__(self, img_size=(84, 84)):
+        self.img_size = img_size
+        self.frame_buffer = deque(maxlen=4)
+        
+    def preprocess(self, rgb_array):
+        """预处理单帧图像"""
+        img = Image.fromarray(rgb_array)
+        # 转换为灰度图
+        img = img.convert('L')
+        # 调整大小
+        img = img.resize(self.img_size, Image.BILINEAR)
+        # 转换为numpy数组并归一化
+        img_array = np.array(img, dtype=np.float32) / 255.0
+        return img_array
+    
+    def reset(self):
+        """重置帧缓冲区"""
+        self.frame_buffer.clear()
+        # 用空白帧初始化
+        blank_frame = np.zeros(self.img_size, dtype=np.float32)
+        for _ in range(4):
+            self.frame_buffer.append(blank_frame)
+    
+    def get_state(self, rgb_array):
+        """获取当前状态（堆叠4帧）"""
+        processed_frame = self.preprocess(rgb_array)
+        self.frame_buffer.append(processed_frame)
+        # 堆叠帧
+        state = np.stack(self.frame_buffer, axis=0)  # Shape: (4, 84, 84)
+        return state
+
+class DQN(nn.Module):
+    """深度Q网络"""
+    def __init__(self, input_shape, n_actions):
+        super(DQN, self).__init__()
+        self.conv = nn.Sequential(
+            nn.Conv2d(input_shape[0], 32, kernel_size=8, stride=4),
+            nn.ReLU(),
+            nn.Conv2d(32, 64, kernel_size=4, stride=2),
+            nn.ReLU(),
+            nn.Conv2d(64, 64, kernel_size=3, stride=1),
+            nn.ReLU()
+        )
+        
+        # 计算卷积层输出尺寸
+        conv_out_size = self._get_conv_out(input_shape)
+        
+        self.fc = nn.Sequential(
+            nn.Linear(conv_out_size, 512),
+            nn.ReLU(),
+            nn.Linear(512, n_actions)
+        )
+    
+    def _get_conv_out(self, shape):
+        """计算卷积层输出尺寸"""
+        o = self.conv(torch.zeros(1, *shape))
+        return int(np.prod(o.size()))
+    
+    def forward(self, x):
+        conv_out = self.conv(x).view(x.size()[0], -1)
+        return self.fc(conv_out)
+
+class ReplayBuffer:
+    """经验回放缓冲区"""
+    def __init__(self, capacity):
+        self.buffer = deque(maxlen=capacity)
+    
+    def push(self, state, action, reward, next_state, done):
+        self.buffer.append((state, action, reward, next_state, done))
+    
+    def sample(self, batch_size):
+        batch = random.sample(self.buffer, batch_size)
+        state, action, reward, next_state, done = map(np.stack, zip(*batch))
+        return state, action, reward, next_state, done
+    
+    def __len__(self):
+        return len(self.buffer)
+
+class DQNAgent:
+    """DQN代理"""
+    def __init__(self, state_shape, n_actions, lr=1e-4, gamma=0.99, device=None):
+        self.n_actions = n_actions
+        self.gamma = gamma
+        self.device = device
+        self.epsilon = 1.0
+        self.epsilon_min = 0.05  # 稍微降低最小探索率
+        self.epsilon_decay = 0.995  # 保持较慢的衰减
+        self.batch_size = 64
+        self.update_target_freq = 500
+        
+        # 网络
+        self.policy_net = DQN(state_shape, n_actions).to(device)
+        self.target_net = DQN(state_shape, n_actions).to(device)
+        self.target_net.load_state_dict(self.policy_net.state_dict())
+        self.target_net.eval()
+        
+        # 优化器
+        self.optimizer = optim.Adam(self.policy_net.parameters(), lr=lr)
+        
+        # 经验回放
+        self.memory = ReplayBuffer(50000)
+        
+        # 训练步数计数
+        self.steps_done = 0
+    
+    def select_action(self, state, training=True):
+        """选择动作"""
+        if training and random.random() < self.epsilon:
+            return random.randrange(self.n_actions)
+        else:
+            with torch.no_grad():
+                state_tensor = torch.FloatTensor(state).unsqueeze(0).to(self.device)
+                q_values = self.policy_net(state_tensor)
+                return q_values.max(1)[1].item()
+    
+    def update_epsilon(self):
+        """更新探索率"""
+        self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
+    
+    def train_step(self):
+        """单步训练"""
+        if len(self.memory) < self.batch_size:
+            return 0.0
+        
+        # 从经验回放中采样
+        states, actions, rewards, next_states, dones = self.memory.sample(self.batch_size)
+        
+        # 转换为张量
+        states = torch.FloatTensor(states).to(self.device)
+        actions = torch.LongTensor(actions).to(self.device)
+        rewards = torch.FloatTensor(rewards).to(self.device)
+        next_states = torch.FloatTensor(next_states).to(self.device)
+        dones = torch.BoolTensor(dones).to(self.device)
+        
+        # 计算当前Q值
+        current_q_values = self.policy_net(states).gather(1, actions.unsqueeze(1))
+        
+        # 计算目标Q值
+        with torch.no_grad():
+            next_q_values = self.target_net(next_states).max(1)[0]
+            target_q_values = rewards + (self.gamma * next_q_values * ~dones)
+        
+        # 计算损失
+        loss = F.mse_loss(current_q_values.squeeze(), target_q_values)
+        
+        # 优化
+        self.optimizer.zero_grad()
+        loss.backward()
+        # 加强梯度裁剪
+        torch.nn.utils.clip_grad_norm_(self.policy_net.parameters(), max_norm=1.0)
+        self.optimizer.step()
+        
+        # 更新目标网络
+        self.steps_done += 1
+        if self.steps_done % self.update_target_freq == 0:
+            self.target_net.load_state_dict(self.policy_net.state_dict())
+        
+        # 更新探索率
+        self.update_epsilon()
+        
+        return loss.item()
+
+def train_dqn_optimized(total_steps=30000, device=None):
+    """优化的训练函数"""
+    # 初始化环境
+    env = gym.make('CartPole-v1', render_mode='rgb_array')
+    n_actions = env.action_space.n
+    
+    # 初始化预处理器和代理
+    preprocessor = ImagePreprocessor()
+    agent = DQNAgent(state_shape=(4, 84, 84), n_actions=n_actions, device=device)
+    
+    # 训练变量
+    episode_rewards = []
+    episode_losses = []
+    current_episode_reward = 0
+    current_episode_loss = 0
+    loss_count = 0
+    episode_count = 0
+    
+    # 时间统计
+    episode_start_time = time.time()
+    last_episode_time = episode_start_time
+    
+    state, _ = env.reset()
+    preprocessor.reset()
+    
+    # 获取初始状态
+    rgb_array = env.render()
+    state_tensor = preprocessor.get_state(rgb_array)
+    
+    print("开始优化训练...")
+    print(f"初始参数: epsilon={agent.epsilon}, lr=3e-5, batch_size={agent.batch_size}")
+    
+    for step in range(total_steps):
+        # 选择动作
+        action = agent.select_action(state_tensor)
+        
+        # 执行动作
+        next_state, reward, terminated, truncated, _ = env.step(action)
+        done = terminated or truncated
+        current_episode_reward += reward
+        
+        # 获取下一状态的图像
+        rgb_array = env.render()
+        next_state_tensor = preprocessor.get_state(rgb_array)
+        
+        # 存储经验
+        agent.memory.push(state_tensor, action, reward, next_state_tensor, done)
+        
+        # 训练
+        loss = agent.train_step()
+        if loss > 0:
+            current_episode_loss += loss
+            loss_count += 1
+        
+        # 更新状态
+        state_tensor = next_state_tensor
+        
+        # 环境重置
+        if done:
+            episode_count += 1
+            avg_loss = current_episode_loss / loss_count if loss_count > 0 else 0
+            episode_rewards.append(current_episode_reward)
+            episode_losses.append(avg_loss)
+            
+            # 每10个episode打印详细信息
+            if episode_count % 10 == 0:
+                current_time = time.time()
+                time_elapsed = current_time - last_episode_time
+                last_episode_time = current_time
+                
+                avg_reward = np.mean(episode_rewards[-10:])
+                print(f"Episode {episode_count}: "
+                      f"Avg Reward = {avg_reward:.1f}, "
+                      f"Epsilon = {agent.epsilon:.3f}, "
+                      f"Avg Loss = {avg_loss:.4f}, "
+                      f"Time = {time_elapsed:.2f}s")
+            
+            state, _ = env.reset()
+            preprocessor.reset()
+            rgb_array = env.render()
+            state_tensor = preprocessor.get_state(rgb_array)
+            current_episode_reward = 0
+            current_episode_loss = 0
+            loss_count = 0
+    
+    env.close()
+    return agent, episode_rewards, episode_losses, episode_count
+
+def final_visualization(agent, preprocessor, max_steps=500):
+    """最终可视化演示"""
+    env = gym.make('CartPole-v1', render_mode='human')  # 使用human模式进行可视化
+    
+    state, _ = env.reset()
+    preprocessor.reset()
+    total_reward = 0
+    frames = []
+    
+    print("\n开始最终可视化演示...")
+    
+    # 切换到评估模式
+    agent.policy_net.eval()
+    
+    # 运行一个完整回合
+    with torch.no_grad():
+        for step in range(max_steps):
+            # 渲染当前状态
+            env.render()
+            
+            # 获取当前状态
+            rgb_array = env.render()
+            state_tensor = preprocessor.get_state(rgb_array)
+            
+            # 选择动作
+            action = agent.select_action(state_tensor, training=False)
+            
+            # 执行动作
+            state, reward, terminated, truncated, _ = env.step(action)
+            done = terminated or truncated
+            total_reward += reward
+            
+            # 记录帧（用于后续分析）
+            frames.append(rgb_array)
+            
+            # 添加小延迟以便观察
+            time.sleep(0.05)
+            
+            if done:
+                break
+    
+    print(f"可视化演示结束，总奖励: {total_reward}")
+    
+    # 切换回训练模式
+    agent.policy_net.train()
+    env.close()
+    
+    return total_reward, frames
+
+def plot_and_save_training_progress(rewards, losses, filename="optimized_training_progress.png"):
+    """绘制并保存训练进度图"""
+    plt.figure(figsize=(15, 5))
+    
+    # 原始奖励
+    plt.subplot(1, 3, 1)
+    plt.plot(rewards, alpha=0.6, linewidth=1)
+    plt.title('Training Rewards per Episode')
+    plt.xlabel('Episode')
+    plt.ylabel('Reward')
+    plt.grid(True, alpha=0.3)
+    
+    # 滑动平均奖励
+    plt.subplot(1, 3, 2)
+    window = 10
+    if len(rewards) >= window:
+        moving_avg = [np.mean(rewards[i-window:i]) for i in range(window, len(rewards))]
+        plt.plot(range(window, len(rewards)), moving_avg, linewidth=2, color='red')
+        plt.title(f'Moving Average Reward (window={window})')
+        plt.xlabel('Episode')
+        plt.ylabel('Average Reward')
+        plt.grid(True, alpha=0.3)
+    
+    # 损失曲线
+    plt.subplot(1, 3, 3)
+    if losses:
+        plt.plot(losses, alpha=0.6, linewidth=1, color='green')
+        plt.title('Training Loss per Episode')
+        plt.xlabel('Episode')
+        plt.ylabel('Loss')
+        plt.grid(True, alpha=0.3)
+    
+    plt.tight_layout()
+    
+    # 保存图像
+    plt.savefig(filename, dpi=300, bbox_inches='tight')
+    print(f"训练进度图已保存为: {filename}")
+    plt.show()
+    
+    # 输出统计信息
+    if len(rewards) > 0:
+        print(f"\n训练统计:")
+        print(f"总回合数: {len(rewards)}")
+        print(f"平均奖励: {np.mean(rewards):.2f} ± {np.std(rewards):.2f}")
+        print(f"最大奖励: {np.max(rewards)}")
+        print(f"最小奖励: {np.min(rewards)}")
+        if len(rewards) >= 10:
+            print(f"最近10回合平均奖励: {np.mean(rewards[-10:]):.2f}")
+
+if __name__ == "__main__":
+    # ========== 一键切换设备 ==========
+    # 只需修改下面这一行：
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")  # 自动选择
+    # device = torch.device("cpu")  # 强制使用CPU
+    # device = torch.device("cuda")  # 强制使用GPU（如果有）
+    # ==================================
+    
+    print(f"使用设备: {device}")
+    if device.type == 'cuda':
+        print(f"GPU名称: {torch.cuda.get_device_name(0)}")
+    
+    # 开始训练
+    try:
+        start_time = time.time()
+        trained_agent, rewards, losses, episode_count = train_dqn_optimized(
+            total_steps=400000,  # 增加总训练步数
+            device=device  # 传递设备参数
+        )
+        total_time = time.time() - start_time
+        
+        print(f"\n训练完成!")
+        print(f"总训练时间: {total_time:.2f}秒")
+        print(f"总回合数: {episode_count}")
+        print(f"平均每回合时间: {total_time/episode_count:.2f}秒")
+        
+        # 绘制并保存训练进度
+        plot_and_save_training_progress(rewards, losses, "optimized_training_progress.png")
+        
+        # 保存模型
+        torch.save(trained_agent.policy_net.state_dict(), 'optimized_dqn_cartpole_model.pth')
+        print("模型已保存为: optimized_dqn_cartpole_model.pth")
+        
+        # 最终可视化演示
+        preprocessor = ImagePreprocessor()
+        final_reward, _ = final_visualization(trained_agent, preprocessor)
+        print(f"最终可视化演示奖励: {final_reward}")
+        
+    except KeyboardInterrupt:
+        print("\n训练被用户中断")
+    except Exception as e:
+        print(f"训练过程中出现错误: {e}")
+        import traceback
+        traceback.print_exc()
+```
+
+</details>
+
+这是效果：
+
+![alt text](best_cartpole_demo.gif)
+
+## 第八章
+
+![alt text](image-5.png)
