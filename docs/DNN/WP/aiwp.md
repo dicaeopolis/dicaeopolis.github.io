@@ -237,13 +237,13 @@ PJA 师傅用 Gemini 搓了个绕过，也很不错：
 
 ![alt text](image-5.png)
 
-<warning>
+<details class = "warning">
+<summary>有害内容警告</summary>
 
-<summary> 有害内容警告 </summary>
+<p></p>
+<p>下面的内容涉及到对大语言模型的提示词越狱攻击，可能包含不恰当内容，如暴力危险言论等。这些内容仅供学术交流使用。</p>
+<p></p>
 
-下面的内容涉及到对大语言模型的提示词越狱攻击，可能包含不恰当的如暴力危险言论等。这些内容仅供学术交流使用。
-
-</warning>
 
 从 [这里](https://linux.do/t/topic/403782) 摘录的一段提示词，Deepseek-DAN：
 
@@ -261,6 +261,203 @@ PJA 师傅用 Gemini 搓了个绕过，也很不错：
 
 ![alt text](image-6.png)
 
-[还挺好用的万能套取 prompt](https://linux.do/t/topic/209856)
+[还挺好用的万能套取 prompt](https://linux.do/t/topic/209856)：
 
 ![alt text](image-7.png)
+
+## Problem 3
+
+本来这个位置应该放另外一道题的，但是由于 push 到比赛环境上面可能出了些问题导致没有回显一直修不好，就在放题当天凌晨加班到 3 点过花了 2h 出出来了，结果导致当天白天院运会志愿者直接睡过头……
+
+题目结合背景其实很简单，考的是**后门攻击**的防御，也就是对后门触发器的逆向。考虑到题目说法可能还是有点隐晦，反正我自己试了几个 LLM 发现它们都没能读出后门攻击的味道反而一直在纠结题目背景的自动驾驶。不过最后我已经把关键词贴出来了，搜索一下照着做就行嘛。**为什么这些题出在 misc? 就是考验搜索能力。如果一道 misc 题目可以轻松利用随波逐流等工具“梭”出来，那么这样的题目（入门教学题目不算哈）质量肯定不高。**
+
+顺着我给的提示，或者让 GPT5-high 等聪明模型来做就会找到 [这篇文章](https://ieeexplore.ieee.org/document/8835365)，然后喂给 LLM 直接 vibe 即可。
+
+下面的 WP 就是 deepseek 帮我写的：
+
+### WP
+
+每个模型都被植入了后门（backdoor），当输入图像包含特定触发器（trigger）时，模型会错误分类到目标数字。触发器是一个小的扰动模式，通常人眼难以察觉。
+
+Neural Cleanse是一种后门检测方法，其核心思想是：对于一个被植入后门的模型，将其他类别的输入误分类到目标类别所需的触发器是最小的。因此，我们可以通过逆向工程为每个候选数字（0-9）生成触发器，并比较触发器的大小，从而找出目标数字。
+
+**关键步骤**：
+
+1. 对于每个候选数字 \( c \)（0到9），我们优化一个触发器 \( \delta \)，使得当触发器添加到干净图像上时，模型将图像分类为 \( c \)。
+2. 优化目标是最小化分类损失和触发器的L1范数（鼓励触发器稀疏）。
+3. 目标数字 \( c^* \) 是所需触发器L1范数最小的那个。
+
+#### 步骤1: 环境准备
+
+确保安装以下Python库：
+
+```bash
+pip install torch torchvision pycryptodome
+```
+
+#### 步骤2: 确定模型数量
+
+从题目附件中，查看模型文件的数量。假设你收到多个模型文件（如 `model_0.pth`, `model_1.pth`, ...），模型数量就是文件的数量。记模型数量为 N。
+
+#### 步骤3: 加载模型并分析架构
+
+模型是PyTorch保存的权重文件（.pth）。由于架构未知，我们需要从模型中推断。通常，MNIST分类模型是CNN。以下代码演示如何加载模型并检查架构：
+
+```python
+import torch
+import torch.nn as nn
+
+# 尝试加载第一个模型以推断架构
+state_dict = torch.load('model_0.pth', map_location='cpu')
+
+# 打印状态字典的键以了解层结构
+print("State dict keys:", state_dict.keys())
+
+# 这里提供一个通用MNIST CNN架构
+class MNISTClassifier(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv_layers = nn.Sequential(
+            nn.Conv2d(1, 32, 3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+            nn.Conv2d(32, 64, 3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(2)
+        )
+        self.fc_layers = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(64 * 7 * 7, 128),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(128, 10)
+        )
+    
+    def forward(self, x):
+        x = self.conv_layers(x)
+        x = self.fc_layers(x)
+        return x
+
+# 加载模型权重
+model = MNISTClassifier()
+model.load_state_dict(state_dict)
+model.eval()
+```
+
+注意：如果架构不匹配，可能需要调整模型定义。你可以通过查看状态字典的形状来推断层大小。
+
+#### 步骤4: 准备测试数据
+
+使用MNIST测试集作为干净图像来源：
+
+```python
+from torchvision import datasets, transforms
+from torch.utils.data import DataLoader
+
+transform = transforms.Compose([transforms.ToTensor()])
+test_dataset = datasets.MNIST(root='./data', train=False, download=True, transform=transform)
+test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False)
+```
+
+#### 步骤5: 实现Neural Cleanse检测
+
+对于每个模型，执行以下代码来检测目标数字：
+
+```python
+import torch.optim as optim
+import numpy as np
+
+def detect_target_class(model, test_loader, device='cpu'):
+    """
+    使用Neural Cleanse检测模型的目标数字
+    返回目标数字（0-9）
+    """
+    model.to(device)
+    model.eval()
+    l1_norms = []  # 存储每个候选数字的触发器L1范数
+    
+    # 选择5个干净图像作为基础（来自不同类别）
+    clean_images = []
+    selected_classes = set()
+    with torch.no_grad():
+        for images, labels in test_loader:
+            for img, lbl in zip(images, labels):
+                if lbl.item() not in selected_classes and len(clean_images) < 5:
+                    clean_images.append(img.to(device))
+                    selected_classes.add(lbl.item())
+                if len(clean_images) >= 5:
+                    break
+            if len(clean_images) >= 5:
+                break
+    
+    # 对每个候选数字（0-9）反演触发器
+    for candidate in range(10):
+        triggers = []  # 存储每个基础图像的触发器
+        for base_img in clean_images:
+            base_img = base_img.unsqueeze(0)  # 添加batch维度
+            # 初始化触发器（可训练参数）
+            trigger = torch.zeros_like(base_img, requires_grad=True, device=device)
+            # 添加小幅噪声初始化
+            trigger.data = torch.randn_like(trigger) * 0.01
+            
+            optimizer = optim.Adam([trigger], lr=0.05)
+            # 优化循环
+            for step in range(200):  # 200次迭代
+                # 添加触发器并裁剪到有效范围
+                poisoned_img = torch.clamp(base_img + trigger, 0, 1)
+                outputs = model(poisoned_img)
+                # 损失函数：分类损失 + L1正则化
+                loss = nn.CrossEntropyLoss()(outputs, torch.tensor([candidate], device=device))
+                loss += 0.1 * torch.norm(trigger, p=1)  # L1正则化系数0.1
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+            
+            triggers.append(trigger.detach().cpu())
+        
+        # 计算平均触发器的L1范数
+        avg_trigger = torch.mean(torch.stack(triggers), dim=0)
+        l1_norm = torch.norm(avg_trigger, p=1).item()
+        l1_norms.append(l1_norm)
+        print(f"候选数字 {candidate} 的触发器L1范数: {l1_norm:.4f}")
+    
+    # 目标数字是L1范数最小的候选
+    target_class = np.argmin(l1_norms)
+    print(f"检测到的目标数字: {target_class}")
+    return target_class
+
+# 遍历所有模型
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+target_sequence = []
+for i in range(N):  # N是模型数量
+    print(f"处理模型 {i}...")
+    model = MNISTClassifier()
+    model.load_state_dict(torch.load(f'model_{i}.pth'))  # 根据实际文件名调整
+    target_digit = detect_target_class(model, test_loader, device)
+    target_sequence.append(str(target_digit))
+
+# 拼接数字序列
+digit_string = ''.join(target_sequence)
+print(f"目标数字序列: {digit_string}")
+```
+
+#### 步骤6: 计算SHA256并解密
+
+使用目标数字序列计算SHA256哈希，并解密密文，这里选一个在线网站解密即可。
+
+注意事项：
+
+1. **模型架构**：如果提供的模型架构与代码中的`MNISTClassifier`不匹配，你需要根据状态字典调整模型定义。查看状态字典的键和形状来构建正确架构。
+2. **计算时间**：Neural Cleanse检测每个模型可能需要几分钟（取决于硬件）。使用GPU可以加速。
+3. **触发器优化**：优化参数（学习率、迭代次数、L1系数）可能需要微调以获得最佳结果。如果检测不准，可以增加迭代次数或调整L1系数。
+4. **模型数量**：确保正确统计模型文件数量，顺序通常按文件名排序（如`model_0.pth`, `model_1.pth`, ...）。
+
+通过以上步骤，你可以找出每个模型的目标数字，拼接后计算SHA256密钥，并解密密文获得flag。本题展示了后门攻击的检测方法，强调了AI模型安全的重要性。如果你在实施过程中遇到问题，可以检查模型架构或调整优化参数。
+
+## 碎碎念
+
+从迎新赛开始就有了“梭”的风气。不可避免地，我们应该承认 LLM 越来越聪明了。但似乎 LLM 的智力和用 LLM 的人的智力在很多时候是守恒的。我看到好多人对着 AI 1 的指示咔咔一顿炼丹出 flag，然后看着 AI 2 的一个**真实世界的复杂问题**：nc 连不上，而发呆求助。**这并不是一个好现象**。固然我们不可能反对 LLM 浪潮开历史倒车，但我们的比赛是面向**人**的。AI 会写出结构非常清晰，注释丰富逻辑完整的代码，但至少现在的 AI 看到 base100 编码时仍然会选择老是在 emoji 的具体内容上面钻牛角尖，编造一个警察抓情侣的故事——而如果**人**能够设计一个合理的 prompt，并辅以搜索功能，是可以正常做出的。我们希望的是这样的 out-of-distribution：用 LLM 的人能够和 LLM 一起智力进步，而不是**电脑控制大脑，LLM 代替思考**。
+
+扯到这了，还得再提一个点。**使用者即负责人**——人要对自己利用 AI 生成的内容负责。怎么个负责法呢？AI 写了段脚本，得清楚它都干了些啥，你才**敢**运行吧？如果你不懂，大可以再开一个对话问问吧。AI 梭题固然快，但你提交之前**能不能先看看这玩意是不是瞎编的啊？？？**我们后台看到这些富有想象力的 flag 们快笑疯了……
+
+这两点总结起来还是那句话：**你尽力了吗？**或者说，**人类**尽力了吗？总之，重申一遍：不要让**电脑控制大脑，LLM 代替思考**。
