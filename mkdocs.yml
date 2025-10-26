@@ -181,6 +181,8 @@ nav:
       - 符号梯度下降: 'DNN/optimizer/SignGD.md'
       - 自适应学习率改进策略: 'DNN/optimizer/Adaptive.md'
       - SGD 系列算法: 'DNN/optimizer/SGD.md'
+    - Wp:
+      - MISC-AI 方向 WriteUp: 'DNN/WP/aiwp.md'
   - 配置和杂谈笔记:
     - 'misc/index.md'
     - 功能测试页面: 'misc/test.md'
