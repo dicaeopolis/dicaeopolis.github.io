@@ -439,7 +439,7 @@ int memcpy_0(void* src, void* dst)// a0 -> src, a1 -> dst
   //loop:
   while(*src != 0)
   //lw t1, 0(a0); t1 = *src
-  //bne t1, zero, ret; *src !=0 then loop otherwise jump to ret
+  //beq t1, zero, ret; *src !=0 then loop otherwise jump to ret
   {
     *dst = *src;//sw t1, 0(a1)
     ++src;//addi a0, a0, 4
@@ -457,7 +457,7 @@ int memcpy_0(void* src, void* dst)// a0 -> src, a1 -> dst
 ```asm
       addi  t0, zero, 0
 loop: lw    t1, 0(a0)
-      bne   t1, zero, ret
+      beq   t1, zero, ret
       sw    t1, 0(a1)
       addi  a0, a0, 4
       addi  a1, a1, 4
