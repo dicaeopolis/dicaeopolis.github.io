@@ -151,8 +151,6 @@ nav:
     - 'DNN/index.md'
     - RL学习笔记 - 上篇: 'DNN/RL.md'
     - SMO 算法的推导: 'DNN/SVM_SMO.md'
-    - Wp:
-      - MISC-AI 方向 WriteUp: 'DNN/WP/aiwp.md'
     - 深度学习模型攻击理论与复现归档:
       - 'DNN/model-attack/index.md'
       - HSJA 攻击: 'DNN/model-attack/hsja.md'
