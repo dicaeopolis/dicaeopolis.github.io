@@ -121,3 +121,7 @@
 ![alt text](de8dfb370f6343fc25ce8030098ff3e3.jpeg)
 
 ![alt text](fa640c69d29fe582245865dc2ae4413e.jpeg)
+
+## 第六次作业
+
+![alt text](b66b23443e49892a0e7209c3d1c53b64_720.jpg)
