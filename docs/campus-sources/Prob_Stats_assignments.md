@@ -408,3 +408,15 @@ $$
         \end{cases}
 \end{align*}
 $$
+
+## 第六次
+
+![alt text](d99e9ef13f0aa0b2dd778afc582003db.jpeg)
+
+![alt text](1096d4c7e79992c2f1d0190cd91b0e95.jpeg)
+
+## 第七次
+
+![alt text](854b71d8e5b34a412f1ac4a2f842544e.jpeg)
+
+![alt text](9cd7ca6791fe9ebb7cd3953fb6135810.jpeg)

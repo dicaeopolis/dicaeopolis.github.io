@@ -415,3 +415,65 @@ R\circ R\circ R=\left[
 \end{matrix}
 \right]
 $$
+
+## 第七次作业
+
+![alt text](image-105.png)
+
+$$
+R_1=\left[
+\begin{matrix}
+    1&1&0\\
+    1&1&1\\
+    1&0&1\\
+\end{matrix}
+\right]
+$$
+
+自反的，选择 4.
+
+$$
+R_2=\left[
+\begin{matrix}
+    1&0&1\\
+    1&1&0\\
+    0&1&0\\
+\end{matrix}
+\right]
+$$
+
+反对称的，选择 8.
+
+$$
+R_3=\left[
+\begin{matrix}
+    0&1&0\\
+    1&0&1\\
+    0&1&0\\
+\end{matrix}
+\right]
+$$
+
+对称的，反自反的，选择 9.
+
+$$
+R_4=\left[
+\begin{matrix}
+    1&1&0\\
+    0&0&0\\
+    0&0&0\\
+\end{matrix}
+\right]
+$$
+
+选择 6.
+
+$$
+R_5=I_3
+$$
+
+恒等满足 10.
+
+![alt text](image-103.png)
+
+![alt text](image-106.png)
