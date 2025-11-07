@@ -149,10 +149,10 @@ extra_javascript:
 nav:
   - 校内课程知识:
     - 'campus-sources/index.md'
-    - 《大学物理B下》课程作业与笔记归档: 'campus-sources/PU_Bii_assignments.md'
-    - 《计算机组成原理》理论课程作业与笔记归档: 'campus-sources/SDC_assignments.md'
-    - 《离散数学》课程作业与笔记归档: 'campus-sources/Descrete_assignments.md'
     - 《概率论与数理统计》课程作业与笔记归档: 'campus-sources/Prob_Stats_assignments.md'
+    - 《离散数学》课程作业与笔记归档: 'campus-sources/Descrete_assignments.md'
+    - 《计算机组成原理》理论课程作业与笔记归档: 'campus-sources/SDC_assignments.md'
+    - 《大学物理B下》课程作业与笔记归档: 'campus-sources/PU_Bii_assignments.md'
     - <i class="fas fa-calculator"></i> 二进制乘法可视化工具: 'campus-sources/binmul.md'
     - 本科教科书电子资源: 'campus-sources/textbook.md'
     - 《数据结构》划重点笔记: 'campus-sources/ds-keynote.md'
@@ -162,6 +162,7 @@ nav:
     - 'DNN/index.md'
     - RL学习笔记 - 上篇: 'DNN/RL.md'
     - SMO 算法的推导: 'DNN/SVM_SMO.md'
+    - 前馈神经网络的反向传播: 'DNN/BP.md'
     - Wp:
       - MISC-AI 方向 WriteUp: 'DNN/WP/aiwp.md'
     - 深度学习模型攻击理论与复现归档:
