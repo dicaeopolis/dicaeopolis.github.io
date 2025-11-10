@@ -478,3 +478,55 @@ $$
 
 
 ![alt text](image-106.png)
+
+## 第八次作业
+
+![alt text](image-107.png)
+
+![alt text](image-110.png)
+
+极小元 = 最小元 = 1，极大元 = 最大元 = 24
+
+![alt text](image-111.png)
+
+极小元 = 最小元 = 1，极大元 = 8,6,9,5,7，无最大元。
+
+![alt text](image-108.png)
+
+(1)
+
+$$
+f(x):A\rightarrow B=2^x\quad f^{-1}(y):B\rightarrow A=\log_2 y
+$$
+
+(2)
+
+$$
+f(x):A\rightarrow B=\dfrac{2}{\pi}x-2\quad f^{-1}(y):B\rightarrow A=\dfrac{\pi}{2}(y+2)
+$$
+
+![alt text](image-109.png)
+
+(1)
+
+$$
+f\circ g:\mathbb{N}\rightarrow\mathbb{R}=x^2-x
+$$
+
+$$
+f\circ g(A)=\{2,12,30,56,90\}\quad f\circ g(B)=\{0\}
+$$
+
+由于 $\mathbb{R}$ 的势大于 $\mathbb{N}$ 因此不是满射，因为 $B$ 中两个元素都被映射到了 $0$ 所以不是单射。
+
+(2)
+
+$$
+f\circ g:\mathbb{Z}\rightarrow\mathbb{R}=\mathrm{e}^{x^2}
+$$
+
+$$
+f\circ g(A) = \{\mathrm{e}^{n^2}|n\in \mathbb{N}\}\quad f\circ g(B) = \{\mathrm{e}^{4k^2}|k\in \mathbb{N}\}
+$$
+
+由于 $\mathbb{R}$ 的势大于 $\mathbb{Z}$ 因此不是满射，因为任意 $k,-k\in\mathbb{Z}$ 这两个元素都被映射到了 $\mathrm{e}^{k^2}$ 所以不是单射。
