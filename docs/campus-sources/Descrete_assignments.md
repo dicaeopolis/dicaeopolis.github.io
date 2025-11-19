@@ -530,3 +530,13 @@ f\circ g(A) = \{\mathrm{e}^{n^2}|n\in \mathbb{N}\}\quad f\circ g(B) = \{\mathrm{
 $$
 
 由于 $\mathbb{R}$ 的势大于 $\mathbb{Z}$ 因此不是满射，因为任意 $k,-k\in\mathbb{Z}$ 这两个元素都被映射到了 $\mathrm{e}^{k^2}$ 所以不是单射。
+
+## 第九次作业
+
+![alt text](image-119.png)
+
+![alt text](image-120.png)
+
+![alt text](image-121.png)
+
+![alt text](image-122.png)
