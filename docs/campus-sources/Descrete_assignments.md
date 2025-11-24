@@ -539,4 +539,24 @@ $$
 
 ![alt text](image-121.png)
 
+![alt text](3288b56b6695df0cae711dd9dd089771_720.jpg)
+
 ![alt text](image-122.png)
+
+![alt text](d13afa5622ea597336fe815ee1c02ef2_720.jpg)
+
+## 第十次作业
+
+![alt text](image-123.png)
+
+![alt text](image-124.png)
+
+![alt text](image-125.png)
+
+![alt text](image-126.png)
+
+![alt text](image-127.png)
+
+![alt text](image-128.png)
+
+![alt text](606296c10ec4934478f06fdc1bbf0ca6_720.jpg)
