@@ -158,6 +158,7 @@ nav:
     - 《数据结构》划重点笔记: 'campus-sources/ds-keynote.md'
     - 《数据结构》期末复习题题解: 'campus-sources/ds-write-up.md'
     - 自动签到脚本: 'campus-sources/autosignin.md'
+    - 《计算机组成与设计》部分历年题目题解: 'campus-sources/SDC-exams.md'
   - 深度神经网络:
     - 'DNN/index.md'
     - 前馈神经网络的反向传播: 'DNN/BP.md'
