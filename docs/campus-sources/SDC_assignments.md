@@ -863,14 +863,100 @@ $$
 
 ![alt text](image-148.png)
 
+> 主存 1GB 字节，则地址宽度是 30 位。块大小 128B = 1/8 KB，则 cache 一共 512 块，也就是块索引 9 位，块内偏移 7 位，那么 tag 就需要 14 位。
+>
+> 由于是直接映射，不需要 LRU 的记号位；由于是通写，不需要脏位，因此只需要一个冷启动有效位，加上 tag 的 14 位，一共是 15 位。每一块的总数据是 64KB + 512 * 15 / 8 B = 64.94 KB
+
 ![alt text](image-149.png)
 
+```
+block size = 1   block size = 4
+addr line        addr line
+2    2   miss    2    0    miss
+3    3   miss    3    0    hit
+11   11  miss    11   2    miss
+16   0   miss    16   0    miss
+21   5   miss    21   1    miss
+13   13  miss    13   3    miss
+64   0   miss    64   0    miss
+48   0   miss    48   0    miss
+19   3   miss    19   0    miss
+11   11  hit     11   2    hit
+3    3   miss    3    0    miss
+22   6   miss    22   1    hit
+4    4   miss    4    1    miss
+27   11  miss    27   2    miss
+6    6   miss    6    1    hit
+11   11  miss    11   2    miss
+hit rate = 1/16  hit rate = 1/4
+```
+
 ![alt text](image-150.png)
+
+> (1) x 和 y 中的元素都是访问后就不再使用，时间局部性差。但是好在存在一个数组里面，且是顺序访问，因此空间局部性好。这个时候就该用向量指令！
+
+> (2) 这个 cache 真是牛大了，只有两行，也就是说每一行只能放半个浮点向量。具体而言，我们可以把 cache line 映射到主存看一下：
+
+```
+ 40  44  48  4B  50  54  58  5B  60  64  68  6B  70  74  78  7B
+ x0  x1  x2  x3  x4  x5  x6  x7  y0  y1  y2  y3  y4  y5  y6  y7
+| cache line 1  | cache line 2  | cache line 1  | cache line 2 |
+```
+
+> 也就是说每一次计算 x[i] * y[i] 都要刷新一次 cache，命中率 0%
+
+> (3) 现在映射变成了：
+
+```
+ 40  44  48  4B  50  54  58  5B  60  64  68  6B  70  74  78  7B
+ x0  x1  x2  x3  x4  x5  x6  x7  y0  y1  y2  y3  y4  y5  y6  y7
+| line1 | line2 | line1 | line2 | line1 | line2 | line1 | line2 |
+```
+
+> 每一次访问 block 的时候，虽然对应的是同一个 cache line 但是能刚好装进两个组里面，一个对应 x 一个对应 y，因此计算 x_2k * y_2k 的时候固定 miss 但后面一次计算就能利用上 cache，命中率 50%。
+
+> （4）映射如下：
+
+```
+ 40  44  48  4B  50  54  58  5B  60  64  68  6B  70  74  78  7B  80  84  88  8B
+ x0  x1  x2  x3  x4  x5  x6  x7  x8  x9  xA  xB  y0  y1  y2  y3  y4  y5  y6  y7
+| cache line 1  | cache line 2  | cache line 1  | cache line 2 | cache line 1 |
+```
+
+> 这样就不会一直撞车了，只在 x0 和 x4 处两次 miss 命中率来到了 75%.
 
 ![alt text](image-151.png)
 
 ![alt text](image-152.png)
 
+> 主存地址线宽度 26 bits，cache 块大小 64B 则偏移位是 6 bits，一共 64 块也就是 set index 同样是 6 位，剩下的 tag 字段就是 14 位。
+> 
+> LRU 需要 2 位，有效位 1 位，脏位 1 位，tag 14 位，每一行的元数据字段宽度是 18 位；一共 64 / 4 = 16 行，元数据占 36 B，加上数据区容量 4KB 一共 4096+36 = 4132 Bytes = 33056 位。
+>
+> 前 4096 bytes 的数据能够完整装入 cache，剩下 248 Bytes 的数据需要 4 次 LRU 替换。
+>
+> 总时间计算如下：冷启动耗时(64 * 10) + 命中耗时（4344 * 1） + LRU 替换(4 * 10) + [载入的 LRU 替换1(4 * 10) + 命中耗时(4344 * 1) + 载入的 LRU 替换2(4 * 10)] * 15 = 4344 * 16 + 680 + 15 * 80 = 71384
+>
+> 平均访存为 71384 / (4344 * 16) = 1.027 Cycs
+
 ![alt text](image-153.png)
 
 ![alt text](image-154.png)
+
+> 页大小 128 B 则页内偏移量占用 7 bits，高 9 位是虚拟页号，TLB 一共 4 行，vindex = 2 位，则剩下的 vtag 占 7 位。
+>
+> 物理地址的页内偏移仍然是 7 位，但是高 5 位就是物理页号。
+>
+> cache 的块内偏移 2 位，行号 4 位，则标签 6 位。
+>
+> CPU 读取地址 067AH = 0000 0110 0111 1010.
+>
+> 首先在 TLB 里面查找：vtag = 000 0011 = 03, vindex = 0, offset = 111 1010 = 7A
+>
+> 查到到第一条是对应的，但是有效位 = 0， TLB 缺失，需要从页表中拿映射。
+>
+> 虚拟页号 = 0 0000 1100 = 0C，对应的页框号是 19，有效，无需从外存调取页。则得到物理地址是 19[:5]7A[:7] = 1100 1111 1010
+>
+> 接下来在 cache 里面查找，tag = 11 0011 = 33, index = 1110 = 0E, offset = 10 = 2
+>
+> 取得字节为 4A.
