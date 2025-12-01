@@ -125,3 +125,7 @@
 ## 第六次作业
 
 ![alt text](b66b23443e49892a0e7209c3d1c53b64_720.jpg)
+
+## 第八次作业
+
+![alt text](6e693f1ce1372c4a2c76cf80af346dd4.jpeg)
