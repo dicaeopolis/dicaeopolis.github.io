@@ -149,9 +149,9 @@ extra_javascript:
 nav:
   - 校内课程知识:
     - 'campus-sources/index.md'
+    - 《计算机组成与设计》部分历年题目题解: 'campus-sources/SDC-exams.md'
     - 《离散数学》课程作业与笔记归档: 'campus-sources/Descrete_assignments.md'
     - 《概率论与数理统计》课程作业与笔记归档: 'campus-sources/Prob_Stats_assignments.md'
-    - 《计算机组成与设计》部分历年题目题解: 'campus-sources/SDC-exams.md'
     - 《计算机组成原理》理论课程作业与笔记归档: 'campus-sources/SDC_assignments.md'
     - 《大学物理B下》课程作业与笔记归档: 'campus-sources/PU_Bii_assignments.md'
     - <i class="fas fa-calculator"></i> 二进制乘法可视化工具: 'campus-sources/binmul.md'
