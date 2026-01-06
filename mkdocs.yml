@@ -165,7 +165,7 @@ nav:
     - 看不见北极星怎么办: 'astronomy/polar.md'
     - 方位调节: 'astronomy/方位调节.md'
     - 纬度调节: 'astronomy/纬度调节.md'
-    - 深空影集: 'astronomy/m42.md'
+    - 深空影集: 'astronomy/gallery.md'
   - 深度神经网络:
     - 'DNN/index.md'
     - 如何做四六级考试的段落匹配题: 'DNN/match.md'
