@@ -20,6 +20,8 @@
 
 ### 2026 年 1 月 9 日
 
+![alt text](result_drizzle_3600s_xl.png)
+
 ![alt text](result_drizzle_3600s_2.png)
 
 拍摄参数同上，但是累计 1h。
