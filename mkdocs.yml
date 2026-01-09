@@ -155,7 +155,7 @@ nav:
     - 纬度调节: 'astronomy/纬度调节.md'
   - 校内课程知识:
     - 'campus-sources/index.md'
-    - Discrete_exams: 'campus-sources/Discrete_exams.md'
+    - 《离散数学》部分期末题目题解: 'campus-sources/Discrete_exams.md'
     - 《计算机组成与设计》部分历年题目题解: 'campus-sources/SDC-exams.md'
     - 离散期末复习提纲: 'campus-sources/Discrete_notes.md'
     - 《离散数学》课程作业与笔记归档: 'campus-sources/Descrete_assignments.md'
