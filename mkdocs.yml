@@ -147,11 +147,17 @@ extra_javascript:
   
 
 nav:
+  - 天文摄影理论和实践:
+    - 'astronomy/index.md'
+    - 深空影集: 'astronomy/gallery.md'
+    - 看不见北极星怎么办: 'astronomy/polar.md'
+    - 方位调节: 'astronomy/方位调节.md'
+    - 纬度调节: 'astronomy/纬度调节.md'
   - 校内课程知识:
     - 'campus-sources/index.md'
     - 《离散数学》部分期末题目题解: 'campus-sources/Discrete_exams.md'
-    - 《计算机组成与设计》部分历年题目题解: 'campus-sources/SDC-exams.md'
     - 离散期末复习提纲: 'campus-sources/Discrete_notes.md'
+    - 《计算机组成与设计》部分历年题目题解: 'campus-sources/SDC-exams.md'
     - 《离散数学》课程作业与笔记归档: 'campus-sources/Descrete_assignments.md'
     - 《概率论与数理统计》课程作业与笔记归档: 'campus-sources/Prob_Stats_assignments.md'
     - 《计算机组成原理》理论课程作业与笔记归档: 'campus-sources/SDC_assignments.md'
@@ -161,12 +167,6 @@ nav:
     - 《数据结构》划重点笔记: 'campus-sources/ds-keynote.md'
     - 《数据结构》期末复习题题解: 'campus-sources/ds-write-up.md'
     - 自动签到脚本: 'campus-sources/autosignin.md'
-  - 天文摄影理论和实践:
-    - 'astronomy/index.md'
-    - 深空影集: 'astronomy/gallery.md'
-    - 看不见北极星怎么办: 'astronomy/polar.md'
-    - 方位调节: 'astronomy/方位调节.md'
-    - 纬度调节: 'astronomy/纬度调节.md'
   - 深度神经网络:
     - 'DNN/index.md'
     - 如何做四六级考试的段落匹配题: 'DNN/match.md'
