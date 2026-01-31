@@ -1,0 +1,1830 @@
+
+<!DOCTYPE html>
+
+<html class="no-js" lang="zh">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<link href="../PU_Bii_assignments/" rel="prev"/>
+<link href="../textbook/" rel="next"/>
+<link href="../../favicon.png" rel="icon"/>
+<meta content="mkdocs-1.6.1, mkdocs-material-9.7.1" name="generator"/>
+<title>二进制乘法可视化工具 - Dicaeopolis' Wiki</title>
+<link href="../../assets/stylesheets/main.484c7ddc.min.css" rel="stylesheet"/>
+<link href="../../assets/stylesheets/palette.ab4e12ef.min.css" rel="stylesheet"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback" rel="stylesheet"/>
+<style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+<link href="../../themes/css/custom.css" rel="stylesheet"/>
+<link href="../../themes/css/simpleLightbox.min.css" rel="stylesheet"/>
+<link href="../../themes/css/pied_piper.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css" rel="stylesheet"/>
+<link href="../../stylesheets/customize.css" rel="stylesheet"/>
+<link href="../../assets/css/custom.css" rel="stylesheet"/>
+<script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+</head>
+<body data-md-color-accent="indigo" data-md-color-primary="indigo" data-md-color-scheme="default" dir="ltr">
+<input autocomplete="off" class="md-toggle" data-md-toggle="drawer" id="__drawer" type="checkbox"/>
+<input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
+<label class="md-overlay" for="__drawer"></label>
+<div data-md-component="skip">
+</div>
+<div data-md-component="announce">
+</div>
+<header class="md-header" data-md-component="header">
+<nav aria-label="页眉" class="md-header__inner md-grid">
+<a aria-label="Dicaeopolis' Wiki" class="md-header__button md-logo" data-md-component="logo" href="../.." title="Dicaeopolis' Wiki">
+<img alt="logo" src="../../favicon.png"/>
+</a>
+<label class="md-header__button md-icon" for="__drawer">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"></path></svg>
+</label>
+<div class="md-header__title" data-md-component="header-title">
+<div class="md-header__ellipsis">
+<div class="md-header__topic">
+<span class="md-ellipsis">
+            Dicaeopolis' Wiki
+          </span>
+</div>
+<div class="md-header__topic" data-md-component="header-topic">
+<span class="md-ellipsis">
+<i class="fas fa-calculator"></i> 二进制乘法可视化工具
+            
+          </span>
+</div>
+</div>
+</div>
+<form class="md-header__option" data-md-component="palette">
+<input aria-label="Switch to light mode" class="md-option" data-md-color-accent="indigo" data-md-color-media="(prefers-color-scheme)" data-md-color-primary="indigo" data-md-color-scheme="default" id="__palette_0" name="__palette" type="radio"/>
+<label class="md-header__button md-icon" for="__palette_1" hidden="" title="Switch to light mode">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12zm-9.15 3.96h2.3L12 9z"></path></svg>
+</label>
+<input aria-label="Switch to dark mode" class="md-option" data-md-color-accent="indigo" data-md-color-media="(prefers-color-scheme: light)" data-md-color-primary="indigo" data-md-color-scheme="default" id="__palette_1" name="__palette" type="radio"/>
+<label class="md-header__button md-icon" for="__palette_2" hidden="" title="Switch to dark mode">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+</label>
+<input aria-label="Switch to system preference" class="md-option" data-md-color-accent="indigo" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-primary="indigo" data-md-color-scheme="slate" id="__palette_2" name="__palette" type="radio"/>
+<label class="md-header__button md-icon" for="__palette_0" hidden="" title="Switch to system preference">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+</label>
+</form>
+<script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+<label class="md-header__button md-icon" for="__search">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+</label>
+<div class="md-search" data-md-component="search" role="dialog">
+<label class="md-search__overlay" for="__search"></label>
+<div class="md-search__inner" role="search">
+<form class="md-search__form" name="search">
+<input aria-label="搜索" autocapitalize="off" autocomplete="off" autocorrect="off" class="md-search__input" data-md-component="search-query" name="query" placeholder="搜索" required="" spellcheck="false" type="text"/>
+<label class="md-search__icon md-icon" for="__search">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+</label>
+<nav aria-label="查找" class="md-search__options">
+<button aria-label="清空当前内容" class="md-search__icon md-icon" tabindex="-1" title="清空当前内容" type="reset">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+</button>
+</nav>
+</form>
+<div class="md-search__output">
+<div class="md-search__scrollwrap" data-md-scrollfix="" tabindex="0">
+<div class="md-search-result" data-md-component="search-result">
+<div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+<ol class="md-search-result__list" role="presentation"></ol>
+</div>
+</div>
+</div>
+</div>
+</div>
+</nav>
+</header>
+<div class="md-container" data-md-component="container">
+<nav aria-label="标签" class="md-tabs" data-md-component="tabs">
+<div class="md-grid">
+<ul class="md-tabs__list">
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../astronomy/">
+          
+  
+  
+    
+  
+  天文摄影理论和实践
+
+        </a>
+</li>
+<li class="md-tabs__item md-tabs__item--active">
+<a class="md-tabs__link" href="../">
+          
+  
+  
+    
+  
+  校内课程知识
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../DNN/">
+          
+  
+  
+    
+  
+  深度神经网络
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../misc/">
+          
+  
+  
+    
+  
+  配置和杂谈笔记
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../algorithm/">
+          
+  
+  
+    
+  
+  传统算法与性能
+
+        </a>
+</li>
+</ul>
+</div>
+</nav>
+<main class="md-main" data-md-component="main">
+<div class="md-main__inner md-grid">
+<div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="导航栏" class="md-nav md-nav--primary md-nav--lifted" data-md-level="0">
+<label class="md-nav__title" for="__drawer">
+<a aria-label="Dicaeopolis' Wiki" class="md-nav__button md-logo" data-md-component="logo" href="../.." title="Dicaeopolis' Wiki">
+<img alt="logo" src="../../favicon.png"/>
+</a>
+    Dicaeopolis' Wiki
+  </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_1" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../astronomy/">
+<span class="md-ellipsis">
+    
+  
+    天文摄影理论和实践
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_1_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_1">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    天文摄影理论和实践
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../astronomy/gallery/">
+<span class="md-ellipsis">
+    
+  
+    深空影集
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../astronomy/polar/">
+<span class="md-ellipsis">
+    
+  
+    看不见北极星怎么办
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../astronomy/%E6%96%B9%E4%BD%8D%E8%B0%83%E8%8A%82/">
+<span class="md-ellipsis">
+    
+  
+    方位调节
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../astronomy/%E7%BA%AC%E5%BA%A6%E8%B0%83%E8%8A%82/">
+<span class="md-ellipsis">
+    
+  
+    纬度调节
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+<input checked="" class="md-nav__toggle md-toggle" id="__nav_2" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../">
+<span class="md-ellipsis">
+    
+  
+    校内课程知识
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="true" aria-labelledby="__nav_2_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_2">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    校内课程知识
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../SDC-exams/">
+<span class="md-ellipsis">
+    
+  
+    《计算机组成与设计》部分历年题目题解
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../Discrete_exams/">
+<span class="md-ellipsis">
+    
+  
+    《离散数学》部分期末题目题解
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../Discrete_notes/">
+<span class="md-ellipsis">
+    
+  
+    离散期末复习提纲
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../Descrete_assignments/">
+<span class="md-ellipsis">
+    
+  
+    《离散数学》课程作业与笔记归档
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../Prob_Stats_assignments/">
+<span class="md-ellipsis">
+    
+  
+    《概率论与数理统计》课程作业与笔记归档
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../SDC_assignments/">
+<span class="md-ellipsis">
+    
+  
+    《计算机组成原理》理论课程作业与笔记归档
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../PU_Bii_assignments/">
+<span class="md-ellipsis">
+    
+  
+    《大学物理B下》课程作业与笔记归档
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" id="__toc" type="checkbox"/>
+<a class="md-nav__link md-nav__link--active" href="./">
+<span class="md-ellipsis">
+<i class="fas fa-calculator"></i> 二进制乘法可视化工具
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../textbook/">
+<span class="md-ellipsis">
+    
+  
+    本科教科书电子资源
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../ds-keynote/">
+<span class="md-ellipsis">
+    
+  
+    《数据结构》划重点笔记
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../ds-write-up/">
+<span class="md-ellipsis">
+    
+  
+    《数据结构》期末复习题题解
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../autosignin/">
+<span class="md-ellipsis">
+    
+  
+    自动签到脚本
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_3" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../DNN/">
+<span class="md-ellipsis">
+    
+  
+    深度神经网络
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_3_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_3">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    深度神经网络
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/match/">
+<span class="md-ellipsis">
+    
+  
+    如何做四六级考试的段落匹配题
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/BP/">
+<span class="md-ellipsis">
+    
+  
+    前馈神经网络的反向传播
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/RL/">
+<span class="md-ellipsis">
+    
+  
+    RL学习笔记 - 上篇
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/SVM_SMO/">
+<span class="md-ellipsis">
+    
+  
+    SMO 算法的推导
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_3_6" type="checkbox"/>
+<label class="md-nav__link" for="__nav_3_6" id="__nav_3_6_label" tabindex="0">
+<span class="md-ellipsis">
+    
+  
+    Wp
+  
+
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_3_6_label" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="__nav_3_6">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    Wp
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/WP/aiwp/">
+<span class="md-ellipsis">
+    
+  
+    MISC-AI 方向 WriteUp
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_3_7" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../DNN/model-attack/">
+<span class="md-ellipsis">
+    
+  
+    深度学习模型攻击理论与复现归档
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_3_7" id="__nav_3_7_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_3_7_label" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="__nav_3_7">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    深度学习模型攻击理论与复现归档
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-attack/hsja/">
+<span class="md-ellipsis">
+    
+  
+    HSJA 攻击
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-attack/BadNets/">
+<span class="md-ellipsis">
+    
+  
+    BadNets
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-attack/CandW/">
+<span class="md-ellipsis">
+    
+  
+    C&amp;W 攻击
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-attack/pgd/">
+<span class="md-ellipsis">
+    
+  
+    PGD 攻击
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-attack/fgsm/">
+<span class="md-ellipsis">
+    
+  
+    FGSM 攻击
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_3_8" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../DNN/model-expr/">
+<span class="md-ellipsis">
+    
+  
+    深度学习相关模型理论与复现归档
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_3_8" id="__nav_3_8_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_3_8_label" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="__nav_3_8">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    深度学习相关模型理论与复现归档
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-expr/DDPM/">
+<span class="md-ellipsis">
+    
+  
+    扩散模型理论篇: 从多阶段变分自编码器到概率流常微分方程采样器系列
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-expr/S-and-D-models-replication/">
+<span class="md-ellipsis">
+    
+  
+    图像语义分割和目标检测相关模型复现手记
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-expr/Image-models-replication/">
+<span class="md-ellipsis">
+    
+  
+    图像分类相关模型复现手记
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-expr/DC-GAN-%E8%80%81%E5%A9%86%E7%94%9F%E6%88%90%E5%99%A8/">
+<span class="md-ellipsis">
+    
+  
+    DC-GAN 老婆生成器
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_3_9" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../DNN/optimizer/">
+<span class="md-ellipsis">
+    
+  
+    优化器
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_3_9" id="__nav_3_9_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_3_9_label" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="__nav_3_9">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    优化器
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/optimizer/misc/">
+<span class="md-ellipsis">
+    
+  
+    后续的写作计划
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/optimizer/SignGD/">
+<span class="md-ellipsis">
+    
+  
+    符号梯度下降
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/optimizer/Adaptive/">
+<span class="md-ellipsis">
+    
+  
+    自适应学习率改进策略
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/optimizer/SGD/">
+<span class="md-ellipsis">
+    
+  
+    SGD 系列算法
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_4" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../misc/">
+<span class="md-ellipsis">
+    
+  
+    配置和杂谈笔记
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_4_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_4">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    配置和杂谈笔记
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../misc/test/">
+<span class="md-ellipsis">
+    
+  
+    功能测试页面
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_5" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../algorithm/">
+<span class="md-ellipsis">
+    
+  
+    传统算法与性能
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_5_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_5">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    传统算法与性能
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../algorithm/benchmark-on-stl/">
+<span class="md-ellipsis">
+    
+  
+    STL的一些性能测试
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../algorithm/stl-wheels/">
+<span class="md-ellipsis">
+    
+  
+    嗯造轮子
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../algorithm/template-on-numeric-ring/">
+<span class="md-ellipsis">
+    
+  
+    整数环取模模板
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="目录" class="md-nav md-nav--secondary">
+</nav>
+</div>
+</div>
+</div>
+<div class="md-content" data-md-component="content">
+<article class="md-content__inner md-typeset">
+<div class="admonition info">
+<p class="admonition-title">📖 阅读信息</p>
+<p>阅读时间约 <strong>7</strong> 分钟　|　约 <strong>1393</strong> 字　|　没有代码，请放心食用</p>
+</div>
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>二进制乘法可视化工具</title>
+<style> .md-sidebar.md-sidebar--secondary { display: none !important; } </style>
+<style> .md-sidebar.md-sidebar--primary { display: none !important; } </style>
+<style>
+  :root{
+    --primary-color:#3498db;
+    --secondary-color:#2980b9;
+    --accent-color:#ff7e5f;
+    --dark-color:#2c3e50;
+    --success-color:#2ecc71;
+    --warning-color:#f39c12;
+    --danger-color:#e74c3c;
+    --bit-size:28px;
+    --gap-size:4px;
+    --steps-height:320px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+    max-width:1200px;margin:0 auto;padding:20px;
+    background:#303341;color:#333;line-height:1.6;
+  }
+  h1,h2,h3{color:var(--dark-color);margin-bottom:15px}
+  .header{
+    text-align:center;margin-bottom:30px;padding:20px;
+    background:linear-gradient(135deg,var(--primary-color),var(--secondary-color));
+    color:#fff;border-radius:10px;box-shadow:0 4px 15px rgba(0,0,0,.1)
+  }
+  .header p{max-width:800px;margin:0 auto;font-size:1.05em}
+  .container{
+    background:#fff;border-radius:10px;padding:18px;
+    box-shadow:0 2px 15px rgba(0,0,0,.05);margin-bottom:18px
+  }
+  .control-panel{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    gap:14px;margin-bottom:10px
+  }
+  .input-group{margin-bottom:8px}
+  label{display:block;margin-bottom:6px;font-weight:600;color:var(--dark-color)}
+  select,input{
+    width:100%;padding:10px 12px;border:2px solid #ddd;border-radius:6px;font-size:16px;transition:border-color .3s
+  }
+  select:focus,input:focus{border-color:var(--primary-color);outline:none}
+  .btn-group{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  button{
+    padding:10px 16px;border:none;border-radius:6px;font-size:15px;font-weight:600;cursor:pointer;
+    transition:all .3s;display:inline-flex;align-items:center;justify-content:center
+  }
+  button i{margin-right:8px}
+  .btn-primary{background:var(--primary-color);color:#fff}.btn-primary:hover{background:var(--secondary-color)}
+  .btn-success{background:var(--success-color);color:#fff}.btn-success:hover{background:#27ae60}
+  .btn-warning{background:var(--warning-color);color:#fff}.btn-warning:hover{background:#e67e22}
+  .btn-danger{background:var(--danger-color);color:#fff}.btn-danger:hover{background:#c0392b}
+  .btn-light{background:#eef2f7;color:#2c3e50;border:1px solid #d0d7de}.btn-light:hover{background:#e4e9ef}
+  button:disabled{background:#bdc3c7;cursor:not-allowed;opacity:.7}
+  .explanation{
+    background:#e8f4f8;border-left:4px solid var(--primary-color);padding:14px;margin:12px 0;border-radius:0 8px 8px 0;font-size:15px
+  }
+  .process-layout{
+    display:grid;grid-template-columns:minmax(0,1.7fr) minmax(280px,1fr);
+    gap:16px;align-items:start
+  }
+  .left-pane,.right-pane{min-width:0}
+  .registers-container{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+    gap:12px;margin-bottom:12px
+  }
+  .register-group{background:#f8f9fa;border:1px solid #e9ecef;border-radius:8px;padding:10px}
+  .register-group.wide{grid-column:1 / -1}
+  .register-title{
+    font-weight:bold;margin-bottom:10px;color:var(--dark-color);font-size:16px;display:flex;align-items:center
+  }
+  .register-title i{margin-right:8px;color:var(--primary-color)}
+  .bits-container{display:flex;flex-wrap:wrap;gap:var(--gap-size);margin-bottom:6px}
+  .bits-line{display:flex;gap:var(--gap-size)}
+  .bit{
+    width:var(--bit-size);height:var(--bit-size);display:inline-flex;align-items:center;justify-content:center;
+    border:1px solid #e0e0e0;border-radius:6px;font-family:monospace;font-weight:700;font-size:14px;background:#fff;transition:opacity .35s ease, transform .35s ease;user-select:none
+  }
+  .bit-0{background:#f0f8ff;color:#3498db}
+  .bit-1{background:#e3f2fd;color:#e74c3c;font-weight:800}
+
+  /* 加法后变动位：淡入动画 */
+  .bit-fade-in{opacity:0;transform:scale(0.96)}
+  .bit-fade-in.ready{opacity:1;transform:scale(1)}
+
+  /* 结果寄存器：两半着色，位宽变化自动对应 */
+  .result-row{
+    position:relative;padding:6px;border:1px solid #dfe7f1;border-radius:6px;overflow:hidden;
+  }
+  .result-bits{display:flex;gap:0}
+  .half{display:flex;gap:var(--gap-size)}
+  .half-A{background:#eef6ff}
+  .half-Q{background:#fff2ef;margin-left:var(--gap-size)}
+  /* 让半区背景紧贴比特块 */
+  .half .bit{background:transparent}
+
+  /* 移位动画覆盖层 */
+  .shift-overlay{position:absolute;left:6px;right:6px;top:6px;bottom:6px;pointer-events:none}
+  .ghost-line{display:flex;gap:var(--gap-size)}
+  .shift-ghost{transform:translateX(0);transition:transform .45s ease;opacity:.9}
+  .shift-ghost.move{transform:translateX(calc(var(--bit-size) + var(--gap-size)))}
+  .shift-enter{
+    position:absolute;left:6px;top:6px;width:var(--bit-size);height:var(--bit-size);
+    opacity:0;transform:translateX(calc(-1 * (var(--bit-size) + var(--gap-size))));
+    animation:enterFromLeft .45s ease-out .05s forwards
+  }
+  .shift-exit{animation:fadeOut .40s linear .35s forwards}
+  @keyframes enterFromLeft{to{transform:translateX(0);opacity:1}}
+  @keyframes fadeOut{to{opacity:0}}
+
+  .register-value{
+    text-align:left;font-family:monospace;font-size:14px;margin-top:6px;padding:6px;background:#f1f8e9;border-radius:4px;color:#33691e
+  }
+  .register-labels{display:flex;justify-content:space-between;margin:2px 0 6px;font-size:13px;color:#7f8c8d}
+
+  .inline-chips{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .chip{
+    display:inline-flex;align-items:center;justify-content:center;padding:4px 10px;border-radius:999px;background:#eef2f7;border:1px solid #d0d7de;
+    font-family:monospace;font-weight:700;font-size:14px;color:#2c3e50
+  }
+  .chip.small{padding:3px 8px;font-size:13px}
+
+  /* 右侧步骤：固定高度，底部对齐视口底部 */
+  .steps-card{
+    background:#f8f9fa;border:1px solid #e9ecef;border-radius:8px;padding:12px;height:var(--steps-height);
+    position:sticky;bottom:16px;display:flex;flex-direction:column
+  }
+  .steps-title{font-weight:bold;color:var(--dark-color);display:flex;align-items:center;margin-bottom:8px;font-size:16px}
+  .steps-title i{margin-right:8px;color:var(--primary-color)}
+  .steps-container{flex:1;overflow:auto}
+  .step{padding:10px 12px;border-left:4px solid var(--primary-color);background:#fff;border-radius:0 8px 8px 0;font-size:15px;line-height:1.65}
+  .step h4{margin-bottom:8px;font-size:16px}
+  .step p{margin:6px 0}
+
+  .result{
+    padding:14px;background:#e8f5e9;border-radius:8px;margin-top:14px;text-align:center;font-size:16px;font-weight:bold;color:#2e7d32;
+    box-shadow:0 2px 10px rgba(0,0,0,.05)
+  }
+  .result-error{background:#ffebee;color:#c62828}
+  .animation-controls{display:flex;align-items:center;gap:12px;margin-top:8px}
+  .speed-control{display:flex;align-items:center}
+  .speed-control label{margin-right:8px;margin-bottom:0}
+  .btn-group-compact{display:flex;gap:8px;flex-wrap:wrap}
+  .btn-group-compact button{flex:1 1 120px}
+  @media (max-width:992px){.process-layout{grid-template-columns:1fr}}
+  @media (max-width:768px){
+    .control-panel{grid-template-columns:1fr}
+    .btn-group{flex-direction:column}
+    button{width:100%}
+    .bits-container{gap:3px}
+    .bit{width:26px;height:26px;font-size:13px}
+  }
+</style>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</link></meta></meta></head>
+<body>
+<div class="header">
+<h1><i class="fas fa-calculator"></i> 二进制乘法可视化工具</h1>
+<p>支持无符号乘法、原码乘法与 Booth（补码）乘法。支持单步、回退与自动播放。</p>
+</div>
+<div class="container">
+<h2><i class="fas fa-cog"></i> 参数设置</h2>
+<div class="control-panel">
+<div class="input-group">
+<label for="multiplicationType"><i class="fas fa-clipboard-list"></i> 乘法类型:</label>
+<select id="multiplicationType">
+<option value="unsigned">无符号乘法</option>
+<option value="signMagnitude">原码乘法</option>
+<option value="booth">补码乘法 (Booth 算法)</option>
+</select>
+</div>
+<div class="input-group">
+<label for="bitLength"><i class="fas fa-ruler-combined"></i> 位数:</label>
+<select id="bitLength">
+<option value="4">4位</option>
+<option selected="" value="8">8位</option>
+<option value="16">16位</option>
+</select>
+</div>
+<div class="input-group">
+<label for="operand1"><i class="fas fa-hashtag"></i> 被乘数 (十进制):</label>
+<input id="operand1" type="number" value="5">
+</input></div>
+<div class="input-group">
+<label for="operand2"><i class="fas fa-hashtag"></i> 乘数 (十进制):</label>
+<input id="operand2" type="number" value="3">
+</input></div>
+</div>
+<div class="btn-group">
+<button class="btn-primary" id="initializeBtn"><i class="fas fa-play"></i> 初始化计算</button>
+<button class="btn-light" disabled="" id="prevBtn"><i class="fas fa-step-backward"></i> 上一步</button>
+<button class="btn-success" disabled="" id="stepBtn"><i class="fas fa-step-forward"></i> 下一步</button>
+<button class="btn-warning" disabled="" id="autoBtn"><i class="fas fa-play-circle"></i> 自动播放</button>
+<button class="btn-danger" id="resetBtn"><i class="fas fa-redo"></i> 重置</button>
+</div>
+<div class="animation-controls">
+<div class="speed-control">
+<label for="animationSpeed"><i class="fas fa-tachometer-alt"></i> 动画速度:</label>
+<select id="animationSpeed">
+<option value="1000">慢</option>
+<option selected="" value="500">中</option>
+<option value="200">快</option>
+</select>
+</div>
+</div>
+</div>
+<div class="container">
+<h2><i class="fas fa-calculator"></i> 计算过程</h2>
+<div class="process-layout">
+<div class="left-pane">
+<div class="explanation" id="explanation">
+<p><i class="fas fa-info-circle"></i> 点击“初始化计算”开始。使用“下一步/上一步”逐步查看。右侧只显示当前一步的说明。</p>
+</div>
+<h3><i class="fas fa-microchip"></i> 寄存器状态</h3>
+<div class="registers-container" id="registers"></div>
+<div class="result" id="result"></div>
+</div>
+<div class="right-pane">
+<div class="steps-card">
+<div class="steps-title"><i class="fas fa-list-ol"></i> 步骤说明（仅当前一步）</div>
+<div class="steps-container" id="steps"></div>
+</div>
+</div>
+</div>
+</div>
+<script>
+  // 全局状态
+  let currentStep = 0;
+  let multiplication = null;
+  let autoInterval = null;
+
+  // DOM
+  const multiplicationTypeEl = document.getElementById('multiplicationType');
+  const bitLengthEl = document.getElementById('bitLength');
+  const operand1El = document.getElementById('operand1');
+  const operand2El = document.getElementById('operand2');
+  const initializeBtn = document.getElementById('initializeBtn');
+  const prevBtn = document.getElementById('prevBtn');
+  const stepBtn = document.getElementById('stepBtn');
+  const autoBtn = document.getElementById('autoBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const explanationEl = document.getElementById('explanation');
+  const registersEl = document.getElementById('registers');
+  const stepsEl = document.getElementById('steps');
+  const resultEl = document.getElementById('result');
+  const animationSpeedEl = document.getElementById('animationSpeed');
+
+  class BinaryMultiplication {
+    constructor(type, bitLength, operand1, operand2) {
+      this.type = type;
+      this.n = parseInt(bitLength);
+      this.operand1 = parseInt(operand1);
+      this.operand2 = parseInt(operand2);
+      this.steps = [];
+      this.valid = true;
+
+      this.initializeRegisters();
+
+      if (!this.validateInputs()) {
+        this.valid = false;
+        this.addStep("系统检测到参数超出当前位宽可表示的范围。请调整位宽或数值后重新初始化。");
+        return;
+      }
+
+      if (type === 'unsigned') this.unsignedMultiplication();
+      else if (type === 'signMagnitude') this.signMagnitudeMultiplication();
+      else if (type === 'booth') this.boothMultiplication();
+    }
+
+    validateInputs() {
+      const maxUnsigned = Math.pow(2, this.n) - 1;
+      const minSigned = -Math.pow(2, this.n - 1);
+      const maxSigned = Math.pow(2, this.n - 1) - 1;
+      if (this.type === 'unsigned') {
+        if (this.operand1 < 0 || this.operand1 > maxUnsigned || this.operand2 < 0 || this.operand2 > maxUnsigned) {
+          alert(`对于 ${this.n} 位无符号乘法，操作数必须在 0 到 ${maxUnsigned} 之间`);
+          return false;
+        }
+      } else {
+        if (this.operand1 < minSigned || this.operand1 > maxSigned || this.operand2 < minSigned || this.operand2 > maxSigned) {
+          alert(`对于 ${this.n} 位有符号乘法，操作数必须在 ${minSigned} 到 ${maxSigned} 之间`);
+          return false;
+        }
+      }
+      return true;
+    }
+
+    initializeRegisters() {
+      if (this.type === 'unsigned') {
+        this.A = Array(this.n).fill(0);
+        this.Q = this.toUnsignedBinary(this.operand2);
+        this.M = this.toUnsignedBinary(this.operand1);
+        this.C = 0;
+        this.counter = this.n;
+        this.addStep(
+          "系统把 A 置为全 0，把 Q 写入乘数的二进制表示，把 M 写入被乘数的二进制表示，把 C 置为 0，并把计数器置为位宽 n。",
+          { A: this.A.join(''), Q: this.Q.join(''), M: this.M.join(''), C: this.C, counter: this.counter }
+        );
+      } else if (this.type === 'signMagnitude') {
+        this.sign = (this.operand1 < 0 ? 1 : 0) ^ (this.operand2 < 0 ? 1 : 0);
+        this.A = Array(this.n).fill(0);
+        this.Q = this.toUnsignedBinary(Math.abs(this.operand2));
+        this.M = this.toUnsignedBinary(Math.abs(this.operand1));
+        this.counter = this.n;
+        this.addStep(
+          "系统把 A 置为全 0，把 Q 写入 |乘数| 的二进制表示，把 M 写入 |被乘数| 的二进制表示，并把计数器置为 n。系统同时计算结果的符号位（被乘数符号 XOR 乘数符号）。",
+          { A: this.A.join(''), Q: this.Q.join(''), M: this.M.join(''), sign: this.sign, counter: this.counter }
+        );
+        this.addStep(`系统计算结果符号位：被乘数符号 ${this.operand1 < 0 ? 1 : 0} XOR 乘数符号 ${this.operand2 < 0 ? 1 : 0}，得到 ${this.sign}。`);
+      } else if (this.type === 'booth') {
+        this.A = Array(this.n).fill(0);
+        this.Q = this.toTwosComplement(this.operand2);
+        this.M = this.toTwosComplement(this.operand1);
+        this.Q_minus1 = 0;
+        this.counter = this.n;
+        this.M_minus = this.toTwosComplement(-this.operand1);
+        this.addStep(
+          "系统把 A 置为全 0，把 Q 写入乘数的补码表示，把 M 写入被乘数的补码表示，把 Q_{-1} 置为 0，并把计数器置为 n。系统预先计算 −M 的补码以便使用。",
+          { A: this.A.join(''), Q: this.Q.join(''), M: this.M.join(''), "M_minus": this.M_minus.join(''), "Q_-1": this.Q_minus1, counter: this.counter }
+        );
+      }
+    }
+
+    // 无符号乘法
+    unsignedMultiplication() {
+      this.addStep("系统开始无符号乘法。每一轮中，系统读取 Q 的最低位 Q0；如果 Q0 为 1，系统把 M 加到 A，并把产生的进位写入 C。随后，系统把 (C, A, Q) 看作连续寄存器并整体右移一位。");
+
+      while (this.counter > 0) {
+        const stepNum = this.n - this.counter + 1;
+        this.addStep(`第 ${stepNum} 轮：系统读取 Q 的最低位 Q0 = ${this.Q[this.n - 1]}。如果 Q0 为 1，系统把 M 加到 A；如果 Q0 为 0，系统跳过加法。`);
+
+        if (this.Q[this.n - 1] === 1) {
+          this.addStep("系统执行加法：A ← A + M。系统把溢出的进位写入 C，并只保留 A 的低 n 位。");
+          this.addBinaryArrays();
+          this.addStep(`加法结束：此时 A = ${this.A.join('')}，C = ${this.C}。`);
+        }
+
+        this.addStep("系统把 (C, A, Q) 作为一个连续寄存器整体右移一位。系统把 A 的最低位写入 Q 的最高位，并把 C 写入 A 的最高位。");
+        this.shiftRight();
+        this.addStep(`右移完成：此时 C = ${this.C}，A = ${this.A.join('')}，Q = ${this.Q.join('')}。`);
+
+        this.counter--;
+        this.addStep(`系统把计数器减一：counter ← ${this.counter}。`);
+      }
+
+      const product = this.A.concat(this.Q).join('');
+      const decimalProduct = parseInt(product, 2);
+      this.addStep(`计算结束：系统给出最终乘积。二进制结果为 ${product}，十进制结果为 ${decimalProduct}。`);
+    }
+
+    // 原码乘法
+    signMagnitudeMultiplication() {
+      this.addStep("系统开始原码乘法。每一轮中，系统读取 Q 的最低位 Q0；如果 Q0 为 1，系统把 M 加到 A 并忽略进位。随后，系统对 (A, Q) 做右移：系统把 A 的最低位写入 Q 的最高位，并把 A 的最高位补 0。最终的符号位在初始化阶段已确定。");
+
+      while (this.counter > 0) {
+        const stepNum = this.n - this.counter + 1;
+        this.addStep(`第 ${stepNum} 轮：系统读取 Q 的最低位 Q0 = ${this.Q[this.n - 1]}。如果 Q0 为 1，系统把 M 加到 A；如果 Q0 为 0，系统跳过加法。`);
+
+        if (this.Q[this.n - 1] === 1) {
+          this.addStep("系统执行加法：A ← A + M。系统忽略加法产生的进位，并只保留 A 的低 n 位。");
+          this.addBinaryArraysNoCarry();
+          this.addStep(`加法结束：此时 A = ${this.A.join('')}。`);
+        }
+
+        this.addStep("系统对 (A, Q) 各右移一位。系统把 A 的最低位写入 Q 的最高位，并把 A 的最高位补 0。");
+        this.shiftRightNoCarry();
+        this.addStep(`右移完成：此时 A = ${this.A.join('')}，Q = ${this.Q.join('')}。`);
+
+        this.counter--;
+        this.addStep(`系统把计数器减一：counter ← ${this.counter}。`);
+      }
+
+      const magnitude = this.A.concat(this.Q).join('');
+      const product = (this.sign ? '1' : '0') + magnitude;
+      const decimalMagnitude = parseInt(magnitude, 2);
+      const decimalProduct = this.sign ? -decimalMagnitude : decimalMagnitude;
+      this.addStep(`计算结束：系统根据已确定的符号位与数值部分给出结果。二进制结果为 ${product}，十进制结果为 ${decimalProduct}。`);
+    }
+
+    // Booth 乘法（补码）
+    boothMultiplication() {
+      this.addStep("系统开始 Booth 乘法。每一轮中，系统读取 Q 的最低位 Q0 和 Q_{-1}。当 (Q0, Q_{-1}) 为 (0, 1) 时，系统把 M 加到 A；当 (1, 0) 时，系统把 −M 加到 A；当两位相同（0,0 或 1,1）时，系统不进行加法。随后，系统对 (A, Q, Q_{-1}) 做一次算术右移：系统保持 A 的最高位不变，把 A 的最低位写入 Q 的最高位，并把 Q 的最低位写入 Q_{-1}。");
+
+      while (this.counter > 0) {
+        const stepNum = this.n - this.counter + 1;
+        const q0 = this.Q[this.n - 1];
+        const qm1 = this.Q_minus1;
+
+        this.addStep(`第 ${stepNum} 轮：系统读取 Q0 = ${q0} 与 Q_{-1} = ${qm1}。当它们为 (0, 1) 时，系统把 M 加到 A；当它们为 (1, 0) 时，系统把 −M 加到 A；当它们相同，系统保持 A 不变。`);
+
+        if (q0 === 0 && qm1 === 1) {
+          this.addStep("系统执行加法：A ← A + M（补码加法，系统忽略最终溢出）。");
+          this.addBinaryArraysTwosComplement(this.M);
+        } else if (q0 === 1 && qm1 === 0) {
+          this.addStep("系统执行加法：A ← A + (−M)（补码加法，系统忽略最终溢出）。");
+          this.addBinaryArraysTwosComplement(this.M_minus);
+        } else {
+          this.addStep("系统不执行加法：A 保持不变。");
+        }
+        this.addStep(`加法结束：此时 A = ${this.A.join('')}。`);
+
+        this.addStep("系统对 (A, Q, Q_{-1}) 执行算术右移一位。系统保持 A 的最高位不变，把 A 的最低位写入 Q 的最高位，并把 Q 的最低位写入 Q_{-1}。");
+        this.arithmeticShiftRight();
+        this.addStep(`右移完成：此时 A = ${this.A.join('')}，Q = ${this.Q.join('')}，Q_{-1} = ${this.Q_minus1}。`);
+
+        this.counter--;
+        this.addStep(`系统把计数器减一：counter ← ${this.counter}。`);
+      }
+
+      const product = this.A.concat(this.Q).join('');
+      const decimalProduct = this.fromTwosComplement(product);
+      this.addStep(`计算结束：系统给出结果。二进制结果为 ${product}，十进制结果为 ${decimalProduct}。`);
+    }
+
+    // 工具
+    toUnsignedBinary(number){
+      let b = number.toString(2);
+      while (b.length < this.n) b = '0' + b;
+      return b.split('').map(x => parseInt(x));
+    }
+    toTwosComplement(number){
+      if (number >= 0) return this.toUnsignedBinary(number);
+      const p = this.toUnsignedBinary(-number);
+      const inv = p.map(x => x ? 0 : 1);
+      let carry = 1, res = [];
+      for (let i = inv.length - 1; i >= 0; i--){
+        const s = inv[i] + carry;
+        res.unshift(s & 1);
+        carry = s >> 1;
+      }
+      return res;
+    }
+    fromTwosComplement(str){
+      const bits = str.split('').map(x => parseInt(x));
+      if (bits[0] === 1){
+        // 负数：减 1 再取反
+        let borrow = 1, sub = [];
+        for (let i = bits.length - 1; i >= 0; i--){
+          let v = bits[i] - borrow;
+          if (v < 0){ v = 1; borrow = 1; } else { borrow = 0; }
+          sub.unshift(v);
+        }
+        const inv = sub.map(x => x ? 0 : 1);
+        const pos = parseInt(inv.join(''), 2);
+        return -pos;
+      }
+      return parseInt(str, 2);
+    }
+
+    addBinaryArrays(){
+      let carry = 0;
+      for (let i = this.n - 1; i >= 0; i--){
+        const sum = this.A[i] + this.M[i] + carry;
+        this.A[i] = sum & 1;
+        carry = sum >> 1;
+      }
+      this.C = carry;
+    }
+    addBinaryArraysNoCarry(){
+      let carry = 0;
+      for (let i = this.n - 1; i >= 0; i--){
+        const sum = this.A[i] + this.M[i] + carry;
+        this.A[i] = sum & 1;
+        carry = sum >> 1;
+      }
+    }
+    addBinaryArraysTwosComplement(addend){
+      let carry = 0;
+      for (let i = this.n - 1; i >= 0; i--){
+        const sum = this.A[i] + addend[i] + carry;
+        this.A[i] = sum & 1;
+        carry = sum >> 1;
+      }
+    }
+
+    shiftRight(){
+      // (C, A, Q) 整体右移
+      for (let i = this.n - 1; i > 0; i--) this.Q[i] = this.Q[i - 1];
+      this.Q[0] = this.A[this.n - 1];
+      for (let i = this.n - 1; i > 0; i--) this.A[i] = this.A[i - 1];
+      this.A[0] = this.C;
+      this.C = 0;
+    }
+    shiftRightNoCarry(){
+      // (A, Q) 右移；A 最高位补 0
+      for (let i = this.n - 1; i > 0; i--) this.Q[i] = this.Q[i - 1];
+      this.Q[0] = this.A[this.n - 1];
+      for (let i = this.n - 1; i > 0; i--) this.A[i] = this.A[i - 1];
+      this.A[0] = 0;
+    }
+    arithmeticShiftRight(){
+      // (A, Q, Q_-1) 算术右移；A[MSB] 保持
+      const aMsb = this.A[0];
+      this.Q_minus1 = this.Q[this.n - 1];
+      for (let i = this.n - 1; i > 0; i--) this.Q[i] = this.Q[i - 1];
+      this.Q[0] = this.A[this.n - 1];
+      for (let i = this.n - 1; i > 0; i--) this.A[i] = this.A[i - 1];
+      this.A[0] = aMsb;
+    }
+
+    addStep(description, registers = {}){
+      const snapshot = {};
+      if (this.A) snapshot.A = this.A.join('');
+      if (this.Q) snapshot.Q = this.Q.join('');
+      if (this.M) snapshot.M = this.M.join('');
+      if (typeof this.C !== 'undefined') snapshot.C = this.C;
+      if (typeof this.counter !== 'undefined') snapshot.counter = this.counter;
+      if (typeof this.sign !== 'undefined') snapshot.sign = this.sign;
+      if (typeof this.Q_minus1 !== 'undefined') snapshot["Q_-1"] = this.Q_minus1;
+      if (this.M_minus) snapshot["M_minus"] = this.M_minus.join('');
+      this.steps.push({ description, registers: { ...snapshot, ...registers } });
+    }
+  }
+
+  // 控制
+  function stopAutoIfRunning(){
+    if (autoInterval){
+      clearInterval(autoInterval);
+      autoInterval = null;
+      autoBtn.innerHTML = '<i class="fas fa-play-circle"></i> 自动播放';
+      autoBtn.className = 'btn-warning';
+    }
+  }
+  function goPrev(){
+    if (multiplication && currentStep > 0){
+      currentStep--;
+      stopAutoIfRunning();
+      updateDisplay();
+    }
+  }
+  function goNext(){
+    if (multiplication && currentStep < multiplication.steps.length - 1){
+      currentStep++;
+      stopAutoIfRunning();
+      updateDisplay();
+    }
+  }
+
+  // 事件
+  initializeBtn.addEventListener('click', () => {
+    const type = multiplicationTypeEl.value;
+    const bitLength = bitLengthEl.value;
+    const operand1 = operand1El.value;
+    const operand2 = operand2El.value;
+    multiplication = new BinaryMultiplication(type, bitLength, operand1, operand2);
+    currentStep = 0;
+    if (!multiplication.valid || !multiplication.steps.length){
+      stepBtn.disabled = true; prevBtn.disabled = true; autoBtn.disabled = true;
+    }else{
+      stepBtn.disabled = false; prevBtn.disabled = true; autoBtn.disabled = false;
+    }
+    stopAutoIfRunning();
+    updateDisplay();
+  });
+  prevBtn.addEventListener('click', goPrev);
+  stepBtn.addEventListener('click', goNext);
+  autoBtn.addEventListener('click', () => {
+    if (autoInterval){ stopAutoIfRunning(); }
+    else{
+      autoBtn.innerHTML = '<i class="fas fa-pause-circle"></i> 停止';
+      autoBtn.className = 'btn-danger';
+      const speed = parseInt(animationSpeedEl.value);
+      autoInterval = setInterval(() => {
+        if (multiplication && currentStep < multiplication.steps.length - 1){
+          currentStep++; updateDisplay();
+        }else{ stopAutoIfRunning(); }
+      }, speed);
+    }
+  });
+  resetBtn.addEventListener('click', () => {
+    stopAutoIfRunning();
+    multiplication = null; currentStep = 0;
+    stepBtn.disabled = true; prevBtn.disabled = true; autoBtn.disabled = true;
+    explanationEl.innerHTML = "<p><i class='fas fa-info-circle'></i> 点击“初始化计算”开始。使用“下一步/上一步”逐步查看。右侧只显示当前一步的说明。</p>";
+    registersEl.innerHTML = ""; stepsEl.innerHTML = ""; resultEl.textContent = ""; resultEl.className = 'result';
+  });
+
+  // 辅助
+  function combinedDecimal(A, Q){
+    if (!multiplication) return 0;
+    const full = (A || '') + (Q || '');
+    if (!full) return 0;
+    if (multiplication.type === 'booth') return multiplication.fromTwosComplement(full);
+    if (multiplication.type === 'signMagnitude'){
+      const val = parseInt(full, 2); return multiplication.sign ? -val : val;
+    }
+    return parseInt(full, 2);
+  }
+  function labelType(type){
+    if (type === 'unsigned') return '无符号乘法';
+    if (type === 'signMagnitude') return '原码乘法';
+    if (type === 'booth') return 'Booth（补码）乘法';
+    return type;
+  }
+  function formatStep(description, idx){
+    const total = multiplication ? multiplication.steps.length : 0;
+    return `<div class="step"><h4>步骤 ${idx + 1} / ${total}</h4><p>${description}</p></div>`;
+  }
+  function isShiftCompletion(desc){ return desc.includes("右移完成"); }
+  function isAdditionResultStep(desc){ return desc.includes("加法结束"); }
+
+  function insertedBitForShift(prevRegs){
+    if (!multiplication || !prevRegs) return 0;
+    if (multiplication.type === 'unsigned') return Number(prevRegs.C || 0);
+    if (multiplication.type === 'signMagnitude') return 0;
+    if (multiplication.type === 'booth') return Number((prevRegs.A || '0')[0] || 0); // A 的最高位
+    return 0;
+  }
+  function createBitEl(bit, extra=''){
+    const el = document.createElement('div');
+    el.className = `bit bit-${bit} ${extra}`.trim();
+    el.textContent = bit;
+    return el;
+  }
+
+  // 渲染
+  function updateDisplay(){
+    if (!multiplication || !multiplication.steps.length){
+      explanationEl.innerHTML = `<p><i class="fas fa-info-circle"></i> 点击“初始化计算”开始。初始化后会显示第一步。</p>`;
+      registersEl.innerHTML = ""; stepsEl.innerHTML = ""; resultEl.textContent = ""; resultEl.className = 'result'; return;
+    }
+
+    const step = multiplication.steps[currentStep];
+    const prevStep = currentStep > 0 ? multiplication.steps[currentStep - 1] : null;
+    const rs = step.registers;
+    const prev = prevStep ? prevStep.registers : null;
+
+    explanationEl.innerHTML = `<p><i class="fas fa-info-circle"></i> 算法：${labelType(multiplication.type)}｜位宽：${multiplication.n}｜进度：第 ${currentStep + 1} / ${multiplication.steps.length} 步</p>`;
+    stepsEl.innerHTML = formatStep(step.description, currentStep);
+
+    registersEl.innerHTML = "";
+
+    // 结果寄存器 A+Q（两段背景，位宽改变自动对应）
+    if (rs.A && rs.Q){
+      const group = document.createElement('div'); group.className = 'register-group wide';
+      const title = document.createElement('div'); title.className = 'register-title'; title.innerHTML = '<i class="fas fa-tasks"></i> 结果寄存器 (A + Q)';
+      group.appendChild(title);
+
+      const labels = document.createElement('div'); labels.className = 'register-labels'; labels.innerHTML = `<span>高位 (A)</span><span>低位 (Q)</span>`;
+      group.appendChild(labels);
+
+      const row = document.createElement('div'); row.className = 'result-row';
+      const resultBits = document.createElement('div'); resultBits.className = 'result-bits';
+
+      // A 半
+      const halfA = document.createElement('div'); halfA.className = 'half half-A';
+      const aBits = rs.A.split('');
+      aBits.forEach((b,i) => {
+        const el = createBitEl(b);
+        // 加法结束步骤：把发生变化的 A 位做淡入
+        if (prev && prev.A && isAdditionResultStep(step.description) && prev.A[i] !== b){
+          el.classList.add('bit-fade-in');
+          requestAnimationFrame(() => el.classList.add('ready'));
+        }
+        halfA.appendChild(el);
+      });
+
+      // Q 半
+      const halfQ = document.createElement('div'); halfQ.className = 'half half-Q';
+      rs.Q.split('').forEach((b) => {
+        const el = createBitEl(b);
+        halfQ.appendChild(el);
+      });
+
+      resultBits.appendChild(halfA);
+      resultBits.appendChild(halfQ);
+      row.appendChild(resultBits);
+
+      // 移位动画：整体右移一位 → 左侧补入 → 最右位淡出
+      if (prev && prev.A && prev.Q && isShiftCompletion(step.description)){
+        const overlay = document.createElement('div'); overlay.className = 'shift-overlay';
+        const ghostLine = document.createElement('div'); ghostLine.className = 'ghost-line';
+        const prevFull = (prev.A + prev.Q).split('');
+        prevFull.forEach((b, idx) => {
+          const ghost = createBitEl(b, 'shift-ghost');
+          if (idx === prevFull.length - 1) ghost.classList.add('shift-exit');
+          ghostLine.appendChild(ghost);
+        });
+        overlay.appendChild(ghostLine);
+
+        const insBit = insertedBitForShift(prev);
+        const enter = createBitEl(insBit, 'shift-enter');
+        overlay.appendChild(enter);
+
+        row.appendChild(overlay);
+
+        requestAnimationFrame(() => {
+          overlay.querySelectorAll('.shift-ghost').forEach(el => el.classList.add('move'));
+        });
+
+        const speed = parseInt(animationSpeedEl.value);
+        const totalMs = Math.max(300, Math.min(800, speed + 100));
+        setTimeout(() => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }, totalMs);
+      }
+
+      const val = document.createElement('div'); val.className = 'register-value';
+      val.textContent = `十进制: ${combinedDecimal(rs.A, rs.Q)}`;
+
+      group.appendChild(row);
+      group.appendChild(val);
+      registersEl.appendChild(group);
+    }
+
+    // 其他寄存器；合并 counter 与 Q_-1
+    let counterVal = null, qMinus1Val = null;
+    for (const [name, value] of Object.entries(rs)){
+      if (name === 'A' || name === 'Q') continue;
+      if (name === 'counter'){ counterVal = value; continue; }
+      if (name === 'Q_-1'){ qMinus1Val = value; continue; }
+
+      const group = document.createElement('div'); group.className = 'register-group';
+      const title = document.createElement('div'); title.className = 'register-title';
+      let icon = 'fas fa-memory';
+      if (name === 'M') icon = 'fas fa-xmark';
+      if (name === 'C') icon = 'fas fa-arrow-up';
+      if (name === 'sign') icon = 'fas fa-adjust';
+      if (name === 'M_minus') icon = 'fas fa-minus';
+      title.innerHTML = `<i class="${icon}"></i> ${name} 寄存器`;
+      group.appendChild(title);
+
+      const box = document.createElement('div'); box.className = 'bits-container';
+      if (typeof value === 'number' || (typeof value === 'string' && value.length === 1 && name !== 'M' && name !== 'M_minus')){
+        const chip = document.createElement('div'); chip.className = 'chip small'; chip.textContent = value.toString();
+        box.appendChild(chip);
+      }else{
+        const bits = value.toString().split('');
+        const prevStr = prev && prev[name] ? prev[name].toString() : null;
+        bits.forEach((b,i) => {
+          const el = createBitEl(b);
+          // A 寄存器：加法结束步骤对变动位淡入
+          if (name === 'A' && prevStr && isAdditionResultStep(step.description) && prevStr[i] !== b){
+            el.classList.add('bit-fade-in');
+            requestAnimationFrame(() => el.classList.add('ready'));
+          }
+          box.appendChild(el);
+        });
+      }
+      group.appendChild(box);
+      registersEl.appendChild(group);
+    }
+
+    // 合并显示 counter 与 Q_-1
+    if (counterVal !== null || qMinus1Val !== null){
+      const group = document.createElement('div'); group.className = 'register-group';
+      const title = document.createElement('div'); title.className = 'register-title';
+      title.innerHTML = `<i class="fas fa-sliders-h"></i> 控制位（合并）`;
+      group.appendChild(title);
+
+      const chips = document.createElement('div'); chips.className = 'inline-chips';
+      if (qMinus1Val !== null){
+        const c1 = document.createElement('div'); c1.className = 'chip small'; c1.textContent = `Q_-1 = ${qMinus1Val}`;
+        chips.appendChild(c1);
+      }
+      if (counterVal !== null){
+        const c2 = document.createElement('div'); c2.className = 'chip small'; c2.textContent = `counter = ${counterVal}`;
+        chips.appendChild(c2);
+      }
+      group.appendChild(chips);
+      registersEl.appendChild(group);
+    }
+
+    // 底部便捷控制
+    const ctrl = document.createElement('div'); ctrl.className = 'register-group';
+    const ctrlTitle = document.createElement('div'); ctrlTitle.className = 'register-title'; ctrlTitle.innerHTML = `<i class="fas fa-gamepad"></i> 快捷控制`;
+    ctrl.appendChild(ctrlTitle);
+    const compact = document.createElement('div'); compact.className = 'btn-group-compact';
+    const bPrev = document.createElement('button'); bPrev.className = 'btn-light'; bPrev.innerHTML = '<i class="fas fa-step-backward"></i> 上一步'; bPrev.disabled = currentStep === 0; bPrev.addEventListener('click', goPrev);
+    const bNext = document.createElement('button'); bNext.className = 'btn-success'; bNext.innerHTML = '<i class="fas fa-step-forward"></i> 下一步'; bNext.disabled = currentStep >= multiplication.steps.length - 1; bNext.addEventListener('click', goNext);
+    compact.appendChild(bPrev); compact.appendChild(bNext); ctrl.appendChild(compact); registersEl.appendChild(ctrl);
+
+    // 结果
+    if (currentStep === multiplication.steps.length - 1){
+      const last = rs;
+      if (last && last.A && last.Q){
+        const dec = combinedDecimal(last.A, last.Q);
+        const expected = multiplication.operand1 * multiplication.operand2;
+        resultEl.textContent = `最终乘积：二进制 ${last.A + last.Q}，十进制 ${dec}`;
+        resultEl.className = dec === expected ? 'result' : 'result result-error';
+        if (dec !== expected) resultEl.textContent += `（期望: ${expected}）`;
+      }
+    }else{
+      resultEl.textContent = ""; resultEl.className = 'result';
+    }
+
+    // 顶部按钮状态
+    prevBtn.disabled = currentStep === 0;
+    stepBtn.disabled = currentStep >= multiplication.steps.length - 1;
+    autoBtn.disabled = multiplication.steps.length <= 1 || currentStep >= multiplication.steps.length - 1;
+  }
+</script>
+</body>
+</html>
+<div class="admonition info">
+<p class="admonition-title">📝 如果您需要引用本文</p>
+<p>Yan Li. (Sep. 25, 2025). <i class="fas fa-calculator"></i> 二进制乘法可视化工具 [Blog post]. Retrieved from <a href="https://dicaeopolis.github.io/campus-sources/binmul">https://dicaeopolis.github.io/campus-sources/binmul</a></p>
+<p>在 BibTeX 格式中：
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
+<span class="normal"><a href="#__codelineno-0-2">2</a></span>
+<span class="normal"><a href="#__codelineno-0-3">3</a></span>
+<span class="normal"><a href="#__codelineno-0-4">4</a></span>
+<span class="normal"><a href="#__codelineno-0-5">5</a></span>
+<span class="normal"><a href="#__codelineno-0-6">6</a></span>
+<span class="normal"><a href="#__codelineno-0-7">7</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1"></a>@online{binmul,
+<a id="__codelineno-0-2" name="__codelineno-0-2"></a>    title={&lt;i class="fas fa-calculator"&gt;&lt;/i&gt; 二进制乘法可视化工具},
+<a id="__codelineno-0-3" name="__codelineno-0-3"></a>    author={Yan Li},
+<a id="__codelineno-0-4" name="__codelineno-0-4"></a>    year={2025},
+<a id="__codelineno-0-5" name="__codelineno-0-5"></a>    month={Sep},
+<a id="__codelineno-0-6" name="__codelineno-0-6"></a>    url={\url{https://dicaeopolis.github.io/campus-sources/binmul}},
+<a id="__codelineno-0-7" name="__codelineno-0-7"></a>}
+</code></pre></div></td></tr></table></div></p>
+</div>
+<form class="md-feedback" hidden="" name="feedback">
+<fieldset>
+<legend class="md-feedback__title">
+        Was this page helpful?
+      </legend>
+<div class="md-feedback__inner">
+<div class="md-feedback__list">
+<button class="md-feedback__icon md-icon" data-md-value="1" title="This page was helpful" type="submit">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 12a8 8 0 0 0-8-8 8 8 0 0 0-8 8 8 8 0 0 0 8 8 8 8 0 0 0 8-8m2 0a10 10 0 0 1-10 10A10 10 0 0 1 2 12 10 10 0 0 1 12 2a10 10 0 0 1 10 10M10 9.5c0 .8-.7 1.5-1.5 1.5S7 10.3 7 9.5 7.7 8 8.5 8s1.5.7 1.5 1.5m7 0c0 .8-.7 1.5-1.5 1.5S14 10.3 14 9.5 14.7 8 15.5 8s1.5.7 1.5 1.5m-5 7.73c-1.75 0-3.29-.73-4.19-1.81L9.23 14c.45.72 1.52 1.23 2.77 1.23s2.32-.51 2.77-1.23l1.42 1.42c-.9 1.08-2.44 1.81-4.19 1.81"></path></svg>
+</button>
+<button class="md-feedback__icon md-icon" data-md-value="0" title="This page could be improved" type="submit">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 12a8 8 0 0 0-8-8 8 8 0 0 0-8 8 8 8 0 0 0 8 8 8 8 0 0 0 8-8m2 0a10 10 0 0 1-10 10A10 10 0 0 1 2 12 10 10 0 0 1 12 2a10 10 0 0 1 10 10m-6.5-4c.8 0 1.5.7 1.5 1.5s-.7 1.5-1.5 1.5-1.5-.7-1.5-1.5.7-1.5 1.5-1.5M10 9.5c0 .8-.7 1.5-1.5 1.5S7 10.3 7 9.5 7.7 8 8.5 8s1.5.7 1.5 1.5m2 4.5c1.75 0 3.29.72 4.19 1.81l-1.42 1.42C14.32 16.5 13.25 16 12 16s-2.32.5-2.77 1.23l-1.42-1.42C8.71 14.72 10.25 14 12 14"></path></svg>
+</button>
+</div>
+<div class="md-feedback__note">
+<div data-md-value="1" hidden="">
+              
+              
+                
+              
+              
+              
+                
+                
+              
+              Thanks for your feedback!
+            </div>
+<div data-md-value="0" hidden="">
+              
+              
+                
+              
+              
+              
+                
+                
+              
+              Thanks for your feedback! Help us improve this page by using our <a href="..." rel="noopener" target="_blank">feedback form</a>.
+            </div>
+</div>
+</div>
+</fieldset>
+</form>
+</article>
+</div>
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+</div>
+</main>
+<footer class="md-footer">
+<div class="md-footer-meta md-typeset">
+<div class="md-footer-meta__inner md-grid">
+<div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" rel="noopener" target="_blank">
+      Material for MkDocs
+    </a>
+</div>
+</div>
+</div>
+</footer>
+</div>
+<div class="md-dialog" data-md-component="dialog">
+<div class="md-dialog__inner md-typeset"></div>
+</div>
+<script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.code.copy", "content.code.select", "navigation.titles", "navigation.tabs", "navigation.indexes"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+<script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+<script src="../../assets/js/custom.js"></script>
+<script src="../../themes/js/custom.js"></script>
+<script src="../../themes/js/simpleLightbox.min.js"></script>
+<script src="../../themes/js/optionalConfig.js"></script>
+<script src="../../themes/js/mermaidloader.js"></script>
+<script src="../../themes/js/umlconvert.js"></script>
+<script src="../../themes/js/mathjax.js"></script>
+<script src="../../themes/js/katex.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.17.1/flowchart.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.3.0/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.13.6/underscore-min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mermaid-js/mermaid-mindmap@9.3.0/dist/diagram-definition.0faef4c2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/markdown-it-plantuml@1.4.1/index.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/webfont/1.6.28/webfontloader.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-chtml-full.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-svg-full.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+</body>
+</html>

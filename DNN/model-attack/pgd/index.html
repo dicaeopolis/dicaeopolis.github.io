@@ -1,0 +1,1182 @@
+
+<!DOCTYPE html>
+
+<html class="no-js" lang="zh">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<link href="../CandW/" rel="prev"/>
+<link href="../fgsm/" rel="next"/>
+<link href="../../../favicon.png" rel="icon"/>
+<meta content="mkdocs-1.6.1, mkdocs-material-9.7.1" name="generator"/>
+<title>PGD 攻击 - Dicaeopolis' Wiki</title>
+<link href="../../../assets/stylesheets/main.484c7ddc.min.css" rel="stylesheet"/>
+<link href="../../../assets/stylesheets/palette.ab4e12ef.min.css" rel="stylesheet"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback" rel="stylesheet"/>
+<style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+<link href="../../../themes/css/custom.css" rel="stylesheet"/>
+<link href="../../../themes/css/simpleLightbox.min.css" rel="stylesheet"/>
+<link href="../../../themes/css/pied_piper.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css" rel="stylesheet"/>
+<link href="../../../stylesheets/customize.css" rel="stylesheet"/>
+<link href="../../../assets/css/custom.css" rel="stylesheet"/>
+<script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+</head>
+<body data-md-color-accent="indigo" data-md-color-primary="indigo" data-md-color-scheme="default" dir="ltr">
+<input autocomplete="off" class="md-toggle" data-md-toggle="drawer" id="__drawer" type="checkbox"/>
+<input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
+<label class="md-overlay" for="__drawer"></label>
+<div data-md-component="skip">
+<a class="md-skip" href="#pgd">
+          跳转至
+        </a>
+</div>
+<div data-md-component="announce">
+</div>
+<header class="md-header" data-md-component="header">
+<nav aria-label="页眉" class="md-header__inner md-grid">
+<a aria-label="Dicaeopolis' Wiki" class="md-header__button md-logo" data-md-component="logo" href="../../.." title="Dicaeopolis' Wiki">
+<img alt="logo" src="../../../favicon.png"/>
+</a>
+<label class="md-header__button md-icon" for="__drawer">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"></path></svg>
+</label>
+<div class="md-header__title" data-md-component="header-title">
+<div class="md-header__ellipsis">
+<div class="md-header__topic">
+<span class="md-ellipsis">
+            Dicaeopolis' Wiki
+          </span>
+</div>
+<div class="md-header__topic" data-md-component="header-topic">
+<span class="md-ellipsis">
+            
+              PGD 攻击
+            
+          </span>
+</div>
+</div>
+</div>
+<form class="md-header__option" data-md-component="palette">
+<input aria-label="Switch to light mode" class="md-option" data-md-color-accent="indigo" data-md-color-media="(prefers-color-scheme)" data-md-color-primary="indigo" data-md-color-scheme="default" id="__palette_0" name="__palette" type="radio"/>
+<label class="md-header__button md-icon" for="__palette_1" hidden="" title="Switch to light mode">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12zm-9.15 3.96h2.3L12 9z"></path></svg>
+</label>
+<input aria-label="Switch to dark mode" class="md-option" data-md-color-accent="indigo" data-md-color-media="(prefers-color-scheme: light)" data-md-color-primary="indigo" data-md-color-scheme="default" id="__palette_1" name="__palette" type="radio"/>
+<label class="md-header__button md-icon" for="__palette_2" hidden="" title="Switch to dark mode">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+</label>
+<input aria-label="Switch to system preference" class="md-option" data-md-color-accent="indigo" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-primary="indigo" data-md-color-scheme="slate" id="__palette_2" name="__palette" type="radio"/>
+<label class="md-header__button md-icon" for="__palette_0" hidden="" title="Switch to system preference">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+</label>
+</form>
+<script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+<label class="md-header__button md-icon" for="__search">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+</label>
+<div class="md-search" data-md-component="search" role="dialog">
+<label class="md-search__overlay" for="__search"></label>
+<div class="md-search__inner" role="search">
+<form class="md-search__form" name="search">
+<input aria-label="搜索" autocapitalize="off" autocomplete="off" autocorrect="off" class="md-search__input" data-md-component="search-query" name="query" placeholder="搜索" required="" spellcheck="false" type="text"/>
+<label class="md-search__icon md-icon" for="__search">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+</label>
+<nav aria-label="查找" class="md-search__options">
+<button aria-label="清空当前内容" class="md-search__icon md-icon" tabindex="-1" title="清空当前内容" type="reset">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+</button>
+</nav>
+</form>
+<div class="md-search__output">
+<div class="md-search__scrollwrap" data-md-scrollfix="" tabindex="0">
+<div class="md-search-result" data-md-component="search-result">
+<div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+<ol class="md-search-result__list" role="presentation"></ol>
+</div>
+</div>
+</div>
+</div>
+</div>
+</nav>
+</header>
+<div class="md-container" data-md-component="container">
+<nav aria-label="标签" class="md-tabs" data-md-component="tabs">
+<div class="md-grid">
+<ul class="md-tabs__list">
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../../astronomy/">
+          
+  
+  
+    
+  
+  天文摄影理论和实践
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../../campus-sources/">
+          
+  
+  
+    
+  
+  校内课程知识
+
+        </a>
+</li>
+<li class="md-tabs__item md-tabs__item--active">
+<a class="md-tabs__link" href="../../">
+          
+  
+  
+    
+  
+  深度神经网络
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../../misc/">
+          
+  
+  
+    
+  
+  配置和杂谈笔记
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../../algorithm/">
+          
+  
+  
+    
+  
+  传统算法与性能
+
+        </a>
+</li>
+</ul>
+</div>
+</nav>
+<main class="md-main" data-md-component="main">
+<div class="md-main__inner md-grid">
+<div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="导航栏" class="md-nav md-nav--primary md-nav--lifted" data-md-level="0">
+<label class="md-nav__title" for="__drawer">
+<a aria-label="Dicaeopolis' Wiki" class="md-nav__button md-logo" data-md-component="logo" href="../../.." title="Dicaeopolis' Wiki">
+<img alt="logo" src="../../../favicon.png"/>
+</a>
+    Dicaeopolis' Wiki
+  </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_1" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../../astronomy/">
+<span class="md-ellipsis">
+    
+  
+    天文摄影理论和实践
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_1_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_1">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    天文摄影理论和实践
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../astronomy/gallery/">
+<span class="md-ellipsis">
+    
+  
+    深空影集
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../astronomy/polar/">
+<span class="md-ellipsis">
+    
+  
+    看不见北极星怎么办
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../astronomy/%E6%96%B9%E4%BD%8D%E8%B0%83%E8%8A%82/">
+<span class="md-ellipsis">
+    
+  
+    方位调节
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../astronomy/%E7%BA%AC%E5%BA%A6%E8%B0%83%E8%8A%82/">
+<span class="md-ellipsis">
+    
+  
+    纬度调节
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_2" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../../campus-sources/">
+<span class="md-ellipsis">
+    
+  
+    校内课程知识
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_2_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_2">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    校内课程知识
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/SDC-exams/">
+<span class="md-ellipsis">
+    
+  
+    《计算机组成与设计》部分历年题目题解
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/Discrete_exams/">
+<span class="md-ellipsis">
+    
+  
+    《离散数学》部分期末题目题解
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/Discrete_notes/">
+<span class="md-ellipsis">
+    
+  
+    离散期末复习提纲
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/Descrete_assignments/">
+<span class="md-ellipsis">
+    
+  
+    《离散数学》课程作业与笔记归档
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/Prob_Stats_assignments/">
+<span class="md-ellipsis">
+    
+  
+    《概率论与数理统计》课程作业与笔记归档
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/SDC_assignments/">
+<span class="md-ellipsis">
+    
+  
+    《计算机组成原理》理论课程作业与笔记归档
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/PU_Bii_assignments/">
+<span class="md-ellipsis">
+    
+  
+    《大学物理B下》课程作业与笔记归档
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/binmul/">
+<span class="md-ellipsis">
+<i class="fas fa-calculator"></i> 二进制乘法可视化工具
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/textbook/">
+<span class="md-ellipsis">
+    
+  
+    本科教科书电子资源
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/ds-keynote/">
+<span class="md-ellipsis">
+    
+  
+    《数据结构》划重点笔记
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/ds-write-up/">
+<span class="md-ellipsis">
+    
+  
+    《数据结构》期末复习题题解
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/autosignin/">
+<span class="md-ellipsis">
+    
+  
+    自动签到脚本
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+<input checked="" class="md-nav__toggle md-toggle" id="__nav_3" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../">
+<span class="md-ellipsis">
+    
+  
+    深度神经网络
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="true" aria-labelledby="__nav_3_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_3">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    深度神经网络
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../match/">
+<span class="md-ellipsis">
+    
+  
+    如何做四六级考试的段落匹配题
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../BP/">
+<span class="md-ellipsis">
+    
+  
+    前馈神经网络的反向传播
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../RL/">
+<span class="md-ellipsis">
+    
+  
+    RL学习笔记 - 上篇
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../SVM_SMO/">
+<span class="md-ellipsis">
+    
+  
+    SMO 算法的推导
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_3_6" type="checkbox"/>
+<label class="md-nav__link" for="__nav_3_6" id="__nav_3_6_label" tabindex="0">
+<span class="md-ellipsis">
+    
+  
+    Wp
+  
+
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_3_6_label" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="__nav_3_6">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    Wp
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../WP/aiwp/">
+<span class="md-ellipsis">
+    
+  
+    MISC-AI 方向 WriteUp
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--active md-nav__item--nested">
+<input checked="" class="md-nav__toggle md-toggle" id="__nav_3_7" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../">
+<span class="md-ellipsis">
+    
+  
+    深度学习模型攻击理论与复现归档
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_3_7" id="__nav_3_7_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="true" aria-labelledby="__nav_3_7_label" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="__nav_3_7">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    深度学习模型攻击理论与复现归档
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../hsja/">
+<span class="md-ellipsis">
+    
+  
+    HSJA 攻击
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../BadNets/">
+<span class="md-ellipsis">
+    
+  
+    BadNets
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../CandW/">
+<span class="md-ellipsis">
+    
+  
+    C&amp;W 攻击
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" id="__toc" type="checkbox"/>
+<label class="md-nav__link md-nav__link--active" for="__toc">
+<span class="md-ellipsis">
+    
+  
+    PGD 攻击
+  
+
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<a class="md-nav__link md-nav__link--active" href="./">
+<span class="md-ellipsis">
+    
+  
+    PGD 攻击
+  
+
+    
+  </span>
+</a>
+<nav aria-label="目录" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_1">
+<span class="md-ellipsis">
+      
+        迭代攻击
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_2">
+<span class="md-ellipsis">
+      
+        理论框架
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_3">
+<span class="md-ellipsis">
+      
+        效果
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_4">
+<span class="md-ellipsis">
+      
+        关于谱范数的一些注解：算法和动机
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../fgsm/">
+<span class="md-ellipsis">
+    
+  
+    FGSM 攻击
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_3_8" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../model-expr/">
+<span class="md-ellipsis">
+    
+  
+    深度学习相关模型理论与复现归档
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_3_8" id="__nav_3_8_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_3_8_label" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="__nav_3_8">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    深度学习相关模型理论与复现归档
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../model-expr/DDPM/">
+<span class="md-ellipsis">
+    
+  
+    扩散模型理论篇: 从多阶段变分自编码器到概率流常微分方程采样器系列
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../model-expr/S-and-D-models-replication/">
+<span class="md-ellipsis">
+    
+  
+    图像语义分割和目标检测相关模型复现手记
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../model-expr/Image-models-replication/">
+<span class="md-ellipsis">
+    
+  
+    图像分类相关模型复现手记
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../model-expr/DC-GAN-%E8%80%81%E5%A9%86%E7%94%9F%E6%88%90%E5%99%A8/">
+<span class="md-ellipsis">
+    
+  
+    DC-GAN 老婆生成器
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_3_9" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../optimizer/">
+<span class="md-ellipsis">
+    
+  
+    优化器
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_3_9" id="__nav_3_9_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_3_9_label" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="__nav_3_9">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    优化器
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../optimizer/misc/">
+<span class="md-ellipsis">
+    
+  
+    后续的写作计划
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../optimizer/SignGD/">
+<span class="md-ellipsis">
+    
+  
+    符号梯度下降
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../optimizer/Adaptive/">
+<span class="md-ellipsis">
+    
+  
+    自适应学习率改进策略
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../optimizer/SGD/">
+<span class="md-ellipsis">
+    
+  
+    SGD 系列算法
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_4" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../../misc/">
+<span class="md-ellipsis">
+    
+  
+    配置和杂谈笔记
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_4_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_4">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    配置和杂谈笔记
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../misc/test/">
+<span class="md-ellipsis">
+    
+  
+    功能测试页面
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_5" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../../algorithm/">
+<span class="md-ellipsis">
+    
+  
+    传统算法与性能
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_5_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_5">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    传统算法与性能
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../algorithm/benchmark-on-stl/">
+<span class="md-ellipsis">
+    
+  
+    STL的一些性能测试
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../algorithm/stl-wheels/">
+<span class="md-ellipsis">
+    
+  
+    嗯造轮子
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../algorithm/template-on-numeric-ring/">
+<span class="md-ellipsis">
+    
+  
+    整数环取模模板
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="目录" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_1">
+<span class="md-ellipsis">
+      
+        迭代攻击
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_2">
+<span class="md-ellipsis">
+      
+        理论框架
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_3">
+<span class="md-ellipsis">
+      
+        效果
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_4">
+<span class="md-ellipsis">
+      
+        关于谱范数的一些注解：算法和动机
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-content" data-md-component="content">
+<article class="md-content__inner md-typeset">
+<h1 id="pgd">PGD 攻击<a class="headerlink" href="#pgd" title="Permanent link">¶</a></h1>
+<div class="admonition info">
+<p class="admonition-title">📖 阅读信息</p>
+<p>阅读时间约 <strong>11</strong> 分钟　|　约 <strong>1832</strong> 字　|　约 <strong>20</strong> 个公式　|　没有代码，请放心食用</p>
+</div>
+<p><a href="https://arxiv.org/abs/1706.06083">文章</a> 发表在 ICLR 2018。作者单位都是 MIT。</p>
+<p>上次写 FGSM 的笔记的时候就发现，其实市面上的大部分博客这些二手知识<strong>无法得到广泛的同行评议</strong>（一些知名的博客如算法竞赛选手的或者领域内专家的除外，但初级学习者的博客情况就尤为严重），因此其正确性难以保证。</p>
+<p>因此本文力求从原论文入手开始阅读并进行相关笔记，写好之后也丢给 GPT-5-high 进行初步审读。当然，更欢迎列位人类看官批评指正。</p>
+<h2 id="_1">迭代攻击<a class="headerlink" href="#_1" title="Permanent link">¶</a></h2>
+<p>在上一篇 FGSM 的笔记中，我们得到攻击的<strong>单步扰动</strong>方式：</p>
+<div class="arithmatex">\[
+\begin{align*}
+    \tilde x_{L_2}&amp;=x+\epsilon g_x/\|g_x\|\\
+    \tilde x_{L_\infty}&amp;=x+\epsilon \mathrm{sign}(g_x)\\
+    \tilde x_{L_\mathrm{spec}}&amp;=x+\epsilon \mathrm{msign}(g_x)
+\end{align*}
+\]</div>
+<p>并且，FGSM 方法选择无穷范数作为最后使用的范数。受到优化器理论的启发，我们可以对此进行迭代：</p>
+<div class="arithmatex">\[
+x_{t+1}=\mathrm{Proj}_{x\in\mathcal{S}}(x_t+\alpha \mathrm{normalized}_L(g_x) )
+\]</div>
+<p>为了对标 FGSM 的扰动 <span class="arithmatex">\(\epsilon\)</span>，假设迭代步数 <span class="arithmatex">\(T\)</span> 则可以设置总扰动 <span class="arithmatex">\(\alpha T=\epsilon\)</span>。</p>
+<p>这里引入了裁切，一方面就如同之前提到的，图像具有一个最大的灰阶，不能超过；另一方面是，我们不能让扰动过大，而是尽可能构造那种“看起来差不多”但却可以对输出造成很大干扰的样本，因此我们需要把诸 <span class="arithmatex">\(x\)</span> 约束在一个可行域 <span class="arithmatex">\(\mathcal{S}\)</span> 里面，而最简单的约束方式就是约束到围绕初始样本形成的一个球 <span class="arithmatex">\(U(x_0,\epsilon)\)</span> 里面做投影（PGD），或者我们还可以直接进行裁切（BIM）。</p>
+<p>工程上为了引入多样性和鲁棒性，会采用在 <span class="arithmatex">\(x_0\)</span> 下添加微小噪声的方式作为迭代起点，又称随机启动。当然为了找到更全局的最大值，我们可以学习 SGD 的方法，也在这个迭代路径下面添加可控的噪声。至于这个 Noise Schedule（不是扩散模型的那个哈哈，我故意的）怎么搞也是见仁见智的。</p>
+<p>为了统一说明，这里使用 <span class="arithmatex">\(\mathrm{normalized}_L(g_x)\)</span> 来表征样本梯度在 <span class="arithmatex">\(L\)</span> 范数下的归一化向量，具体的计算方式如前。这就是 <span class="arithmatex">\(L\)</span> 范数意义下的<strong>投影梯度下降</strong>（projected gradient descent, PGD）。这样看是不是很像 SGD 呢？——那我们其实还可以接着套优化器理论，SGD 引入了动量，那 PGD 也可以引入动量，OK 于是你发明了 <a href="https://arxiv.org/abs/1710.06081">MI-FGSM</a> 然后中了 CVPR 2018，然后你还可以引入 Nesterov 加速梯度，并美美水一篇<a href="https://arxiv.org/abs/2105.05029">文章</a>放在 arXiv 上面……</p>
+<h2 id="_2">理论框架<a class="headerlink" href="#_2" title="Permanent link">¶</a></h2>
+<p>PGD 这篇文章的着眼点并不完全是提出 PGD 这个方法而是提供一个攻防的整体框架。虽然我觉得这个框架就是抄的 GAN 的损失函数……不过让我们先来看看吧。</p>
+<p>作者给出的框架分成两部分，第一部分是作为攻击者，我们考虑一个可行的扰动集合 <span class="arithmatex">\(\delta\in\mathcal{S}\)</span>，需要最大化损失也就是</p>
+<div class="arithmatex">\[
+\max_{\delta\in\mathcal{S}}\mathcal{L}(\theta;x+\delta,y)
+\]</div>
+<p>第二部分是作为防御方，需要针对攻击做出防御，也就是对于正确的分类样本-标签对分布 <span class="arithmatex">\((x,y)\sim\mathcal{D}\)</span> 要最小化攻击效果：</p>
+<div class="arithmatex">\[
+\min_{\theta}\mathbb{E}_{(x,y)\sim\mathcal{D}}[\max_{\delta\in\mathcal{S}}\mathcal{L}(\theta;x+\delta,y)]
+\]</div>
+<p>然后整个攻防过程就抽象成了这么一个鞍点上的 min-max 博弈。</p>
+<p>就 PGD 而言，我们可以将其视作损失地形下的梯度提升。就足够小的 <span class="arithmatex">\(\epsilon\)</span> 和足够多的迭代步数而言，其正如 SGD 一般能得到一个足够高的损失高地。也就是说 PGD 是利用一阶梯度信息的<strong>很强的攻击方法</strong>。</p>
+<p>由于刚刚那个攻防过程的外层就是一般的风险最小化式子，可以通过一般的优化器进行训练。而内层可以利用 PGD 得到最有效的梯度上升。因此文章得出利用 PGD 进行对抗训练，可以实现较好的防御效果。关于这一部分的理论论证，作者利用了 Danskin 定理在附录 A 进行了证明。</p>
+<p>此外文章还花篇幅讨论了网络容量和对抗训练的关系。由于对抗样本实质上是试图在真实样本附近添加扰动而预期跨过决策边界。因此对抗训练会使得决策边界相当复杂，需要网络具有更强大的拟合能力。</p>
+<h2 id="_3">效果<a class="headerlink" href="#_3" title="Permanent link">¶</a></h2>
+<p><img alt="alt text" src="../Figure_2.png"/></p>
+<p><img alt="alt text" src="../Figure_4.png"/></p>
+<p><img alt="alt text" src="../Figure_6.png"/></p>
+<p>当我们控制总的更新量不变时，控制更精细的迭代量会使得在肉眼区别不大的情况下得到更好的攻击效果，这就是多步迭代的威力。比如无穷范数约束下的 PGD 从迭代 0 步到20步，只是灰色色块边缘稍有模糊。</p>
+<h2 id="_4">关于谱范数的一些注解：算法和动机<a class="headerlink" href="#_4" title="Permanent link">¶</a></h2>
+<p>眼尖的读者可能会注意到，这里的谱范数的攻击图像和之前 FGSM 的攻击图像有些不大一样。</p>
+<p>这是因为 GPU 相对较难并行地对矩阵做 SVD，这就导致吞吐率很低。在 GAN 的训练中使用的谱归一化采用幂迭代的方式进行计算，但这对于每个 Batch 都有很大变化的输入而言也是相对低效的。</p>
+<p>因此我们采用在 Muon 优化器里面已经验证过的方式，即使用 Newton-Schulz 迭代高效近似 <span class="arithmatex">\(UV^\top\)</span>。它只需迭代几次 <span class="arithmatex">\(MM^\top\)</span> 的计算即可快速进行谱归一化，时间复杂度尽管仍然是 <span class="arithmatex">\(O(n^3)\)</span> 但是这个过程只依赖矩阵乘法、数乘与加和，相当适用于 GPU 计算，常数小的同时有着相当高的吞吐率。</p>
+<p>具体而言，跑全量数据的对抗样本生成，谱范数约束迭代 20 次，在 P100 GPU 上这个方法耗时是训练集 20.72s 以及测试集 3.52s，而在 Intel i5 1135G7 CPU 上的耗时如上图。有理由相信基于 CPU 的 SVD 方法将更慢。</p>
+<p>关于具体的理论推导和代码实现以及相关参数的求解，请参考“优化器”类别中的“符号梯度下降”一文。</p>
+<p>最后尚未提及的一点是对于张量，其梯度的“谱范数”是未定义的。具体怎么把张量变成矩阵就见仁见智了，比如可以按通道分别抽取最后两个维度，等等。</p>
+<p>我在这一系列里面固执地引入谱范数约束的梯度上升攻击，恰恰是想发掘一些有意思的点——可以看到谱范数在大规模神经网络参数优化问题下表现极佳，具有相当强悍的收敛速率。但是到了<strong>对抗样本生成领域</strong>就表现得相当拉了。一开始我是觉得，神经网络的优化问题是简单的梯度下降而对抗样本生成是简单的梯度上升，只不过一个针对网络参数，一个针对样本输入罢了。</p>
+<p>而正是这一点点的区别造就了很大的不一样。我们面对一个图片或者说基于原有样本生成的对抗样本，其语义信息应当是基本上完整保留的，这就决定了我们的扰动要么是<strong>难以察觉的</strong>，要么是<strong>误导人眼</strong>的——本质上这是一个对对抗样本生成的一个<strong>相当强的正则化约束</strong>！</p>
+<p>由此才决定了为何我们在梯度上升对抗样本生成中，无穷范数的效果是“看起来”最好的。</p>
+<div class="admonition info">
+<p class="admonition-title">📝 如果您需要引用本文</p>
+<p>Yan Li. (Sep. 23, 2025). PGD 攻击 [Blog post]. Retrieved from <a href="https://dicaeopolis.github.io/DNN/model-attack/pgd">https://dicaeopolis.github.io/DNN/model-attack/pgd</a></p>
+<p>在 BibTeX 格式中：
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
+<span class="normal"><a href="#__codelineno-0-2">2</a></span>
+<span class="normal"><a href="#__codelineno-0-3">3</a></span>
+<span class="normal"><a href="#__codelineno-0-4">4</a></span>
+<span class="normal"><a href="#__codelineno-0-5">5</a></span>
+<span class="normal"><a href="#__codelineno-0-6">6</a></span>
+<span class="normal"><a href="#__codelineno-0-7">7</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1"></a>@online{pgd,
+<a id="__codelineno-0-2" name="__codelineno-0-2"></a>    title={PGD 攻击},
+<a id="__codelineno-0-3" name="__codelineno-0-3"></a>    author={Yan Li},
+<a id="__codelineno-0-4" name="__codelineno-0-4"></a>    year={2025},
+<a id="__codelineno-0-5" name="__codelineno-0-5"></a>    month={Sep},
+<a id="__codelineno-0-6" name="__codelineno-0-6"></a>    url={\url{https://dicaeopolis.github.io/DNN/model-attack/pgd}},
+<a id="__codelineno-0-7" name="__codelineno-0-7"></a>}
+</code></pre></div></td></tr></table></div></p>
+</div>
+<form class="md-feedback" hidden="" name="feedback">
+<fieldset>
+<legend class="md-feedback__title">
+        Was this page helpful?
+      </legend>
+<div class="md-feedback__inner">
+<div class="md-feedback__list">
+<button class="md-feedback__icon md-icon" data-md-value="1" title="This page was helpful" type="submit">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 12a8 8 0 0 0-8-8 8 8 0 0 0-8 8 8 8 0 0 0 8 8 8 8 0 0 0 8-8m2 0a10 10 0 0 1-10 10A10 10 0 0 1 2 12 10 10 0 0 1 12 2a10 10 0 0 1 10 10M10 9.5c0 .8-.7 1.5-1.5 1.5S7 10.3 7 9.5 7.7 8 8.5 8s1.5.7 1.5 1.5m7 0c0 .8-.7 1.5-1.5 1.5S14 10.3 14 9.5 14.7 8 15.5 8s1.5.7 1.5 1.5m-5 7.73c-1.75 0-3.29-.73-4.19-1.81L9.23 14c.45.72 1.52 1.23 2.77 1.23s2.32-.51 2.77-1.23l1.42 1.42c-.9 1.08-2.44 1.81-4.19 1.81"></path></svg>
+</button>
+<button class="md-feedback__icon md-icon" data-md-value="0" title="This page could be improved" type="submit">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 12a8 8 0 0 0-8-8 8 8 0 0 0-8 8 8 8 0 0 0 8 8 8 8 0 0 0 8-8m2 0a10 10 0 0 1-10 10A10 10 0 0 1 2 12 10 10 0 0 1 12 2a10 10 0 0 1 10 10m-6.5-4c.8 0 1.5.7 1.5 1.5s-.7 1.5-1.5 1.5-1.5-.7-1.5-1.5.7-1.5 1.5-1.5M10 9.5c0 .8-.7 1.5-1.5 1.5S7 10.3 7 9.5 7.7 8 8.5 8s1.5.7 1.5 1.5m2 4.5c1.75 0 3.29.72 4.19 1.81l-1.42 1.42C14.32 16.5 13.25 16 12 16s-2.32.5-2.77 1.23l-1.42-1.42C8.71 14.72 10.25 14 12 14"></path></svg>
+</button>
+</div>
+<div class="md-feedback__note">
+<div data-md-value="1" hidden="">
+              
+              
+                
+              
+              
+              
+                
+                
+              
+              Thanks for your feedback!
+            </div>
+<div data-md-value="0" hidden="">
+              
+              
+                
+              
+              
+              
+                
+                
+              
+              Thanks for your feedback! Help us improve this page by using our <a href="..." rel="noopener" target="_blank">feedback form</a>.
+            </div>
+</div>
+</div>
+</fieldset>
+</form>
+</article>
+</div>
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+</div>
+</main>
+<footer class="md-footer">
+<div class="md-footer-meta md-typeset">
+<div class="md-footer-meta__inner md-grid">
+<div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" rel="noopener" target="_blank">
+      Material for MkDocs
+    </a>
+</div>
+</div>
+</div>
+</footer>
+</div>
+<div class="md-dialog" data-md-component="dialog">
+<div class="md-dialog__inner md-typeset"></div>
+</div>
+<script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["content.code.copy", "content.code.select", "navigation.titles", "navigation.tabs", "navigation.indexes"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+<script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+<script src="../../../assets/js/custom.js"></script>
+<script src="../../../themes/js/custom.js"></script>
+<script src="../../../themes/js/simpleLightbox.min.js"></script>
+<script src="../../../themes/js/optionalConfig.js"></script>
+<script src="../../../themes/js/mermaidloader.js"></script>
+<script src="../../../themes/js/umlconvert.js"></script>
+<script src="../../../themes/js/mathjax.js"></script>
+<script src="../../../themes/js/katex.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.17.1/flowchart.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.3.0/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.13.6/underscore-min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mermaid-js/mermaid-mindmap@9.3.0/dist/diagram-definition.0faef4c2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/markdown-it-plantuml@1.4.1/index.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/webfont/1.6.28/webfontloader.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-chtml-full.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-svg-full.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+</body>
+</html>

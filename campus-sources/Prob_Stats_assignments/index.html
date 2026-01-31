@@ -1,0 +1,1694 @@
+
+<!DOCTYPE html>
+
+<html class="no-js" lang="zh">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<link href="../Descrete_assignments/" rel="prev"/>
+<link href="../SDC_assignments/" rel="next"/>
+<link href="../../favicon.png" rel="icon"/>
+<meta content="mkdocs-1.6.1, mkdocs-material-9.7.1" name="generator"/>
+<title>《概率论与数理统计》课程作业与笔记归档 - Dicaeopolis' Wiki</title>
+<link href="../../assets/stylesheets/main.484c7ddc.min.css" rel="stylesheet"/>
+<link href="../../assets/stylesheets/palette.ab4e12ef.min.css" rel="stylesheet"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback" rel="stylesheet"/>
+<style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+<link href="../../themes/css/custom.css" rel="stylesheet"/>
+<link href="../../themes/css/simpleLightbox.min.css" rel="stylesheet"/>
+<link href="../../themes/css/pied_piper.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css" rel="stylesheet"/>
+<link href="../../stylesheets/customize.css" rel="stylesheet"/>
+<link href="../../assets/css/custom.css" rel="stylesheet"/>
+<script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+</head>
+<body data-md-color-accent="indigo" data-md-color-primary="indigo" data-md-color-scheme="default" dir="ltr">
+<input autocomplete="off" class="md-toggle" data-md-toggle="drawer" id="__drawer" type="checkbox"/>
+<input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
+<label class="md-overlay" for="__drawer"></label>
+<div data-md-component="skip">
+<a class="md-skip" href="#_1">
+          跳转至
+        </a>
+</div>
+<div data-md-component="announce">
+</div>
+<header class="md-header" data-md-component="header">
+<nav aria-label="页眉" class="md-header__inner md-grid">
+<a aria-label="Dicaeopolis' Wiki" class="md-header__button md-logo" data-md-component="logo" href="../.." title="Dicaeopolis' Wiki">
+<img alt="logo" src="../../favicon.png"/>
+</a>
+<label class="md-header__button md-icon" for="__drawer">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"></path></svg>
+</label>
+<div class="md-header__title" data-md-component="header-title">
+<div class="md-header__ellipsis">
+<div class="md-header__topic">
+<span class="md-ellipsis">
+            Dicaeopolis' Wiki
+          </span>
+</div>
+<div class="md-header__topic" data-md-component="header-topic">
+<span class="md-ellipsis">
+            
+              《概率论与数理统计》课程作业与笔记归档
+            
+          </span>
+</div>
+</div>
+</div>
+<form class="md-header__option" data-md-component="palette">
+<input aria-label="Switch to light mode" class="md-option" data-md-color-accent="indigo" data-md-color-media="(prefers-color-scheme)" data-md-color-primary="indigo" data-md-color-scheme="default" id="__palette_0" name="__palette" type="radio"/>
+<label class="md-header__button md-icon" for="__palette_1" hidden="" title="Switch to light mode">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12zm-9.15 3.96h2.3L12 9z"></path></svg>
+</label>
+<input aria-label="Switch to dark mode" class="md-option" data-md-color-accent="indigo" data-md-color-media="(prefers-color-scheme: light)" data-md-color-primary="indigo" data-md-color-scheme="default" id="__palette_1" name="__palette" type="radio"/>
+<label class="md-header__button md-icon" for="__palette_2" hidden="" title="Switch to dark mode">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+</label>
+<input aria-label="Switch to system preference" class="md-option" data-md-color-accent="indigo" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-primary="indigo" data-md-color-scheme="slate" id="__palette_2" name="__palette" type="radio"/>
+<label class="md-header__button md-icon" for="__palette_0" hidden="" title="Switch to system preference">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+</label>
+</form>
+<script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+<label class="md-header__button md-icon" for="__search">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+</label>
+<div class="md-search" data-md-component="search" role="dialog">
+<label class="md-search__overlay" for="__search"></label>
+<div class="md-search__inner" role="search">
+<form class="md-search__form" name="search">
+<input aria-label="搜索" autocapitalize="off" autocomplete="off" autocorrect="off" class="md-search__input" data-md-component="search-query" name="query" placeholder="搜索" required="" spellcheck="false" type="text"/>
+<label class="md-search__icon md-icon" for="__search">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+</label>
+<nav aria-label="查找" class="md-search__options">
+<button aria-label="清空当前内容" class="md-search__icon md-icon" tabindex="-1" title="清空当前内容" type="reset">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+</button>
+</nav>
+</form>
+<div class="md-search__output">
+<div class="md-search__scrollwrap" data-md-scrollfix="" tabindex="0">
+<div class="md-search-result" data-md-component="search-result">
+<div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+<ol class="md-search-result__list" role="presentation"></ol>
+</div>
+</div>
+</div>
+</div>
+</div>
+</nav>
+</header>
+<div class="md-container" data-md-component="container">
+<nav aria-label="标签" class="md-tabs" data-md-component="tabs">
+<div class="md-grid">
+<ul class="md-tabs__list">
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../astronomy/">
+          
+  
+  
+    
+  
+  天文摄影理论和实践
+
+        </a>
+</li>
+<li class="md-tabs__item md-tabs__item--active">
+<a class="md-tabs__link" href="../">
+          
+  
+  
+    
+  
+  校内课程知识
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../DNN/">
+          
+  
+  
+    
+  
+  深度神经网络
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../misc/">
+          
+  
+  
+    
+  
+  配置和杂谈笔记
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../algorithm/">
+          
+  
+  
+    
+  
+  传统算法与性能
+
+        </a>
+</li>
+</ul>
+</div>
+</nav>
+<main class="md-main" data-md-component="main">
+<div class="md-main__inner md-grid">
+<div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="导航栏" class="md-nav md-nav--primary md-nav--lifted" data-md-level="0">
+<label class="md-nav__title" for="__drawer">
+<a aria-label="Dicaeopolis' Wiki" class="md-nav__button md-logo" data-md-component="logo" href="../.." title="Dicaeopolis' Wiki">
+<img alt="logo" src="../../favicon.png"/>
+</a>
+    Dicaeopolis' Wiki
+  </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_1" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../astronomy/">
+<span class="md-ellipsis">
+    
+  
+    天文摄影理论和实践
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_1_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_1">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    天文摄影理论和实践
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../astronomy/gallery/">
+<span class="md-ellipsis">
+    
+  
+    深空影集
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../astronomy/polar/">
+<span class="md-ellipsis">
+    
+  
+    看不见北极星怎么办
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../astronomy/%E6%96%B9%E4%BD%8D%E8%B0%83%E8%8A%82/">
+<span class="md-ellipsis">
+    
+  
+    方位调节
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../astronomy/%E7%BA%AC%E5%BA%A6%E8%B0%83%E8%8A%82/">
+<span class="md-ellipsis">
+    
+  
+    纬度调节
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+<input checked="" class="md-nav__toggle md-toggle" id="__nav_2" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../">
+<span class="md-ellipsis">
+    
+  
+    校内课程知识
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="true" aria-labelledby="__nav_2_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_2">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    校内课程知识
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../SDC-exams/">
+<span class="md-ellipsis">
+    
+  
+    《计算机组成与设计》部分历年题目题解
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../Discrete_exams/">
+<span class="md-ellipsis">
+    
+  
+    《离散数学》部分期末题目题解
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../Discrete_notes/">
+<span class="md-ellipsis">
+    
+  
+    离散期末复习提纲
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../Descrete_assignments/">
+<span class="md-ellipsis">
+    
+  
+    《离散数学》课程作业与笔记归档
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" id="__toc" type="checkbox"/>
+<label class="md-nav__link md-nav__link--active" for="__toc">
+<span class="md-ellipsis">
+    
+  
+    《概率论与数理统计》课程作业与笔记归档
+  
+
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<a class="md-nav__link md-nav__link--active" href="./">
+<span class="md-ellipsis">
+    
+  
+    《概率论与数理统计》课程作业与笔记归档
+  
+
+    
+  </span>
+</a>
+<nav aria-label="目录" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_2">
+<span class="md-ellipsis">
+      
+        第一次作业
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_3">
+<span class="md-ellipsis">
+      
+        第二次作业
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_4">
+<span class="md-ellipsis">
+      
+        第三次作业
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_5">
+<span class="md-ellipsis">
+      
+        第四次作业
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_6">
+<span class="md-ellipsis">
+      
+        第五次作业
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_7">
+<span class="md-ellipsis">
+      
+        第六次
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_8">
+<span class="md-ellipsis">
+      
+        第七次
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_9">
+<span class="md-ellipsis">
+      
+        第八次
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_10">
+<span class="md-ellipsis">
+      
+        第九次
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_11">
+<span class="md-ellipsis">
+      
+        第十次
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_12">
+<span class="md-ellipsis">
+      
+        第十一次
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_13">
+<span class="md-ellipsis">
+      
+        第十二次
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../SDC_assignments/">
+<span class="md-ellipsis">
+    
+  
+    《计算机组成原理》理论课程作业与笔记归档
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../PU_Bii_assignments/">
+<span class="md-ellipsis">
+    
+  
+    《大学物理B下》课程作业与笔记归档
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../binmul/">
+<span class="md-ellipsis">
+<i class="fas fa-calculator"></i> 二进制乘法可视化工具
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../textbook/">
+<span class="md-ellipsis">
+    
+  
+    本科教科书电子资源
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../ds-keynote/">
+<span class="md-ellipsis">
+    
+  
+    《数据结构》划重点笔记
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../ds-write-up/">
+<span class="md-ellipsis">
+    
+  
+    《数据结构》期末复习题题解
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../autosignin/">
+<span class="md-ellipsis">
+    
+  
+    自动签到脚本
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_3" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../DNN/">
+<span class="md-ellipsis">
+    
+  
+    深度神经网络
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_3_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_3">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    深度神经网络
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/match/">
+<span class="md-ellipsis">
+    
+  
+    如何做四六级考试的段落匹配题
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/BP/">
+<span class="md-ellipsis">
+    
+  
+    前馈神经网络的反向传播
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/RL/">
+<span class="md-ellipsis">
+    
+  
+    RL学习笔记 - 上篇
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/SVM_SMO/">
+<span class="md-ellipsis">
+    
+  
+    SMO 算法的推导
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_3_6" type="checkbox"/>
+<label class="md-nav__link" for="__nav_3_6" id="__nav_3_6_label" tabindex="0">
+<span class="md-ellipsis">
+    
+  
+    Wp
+  
+
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_3_6_label" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="__nav_3_6">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    Wp
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/WP/aiwp/">
+<span class="md-ellipsis">
+    
+  
+    MISC-AI 方向 WriteUp
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_3_7" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../DNN/model-attack/">
+<span class="md-ellipsis">
+    
+  
+    深度学习模型攻击理论与复现归档
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_3_7" id="__nav_3_7_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_3_7_label" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="__nav_3_7">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    深度学习模型攻击理论与复现归档
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-attack/hsja/">
+<span class="md-ellipsis">
+    
+  
+    HSJA 攻击
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-attack/BadNets/">
+<span class="md-ellipsis">
+    
+  
+    BadNets
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-attack/CandW/">
+<span class="md-ellipsis">
+    
+  
+    C&amp;W 攻击
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-attack/pgd/">
+<span class="md-ellipsis">
+    
+  
+    PGD 攻击
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-attack/fgsm/">
+<span class="md-ellipsis">
+    
+  
+    FGSM 攻击
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_3_8" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../DNN/model-expr/">
+<span class="md-ellipsis">
+    
+  
+    深度学习相关模型理论与复现归档
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_3_8" id="__nav_3_8_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_3_8_label" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="__nav_3_8">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    深度学习相关模型理论与复现归档
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-expr/DDPM/">
+<span class="md-ellipsis">
+    
+  
+    扩散模型理论篇: 从多阶段变分自编码器到概率流常微分方程采样器系列
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-expr/S-and-D-models-replication/">
+<span class="md-ellipsis">
+    
+  
+    图像语义分割和目标检测相关模型复现手记
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-expr/Image-models-replication/">
+<span class="md-ellipsis">
+    
+  
+    图像分类相关模型复现手记
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-expr/DC-GAN-%E8%80%81%E5%A9%86%E7%94%9F%E6%88%90%E5%99%A8/">
+<span class="md-ellipsis">
+    
+  
+    DC-GAN 老婆生成器
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_3_9" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../DNN/optimizer/">
+<span class="md-ellipsis">
+    
+  
+    优化器
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_3_9" id="__nav_3_9_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_3_9_label" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="__nav_3_9">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    优化器
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/optimizer/misc/">
+<span class="md-ellipsis">
+    
+  
+    后续的写作计划
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/optimizer/SignGD/">
+<span class="md-ellipsis">
+    
+  
+    符号梯度下降
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/optimizer/Adaptive/">
+<span class="md-ellipsis">
+    
+  
+    自适应学习率改进策略
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/optimizer/SGD/">
+<span class="md-ellipsis">
+    
+  
+    SGD 系列算法
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_4" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../misc/">
+<span class="md-ellipsis">
+    
+  
+    配置和杂谈笔记
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_4_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_4">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    配置和杂谈笔记
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../misc/test/">
+<span class="md-ellipsis">
+    
+  
+    功能测试页面
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_5" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../algorithm/">
+<span class="md-ellipsis">
+    
+  
+    传统算法与性能
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_5_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_5">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    传统算法与性能
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../algorithm/benchmark-on-stl/">
+<span class="md-ellipsis">
+    
+  
+    STL的一些性能测试
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../algorithm/stl-wheels/">
+<span class="md-ellipsis">
+    
+  
+    嗯造轮子
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../algorithm/template-on-numeric-ring/">
+<span class="md-ellipsis">
+    
+  
+    整数环取模模板
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="目录" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_2">
+<span class="md-ellipsis">
+      
+        第一次作业
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_3">
+<span class="md-ellipsis">
+      
+        第二次作业
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_4">
+<span class="md-ellipsis">
+      
+        第三次作业
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_5">
+<span class="md-ellipsis">
+      
+        第四次作业
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_6">
+<span class="md-ellipsis">
+      
+        第五次作业
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_7">
+<span class="md-ellipsis">
+      
+        第六次
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_8">
+<span class="md-ellipsis">
+      
+        第七次
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_9">
+<span class="md-ellipsis">
+      
+        第八次
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_10">
+<span class="md-ellipsis">
+      
+        第九次
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_11">
+<span class="md-ellipsis">
+      
+        第十次
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_12">
+<span class="md-ellipsis">
+      
+        第十一次
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_13">
+<span class="md-ellipsis">
+      
+        第十二次
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-content" data-md-component="content">
+<article class="md-content__inner md-typeset">
+<h1 id="_1">《概率论与数理统计》课程作业与笔记归档<a class="headerlink" href="#_1" title="Permanent link">¶</a></h1>
+<div class="admonition info">
+<p class="admonition-title">📖 阅读信息</p>
+<p>阅读时间约 <strong>11</strong> 分钟　|　约 <strong>477</strong> 字　|　约 <strong>91</strong> 个公式　|　约 <strong>13</strong> 行代码</p>
+</div>
+<p>供存档和复习用。</p>
+<h2 id="_2">第一次作业<a class="headerlink" href="#_2" title="Permanent link">¶</a></h2>
+<p><img alt="alt text" src="../image-11.png"/></p>
+<p>i. A, B 互不相容，即 AB 无交集，也就是 A 一定在 B 的补集里面。<span class="arithmatex">\(P(A\bar B)=P(A)=1/2\)</span></p>
+<p>ii. 由 <span class="arithmatex">\(P(A)=P(AB)+P(A\bar B)\)</span> 可得 <span class="arithmatex">\(P(A\bar B)=3/8\)</span></p>
+<p><img alt="alt text" src="../image-12.png"/></p>
+<p>11 取 7 排列，这个 7 字母词有两个 i 以及两个 b 可以互换都满足条件，所以</p>
+<div class="arithmatex">\[
+P=\dfrac{2\times2}{A^7_{11}}=\dfrac{2\times2}{5\times6\times7\times8\times9\times10\times11}=\dfrac{1}{415800}
+\]</div>
+<p><img alt="alt text" src="../image-13.png"/></p>
+<p>我们分成四个区域</p>
+<p><img alt="alt text" src="../image-14.png"/></p>
+<div class="arithmatex">\[
+P=\dfrac{B\cap (A\cup \bar B)}{A\cup \bar B}=\dfrac{\mathrm{II}}{\mathrm{I+II+IV}}=\dfrac{0.2}{0.5+0.2+0.1}=\dfrac{1}{4}
+\]</div>
+<h2 id="_3">第二次作业<a class="headerlink" href="#_3" title="Permanent link">¶</a></h2>
+<p><img alt="alt text" src="../image-19.png"/></p>
+<p>(1)</p>
+<p>第一次取分为两个步骤：选箱子+选零件。</p>
+<div class="arithmatex">\[
+P(A)=\dfrac{1}{2}\times\dfrac{10}{50}+\dfrac{1}{2}\times\dfrac{18}{30}=\dfrac{2}{5}
+\]</div>
+<p>(2)</p>
+<p>根据条件概率公式：</p>
+<div class="arithmatex">\[
+P(B|A)=\dfrac{P(AB)}{P(A)}
+\]</div>
+<p>其中</p>
+<div class="arithmatex">\[
+P(AB)=\dfrac{1}{2}\times\dfrac{10}{50}\times\dfrac{9}{49}+\dfrac{1}{2}\times\dfrac{18}{30}\times\dfrac{17}{29}=\dfrac{276}{1421}
+\]</div>
+<p>则</p>
+<div class="arithmatex">\[
+P(B|A)=\dfrac{276}{1421}\times\dfrac{5}{2}=\dfrac{690}{1421}
+\]</div>
+<p><img alt="alt text" src="../image-20.png"/></p>
+<p>(1) 和 (2) 必然假。 <span class="arithmatex">\(P(AB)=P(A)P(B)=0\)</span> 与 <span class="arithmatex">\(P(A)&gt;0, P(B)&gt;0\)</span> 矛盾</p>
+<p>(3) 必然假。 若 <span class="arithmatex">\(B\)</span> 与 <span class="arithmatex">\(A\)</span> 不相容则必然 <span class="arithmatex">\(P(B)&lt;1-P(A)\)</span>，这就矛盾。</p>
+<p>(4) 可能对。考虑随机变量 <span class="arithmatex">\(x\)</span> 服从一个 <span class="arithmatex">\([0,1]\)</span> 上的均匀分布。</p>
+<p>成立的情形：</p>
+<div class="arithmatex">\[
+P(A)=P(0&lt;x&lt;0.6)\\
+P(B)=P(0.24&lt;x&lt;0.84)
+\]</div>
+<p>则 <span class="arithmatex">\(P(AB)=P(A)P(B)=0.36\)</span></p>
+<p>不成立的情形：</p>
+<div class="arithmatex">\[
+P(A)=P(0&lt;x&lt;0.6)\\
+P(B)=P(0.4&lt;x&lt;1)
+\]</div>
+<p>则 <span class="arithmatex">\(P(AB)=0.2\neq P(A)P(B)=0.36\)</span></p>
+<p><img alt="alt text" src="../image-21.png"/></p>
+<div class="arithmatex">\[
+P(B)=\underbrace{0.8\times(1-2\%)^3}_{P(BA_1)}+\underbrace{0.15\times(1-10\%)^3}_{P(BA_2)}+\underbrace{0.05\times(1-90\%)^3}_{P(BA_3)}=0.8623536\\
+\]</div>
+<p>拿 Python 算了一下数值解：</p>
+<div class="arithmatex">\[
+\begin{align*}
+    P(A_1|B)=\dfrac{P(BA_1)}{P(B)}&amp;=0.8731378868250795\\
+P(A_2|B)=\dfrac{P(BA_2)}{P(B)}&amp;=0.12680413231880752\\
+P(A_3|B)=\dfrac{P(BA_3)}{P(B)}&amp;=0.00005798085611285204\\
+\end{align*}
+\]</div>
+<p>什么是随机变量：如果一个变量 <span class="arithmatex">\(x\)</span> 在每一次观测时的值不能被完全先验地确定则称其为一个随机变量。</p>
+<h2 id="_4">第三次作业<a class="headerlink" href="#_4" title="Permanent link">¶</a></h2>
+<p><img alt="alt text" src="../image-42.png"/></p>
+<p>(1)</p>
+<div class="arithmatex">\[
+X\sim Ge(p)\Leftrightarrow P(X=n)=p(1-p)^{n-1}
+\]</div>
+<p>也就是在前 <span class="arithmatex">\(n-1\)</span> 次尝试都失败了，最后一次成功就收手。</p>
+<p>(2)</p>
+<div class="arithmatex">\[
+P(X=n)=C_{n-1}^{r-1} p^r(1-p)^{n-r}
+\]</div>
+<p>最后一次尝试必须成功然后收手，前面的 <span class="arithmatex">\(n-1\)</span> 次尝试里面可以任意安排 <span class="arithmatex">\(r-1\)</span> 次成功尝试的位置。</p>
+<p>(3)</p>
+<p>和 (1) 一样的几何分布。</p>
+<div class="arithmatex">\[
+P(X=n) = p(1-p)^{n-1}
+\]</div>
+<p>由此</p>
+<div class="arithmatex">\[
+\begin{align*}
+    P(x\in\mathrm{Even.})&amp;=\sum_{i=1}^\infty P(X=2i)\\
+    &amp;=p[(1-p)^1+(1-p)^3+\cdots]\\
+    &amp;=p\times\dfrac{1-p}{1-(1-p)^2}\\
+    &amp;=\dfrac{1-p}{2-p}
+\end{align*}
+\]</div>
+<p>带入即可得到值为 <span class="arithmatex">\(0.3548387096774194\)</span></p>
+<p><img alt="alt text" src="../image-43.png"/></p>
+<p>题目是要让我们用泊松分布近似二项分布。出事故的车辆数 <span class="arithmatex">\(X\)</span> 满足：</p>
+<div class="arithmatex">\[
+X\sim B(1000,0.0001)
+\]</div>
+<p>近似即</p>
+<div class="arithmatex">\[
+X\sim Po(0.1)
+\]</div>
+<p>由泊松分布公式：<span class="arithmatex">\(P(x=k) =\dfrac{\lambda^k\mathrm{e}^{-\lambda}}{k!}\)</span> 可得：</p>
+<div class="arithmatex">\[
+\begin{align*}
+    P(X\ge 2)&amp;=1-P(x=1)-P(x=0)\\
+    &amp;=1-\dfrac{0.1^1\exp(-0.1)}{1!}-\dfrac{0.1^0\exp(-0.1)}{0!}\\
+    &amp;=1-1.1\exp(-0.1)\\
+    &amp;=0.00467884016044440
+\end{align*}
+\]</div>
+<p><img alt="alt text" src="../image-44.png"/></p>
+<p>(1)</p>
+<p>根据定义：</p>
+<div class="arithmatex">\[
+\begin{align*}
+    P(x&lt;2)&amp;=F(2)=\ln 2\\
+    P(0&lt;x\le 3)&amp;=F(3)-F(0)=1\\
+    P(2&lt;x&lt;5/2)&amp;=F(5/2)-F(2)=\ln 5-2\ln 2
+\end{align*}
+\]</div>
+<p>(2)</p>
+<p>直接求导即可：</p>
+<div class="arithmatex">\[
+f(x)=
+\begin{cases}
+    0,&amp;x&lt;1,x\ge \mathrm{e}\\
+    \dfrac{1}{x},&amp;1\le x&lt;\mathrm{e}\\
+\end{cases}
+\]</div>
+<p><img alt="alt text" src="../image-45.png"/></p>
+<p>几何概型。成立的事件域为：</p>
+<div class="arithmatex">\[
+\begin{align*}
+    (4K)^2-4\times4\times(K+2)\ge 0&amp;\iff K^2-K-2\ge 0\\
+    &amp;\iff (K-2)(K+1)\ge 0\\
+    &amp;\iff K\in (2,5)
+\end{align*}
+\]</div>
+<p>因此 <span class="arithmatex">\(P=3/5\)</span></p>
+<h2 id="_5">第四次作业<a class="headerlink" href="#_5" title="Permanent link">¶</a></h2>
+<p><img alt="alt text" src="../image-83.png"/></p>
+<p>我们直接写程序计算即可：</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-0-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-0-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-0-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-0-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-0-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-0-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-0-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-0-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-0-10">10</a></span>
+<span class="normal"><a href="#__codelineno-0-11">11</a></span>
+<span class="normal"><a href="#__codelineno-0-12">12</a></span>
+<span class="normal"><a href="#__codelineno-0-13">13</a></span>
+<span class="normal"><a href="#__codelineno-0-14">14</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">stats</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3"></a><span class="c1"># X~N(a,b^2) P(X in (M, N))</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4"></a><span class="k">def</span><span class="w"> </span><span class="nf">Gaussian_prob</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5"></a>    <span class="k">return</span> <span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="n">a</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="o">-</span> <span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="n">a</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6"></a>
+<a id="__codelineno-0-7" name="__codelineno-0-7"></a><span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mi">110</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="mi">105</span><span class="p">))</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8"></a><span class="nb">print</span><span class="p">(</span><span class="n">Gaussian_prob</span><span class="p">(</span><span class="mi">110</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">120</span><span class="p">))</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9"></a>
+<a id="__codelineno-0-10" name="__codelineno-0-10"></a><span class="k">def</span><span class="w"> </span><span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11"></a>    <span class="k">return</span> <span class="mf">0.05</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mi">110</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12"></a>
+<a id="__codelineno-0-13" name="__codelineno-0-13"></a><span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">brentq</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14"></a><span class="nb">print</span><span class="p">(</span><span class="n">brentq</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="mi">70</span><span class="p">,</span> <span class="mi">150</span><span class="p">))</span>
+</code></pre></div></td></tr></table></div>
+<p>计算得</p>
+<div class="arithmatex">\[
+\begin{align*}
+    P(X\le 105)&amp;=0.33846111951068963\\
+    P(100&lt;X\le 120)&amp;=0.5953432380727137\\
+    X&amp;=129.73824352341765
+\end{align*}
+\]</div>
+<p><img alt="alt text" src="../image-84.png"/></p>
+<p>我们直接写程序计算即可：</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-1-1">1</a></span>
+<span class="normal"><a href="#__codelineno-1-2">2</a></span>
+<span class="normal"><a href="#__codelineno-1-3">3</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1"></a><span class="n">p1</span><span class="o">=</span><span class="mi">1</span><span class="o">-</span><span class="n">Gaussian_prob</span><span class="p">(</span><span class="mi">120</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">118</span><span class="p">,</span> <span class="mi">122</span><span class="p">)</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2"></a><span class="n">p</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">p1</span><span class="p">)</span><span class="o">**</span><span class="mi">3</span> <span class="o">*</span> <span class="n">p1</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="mi">10</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3"></a><span class="nb">print</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+<p>得到</p>
+<div class="arithmatex">\[
+P = 0.3203602052597432
+\]</div>
+<p><img alt="alt text" src="../image-85.png"/></p>
+<p>(1)</p>
+<p>概率密度积分 <span class="arithmatex">\(F(X)=X,X\in (0,1)\)</span>，由 <span class="arithmatex">\(X=\ln Y\)</span> 可得 <span class="arithmatex">\(F(Y)=\ln Y,Y\in (1,e)\)</span>，求导可得密度：</p>
+<div class="arithmatex">\[
+P(Y)=
+\begin{cases}
+    \dfrac{1}{Y},&amp;Y\in(1,e)\\
+    0,&amp;\mathrm{otherwise}
+\end{cases}
+\]</div>
+<p>(2)</p>
+<p>概率密度积分 <span class="arithmatex">\(F(X)=X,X\in (0,1)\)</span>，由 <span class="arithmatex">\(X=\exp(-\dfrac 12 Y)\)</span> 可得 <span class="arithmatex">\(F(Y)=\exp(-\dfrac 12 Y),Y\in (0,+\infty)\)</span>，求导可得密度：</p>
+<div class="arithmatex">\[
+P(Y)=
+\begin{cases}
+    \dfrac 12\exp(-\dfrac 12 Y),&amp;Y\in(0,+\infty)\\
+    0,&amp;\mathrm{otherwise}
+\end{cases}
+\]</div>
+<h2 id="_6">第五次作业<a class="headerlink" href="#_6" title="Permanent link">¶</a></h2>
+<p><img alt="alt text" src="../image-86.png"/></p>
+<p>(1)</p>
+<div class="arithmatex">\[
+C_7^4=35
+\]</div>
+<p>可列分布律如下：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>X=0</th>
+<th>X=1</th>
+<th>X=2</th>
+<th>X=3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Y=0</td>
+<td><span class="arithmatex">\(0\)</span></td>
+<td><span class="arithmatex">\(0\)</span></td>
+<td><span class="arithmatex">\(\frac{3}{35}\)</span></td>
+<td><span class="arithmatex">\(\frac{2}{35}\)</span></td>
+</tr>
+<tr>
+<td>Y=1</td>
+<td><span class="arithmatex">\(0\)</span></td>
+<td><span class="arithmatex">\(\frac{6}{35}\)</span></td>
+<td><span class="arithmatex">\(\frac{12}{35}\)</span></td>
+<td><span class="arithmatex">\(\frac{2}{35}\)</span></td>
+</tr>
+<tr>
+<td>Y=2</td>
+<td><span class="arithmatex">\(\frac{1}{35}\)</span></td>
+<td><span class="arithmatex">\(\frac{6}{35}\)</span></td>
+<td><span class="arithmatex">\(\frac{3}{35}\)</span></td>
+<td><span class="arithmatex">\(0\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>(2)</p>
+<div class="arithmatex">\[
+\begin{align*}
+    P(X&gt;Y)&amp;=\dfrac{1}{35}(3+2+12+2)=\dfrac{19}{35}\\
+    P(Y=2X)&amp;=\dfrac{6}{35}\\
+    P(X+Y=3)&amp;=\dfrac{1}{35}(6+12+2)=\dfrac{20}{35}\\
+    P(X&lt;3-Y)&amp;=\dfrac{1}{35}(3+6+1)=\dfrac{10}{35}
+\end{align*}
+\]</div>
+<p><img alt="alt text" src="../image-87.png"/></p>
+<div class="arithmatex">\[
+6-x-y=0\implies x+y=6
+\]</div>
+<p>则需要归一化条件：</p>
+<div class="arithmatex">\[
+\begin{align*}
+    \iint_{\mathbb{R}^2}f(x,y)\mathrm{d}x\mathrm{d}y&amp;=k\int_0^2\int_2^4(6-x-y)\mathrm{d}y\mathrm{d}x\\
+    &amp;=k\int_0^2 2(6-x)-6\mathrm{d}x\\
+    &amp;=8k\\
+    &amp;=1\\
+    &amp;\implies k = \dfrac{1}{8}
+\end{align*}
+\]</div>
+<div class="arithmatex">\[
+\begin{align*}
+    P(X&lt;1,Y&lt;3)&amp;=k\int_0^1\int_2^3(6-x-y)\mathrm{d}y\mathrm{d}x\\
+    &amp;=3k\\
+    &amp;=\dfrac{3}{8}
+\end{align*}
+\]</div>
+<div class="arithmatex">\[
+\begin{align*}
+    P(X&lt;1.5)&amp;=k\int_0^\frac{3}{2}\int_2^4(6-x-y)\mathrm{d}y\mathrm{d}x\\
+    &amp;=\dfrac{27}{4}k\\
+    &amp;=\dfrac{27}{32}
+\end{align*}
+\]</div>
+<div class="arithmatex">\[
+\begin{align*}
+    P(X+Y\le 4)&amp;=k\int_0^2\int_2^{4-x}(6-x-y)\mathrm{d}y\mathrm{d}x\\
+    &amp;=(\dfrac{8}{6}+4)k\\
+    &amp;=\dfrac{2}{3}
+\end{align*}
+\]</div>
+<p><img alt="alt text" src="../image-88.png"/></p>
+<p>枚举结果并计数即可。</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>X=0</th>
+<th>X=1</th>
+<th>X=2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Y=0</td>
+<td><span class="arithmatex">\(\frac{1}{8}\)</span></td>
+<td><span class="arithmatex">\(0\)</span></td>
+<td><span class="arithmatex">\(0\)</span></td>
+</tr>
+<tr>
+<td>Y=1</td>
+<td><span class="arithmatex">\(\frac{1}{8}\)</span></td>
+<td><span class="arithmatex">\(\frac{1}{4}\)</span></td>
+<td><span class="arithmatex">\(0\)</span></td>
+</tr>
+<tr>
+<td>Y=2</td>
+<td><span class="arithmatex">\(0\)</span></td>
+<td><span class="arithmatex">\(\frac{1}{4}\)</span></td>
+<td><span class="arithmatex">\(\frac{1}{8}\)</span></td>
+</tr>
+<tr>
+<td>Y=3</td>
+<td><span class="arithmatex">\(0\)</span></td>
+<td><span class="arithmatex">\(0\)</span></td>
+<td><span class="arithmatex">\(\frac{1}{8}\)</span></td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>X=0</th>
+<th>X=1</th>
+<th>X=2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P</td>
+<td><span class="arithmatex">\(\frac{1}{4}\)</span></td>
+<td><span class="arithmatex">\(\frac{1}{2}\)</span></td>
+<td><span class="arithmatex">\(\frac{1}{4}\)</span></td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Y=0</th>
+<th>Y=1</th>
+<th>Y=2</th>
+<th>Y=3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P</td>
+<td><span class="arithmatex">\(\frac{1}{8}\)</span></td>
+<td><span class="arithmatex">\(\frac{3}{8}\)</span></td>
+<td><span class="arithmatex">\(\frac{3}{8}\)</span></td>
+<td><span class="arithmatex">\(\frac{1}{8}\)</span></td>
+</tr>
+</tbody>
+</table>
+<p><img alt="alt text" src="../image-89.png"/></p>
+<div class="arithmatex">\[
+\begin{align*}
+    \iint_{\mathbb{R}^2}f(x,y)\mathrm{d}x\mathrm{d}y&amp;=c\int_{-1}^1\int^1_{x^2}x^2y\mathrm{d}y\mathrm{d}x\\
+    &amp;=c\int_{-1}^1 \frac{1}{2}x^2(1-x^4)\mathrm{d}x\\
+    &amp;=\dfrac{4}{21}c\\
+    &amp;=1\\
+    &amp;\implies c = \dfrac{21}{4}
+\end{align*}
+\]</div>
+<div class="arithmatex">\[
+\begin{align*}
+    P(x)&amp;=c\int_{x^2}^1x^2y\mathrm{d}y=c\frac{1}{2}x^2(1-x^4)\\
+    \implies P(x)&amp;=\
+        \begin{cases}
+            \frac{21}{8}x^2(1-x^4),&amp;x\in[-1,1]\\
+            0,&amp;\mathrm{otherwise}
+        \end{cases}
+\end{align*}
+\]</div>
+<div class="arithmatex">\[
+\begin{align*}
+    P(y)&amp;=c\int_{-\sqrt y}^{\sqrt{y}}x^2y\mathrm{d}y=c\frac{2}{3}y^{\frac{5}{2}}\\
+    \implies P(y)&amp;=\
+        \begin{cases}
+            \frac{7}{2}y^{\frac{5}{2}},&amp;y\in[0,1]\\
+            0,&amp;\mathrm{otherwise}
+        \end{cases}
+\end{align*}
+\]</div>
+<h2 id="_7">第六次<a class="headerlink" href="#_7" title="Permanent link">¶</a></h2>
+<p><img alt="alt text" src="../d99e9ef13f0aa0b2dd778afc582003db.jpeg"/></p>
+<p><img alt="alt text" src="../1096d4c7e79992c2f1d0190cd91b0e95.jpeg"/></p>
+<h2 id="_8">第七次<a class="headerlink" href="#_8" title="Permanent link">¶</a></h2>
+<p><img alt="alt text" src="../854b71d8e5b34a412f1ac4a2f842544e.jpeg"/></p>
+<p><img alt="alt text" src="../9cd7ca6791fe9ebb7cd3953fb6135810.jpeg"/></p>
+<h2 id="_9">第八次<a class="headerlink" href="#_9" title="Permanent link">¶</a></h2>
+<p><img alt="alt text" src="../9f6a74d52ed7dc10d9c9b37f0526eb44_720.jpg"/></p>
+<h2 id="_10">第九次<a class="headerlink" href="#_10" title="Permanent link">¶</a></h2>
+<p><img alt="alt text" src="../5bced22d226eaea74b83fefe72bc4ca0_720.jpg"/></p>
+<p><img alt="alt text" src="../9324ce0239b8697c15da6ea994eda32b_720.jpg"/></p>
+<h2 id="_11">第十次<a class="headerlink" href="#_11" title="Permanent link">¶</a></h2>
+<p><img alt="alt text" src="../018714e233c4b7afb716dc2bbcbfd20f_720.jpg"/></p>
+<h2 id="_12">第十一次<a class="headerlink" href="#_12" title="Permanent link">¶</a></h2>
+<p><img alt="alt text" src="../e27ab1b6b7f69407571da7b4122c8477.jpeg"/></p>
+<h2 id="_13">第十二次<a class="headerlink" href="#_13" title="Permanent link">¶</a></h2>
+<p><img alt="alt text" src="../503db0ebe5215e825a515ddb9b9e5840.jpeg"/></p>
+<div class="admonition info">
+<p class="admonition-title">📝 如果您需要引用本文</p>
+<p>Yan Li. (Dec. 8, 2025). 《概率论与数理统计》课程作业与笔记归档 [Blog post]. Retrieved from <a href="https://dicaeopolis.github.io/campus-sources/Prob_Stats_assignments">https://dicaeopolis.github.io/campus-sources/Prob_Stats_assignments</a></p>
+<p>在 BibTeX 格式中：
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-2-1">1</a></span>
+<span class="normal"><a href="#__codelineno-2-2">2</a></span>
+<span class="normal"><a href="#__codelineno-2-3">3</a></span>
+<span class="normal"><a href="#__codelineno-2-4">4</a></span>
+<span class="normal"><a href="#__codelineno-2-5">5</a></span>
+<span class="normal"><a href="#__codelineno-2-6">6</a></span>
+<span class="normal"><a href="#__codelineno-2-7">7</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1"></a>@online{Prob_Stats_assignments,
+<a id="__codelineno-2-2" name="__codelineno-2-2"></a>    title={《概率论与数理统计》课程作业与笔记归档},
+<a id="__codelineno-2-3" name="__codelineno-2-3"></a>    author={Yan Li},
+<a id="__codelineno-2-4" name="__codelineno-2-4"></a>    year={2025},
+<a id="__codelineno-2-5" name="__codelineno-2-5"></a>    month={Dec},
+<a id="__codelineno-2-6" name="__codelineno-2-6"></a>    url={\url{https://dicaeopolis.github.io/campus-sources/Prob_Stats_assignments}},
+<a id="__codelineno-2-7" name="__codelineno-2-7"></a>}
+</code></pre></div></td></tr></table></div></p>
+</div>
+<form class="md-feedback" hidden="" name="feedback">
+<fieldset>
+<legend class="md-feedback__title">
+        Was this page helpful?
+      </legend>
+<div class="md-feedback__inner">
+<div class="md-feedback__list">
+<button class="md-feedback__icon md-icon" data-md-value="1" title="This page was helpful" type="submit">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 12a8 8 0 0 0-8-8 8 8 0 0 0-8 8 8 8 0 0 0 8 8 8 8 0 0 0 8-8m2 0a10 10 0 0 1-10 10A10 10 0 0 1 2 12 10 10 0 0 1 12 2a10 10 0 0 1 10 10M10 9.5c0 .8-.7 1.5-1.5 1.5S7 10.3 7 9.5 7.7 8 8.5 8s1.5.7 1.5 1.5m7 0c0 .8-.7 1.5-1.5 1.5S14 10.3 14 9.5 14.7 8 15.5 8s1.5.7 1.5 1.5m-5 7.73c-1.75 0-3.29-.73-4.19-1.81L9.23 14c.45.72 1.52 1.23 2.77 1.23s2.32-.51 2.77-1.23l1.42 1.42c-.9 1.08-2.44 1.81-4.19 1.81"></path></svg>
+</button>
+<button class="md-feedback__icon md-icon" data-md-value="0" title="This page could be improved" type="submit">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 12a8 8 0 0 0-8-8 8 8 0 0 0-8 8 8 8 0 0 0 8 8 8 8 0 0 0 8-8m2 0a10 10 0 0 1-10 10A10 10 0 0 1 2 12 10 10 0 0 1 12 2a10 10 0 0 1 10 10m-6.5-4c.8 0 1.5.7 1.5 1.5s-.7 1.5-1.5 1.5-1.5-.7-1.5-1.5.7-1.5 1.5-1.5M10 9.5c0 .8-.7 1.5-1.5 1.5S7 10.3 7 9.5 7.7 8 8.5 8s1.5.7 1.5 1.5m2 4.5c1.75 0 3.29.72 4.19 1.81l-1.42 1.42C14.32 16.5 13.25 16 12 16s-2.32.5-2.77 1.23l-1.42-1.42C8.71 14.72 10.25 14 12 14"></path></svg>
+</button>
+</div>
+<div class="md-feedback__note">
+<div data-md-value="1" hidden="">
+              
+              
+                
+              
+              
+              
+                
+                
+              
+              Thanks for your feedback!
+            </div>
+<div data-md-value="0" hidden="">
+              
+              
+                
+              
+              
+              
+                
+                
+              
+              Thanks for your feedback! Help us improve this page by using our <a href="..." rel="noopener" target="_blank">feedback form</a>.
+            </div>
+</div>
+</div>
+</fieldset>
+</form>
+</article>
+</div>
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+</div>
+</main>
+<footer class="md-footer">
+<div class="md-footer-meta md-typeset">
+<div class="md-footer-meta__inner md-grid">
+<div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" rel="noopener" target="_blank">
+      Material for MkDocs
+    </a>
+</div>
+</div>
+</div>
+</footer>
+</div>
+<div class="md-dialog" data-md-component="dialog">
+<div class="md-dialog__inner md-typeset"></div>
+</div>
+<script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.code.copy", "content.code.select", "navigation.titles", "navigation.tabs", "navigation.indexes"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+<script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+<script src="../../assets/js/custom.js"></script>
+<script src="../../themes/js/custom.js"></script>
+<script src="../../themes/js/simpleLightbox.min.js"></script>
+<script src="../../themes/js/optionalConfig.js"></script>
+<script src="../../themes/js/mermaidloader.js"></script>
+<script src="../../themes/js/umlconvert.js"></script>
+<script src="../../themes/js/mathjax.js"></script>
+<script src="../../themes/js/katex.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.17.1/flowchart.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.3.0/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.13.6/underscore-min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mermaid-js/mermaid-mindmap@9.3.0/dist/diagram-definition.0faef4c2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/markdown-it-plantuml@1.4.1/index.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/webfont/1.6.28/webfontloader.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-chtml-full.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-svg-full.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+</body>
+</html>

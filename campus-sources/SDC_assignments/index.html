@@ -1,0 +1,2486 @@
+
+<!DOCTYPE html>
+
+<html class="no-js" lang="zh">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<link href="../Prob_Stats_assignments/" rel="prev"/>
+<link href="../PU_Bii_assignments/" rel="next"/>
+<link href="../../favicon.png" rel="icon"/>
+<meta content="mkdocs-1.6.1, mkdocs-material-9.7.1" name="generator"/>
+<title>《计算机组成原理》理论课程作业与笔记归档 - Dicaeopolis' Wiki</title>
+<link href="../../assets/stylesheets/main.484c7ddc.min.css" rel="stylesheet"/>
+<link href="../../assets/stylesheets/palette.ab4e12ef.min.css" rel="stylesheet"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback" rel="stylesheet"/>
+<style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+<link href="../../themes/css/custom.css" rel="stylesheet"/>
+<link href="../../themes/css/simpleLightbox.min.css" rel="stylesheet"/>
+<link href="../../themes/css/pied_piper.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css" rel="stylesheet"/>
+<link href="../../stylesheets/customize.css" rel="stylesheet"/>
+<link href="../../assets/css/custom.css" rel="stylesheet"/>
+<script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+</head>
+<body data-md-color-accent="indigo" data-md-color-primary="indigo" data-md-color-scheme="default" dir="ltr">
+<input autocomplete="off" class="md-toggle" data-md-toggle="drawer" id="__drawer" type="checkbox"/>
+<input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
+<label class="md-overlay" for="__drawer"></label>
+<div data-md-component="skip">
+<a class="md-skip" href="#_1">
+          跳转至
+        </a>
+</div>
+<div data-md-component="announce">
+</div>
+<header class="md-header" data-md-component="header">
+<nav aria-label="页眉" class="md-header__inner md-grid">
+<a aria-label="Dicaeopolis' Wiki" class="md-header__button md-logo" data-md-component="logo" href="../.." title="Dicaeopolis' Wiki">
+<img alt="logo" src="../../favicon.png"/>
+</a>
+<label class="md-header__button md-icon" for="__drawer">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"></path></svg>
+</label>
+<div class="md-header__title" data-md-component="header-title">
+<div class="md-header__ellipsis">
+<div class="md-header__topic">
+<span class="md-ellipsis">
+            Dicaeopolis' Wiki
+          </span>
+</div>
+<div class="md-header__topic" data-md-component="header-topic">
+<span class="md-ellipsis">
+            
+              《计算机组成原理》理论课程作业与笔记归档
+            
+          </span>
+</div>
+</div>
+</div>
+<form class="md-header__option" data-md-component="palette">
+<input aria-label="Switch to light mode" class="md-option" data-md-color-accent="indigo" data-md-color-media="(prefers-color-scheme)" data-md-color-primary="indigo" data-md-color-scheme="default" id="__palette_0" name="__palette" type="radio"/>
+<label class="md-header__button md-icon" for="__palette_1" hidden="" title="Switch to light mode">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12zm-9.15 3.96h2.3L12 9z"></path></svg>
+</label>
+<input aria-label="Switch to dark mode" class="md-option" data-md-color-accent="indigo" data-md-color-media="(prefers-color-scheme: light)" data-md-color-primary="indigo" data-md-color-scheme="default" id="__palette_1" name="__palette" type="radio"/>
+<label class="md-header__button md-icon" for="__palette_2" hidden="" title="Switch to dark mode">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+</label>
+<input aria-label="Switch to system preference" class="md-option" data-md-color-accent="indigo" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-primary="indigo" data-md-color-scheme="slate" id="__palette_2" name="__palette" type="radio"/>
+<label class="md-header__button md-icon" for="__palette_0" hidden="" title="Switch to system preference">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+</label>
+</form>
+<script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+<label class="md-header__button md-icon" for="__search">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+</label>
+<div class="md-search" data-md-component="search" role="dialog">
+<label class="md-search__overlay" for="__search"></label>
+<div class="md-search__inner" role="search">
+<form class="md-search__form" name="search">
+<input aria-label="搜索" autocapitalize="off" autocomplete="off" autocorrect="off" class="md-search__input" data-md-component="search-query" name="query" placeholder="搜索" required="" spellcheck="false" type="text"/>
+<label class="md-search__icon md-icon" for="__search">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+</label>
+<nav aria-label="查找" class="md-search__options">
+<button aria-label="清空当前内容" class="md-search__icon md-icon" tabindex="-1" title="清空当前内容" type="reset">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+</button>
+</nav>
+</form>
+<div class="md-search__output">
+<div class="md-search__scrollwrap" data-md-scrollfix="" tabindex="0">
+<div class="md-search-result" data-md-component="search-result">
+<div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+<ol class="md-search-result__list" role="presentation"></ol>
+</div>
+</div>
+</div>
+</div>
+</div>
+</nav>
+</header>
+<div class="md-container" data-md-component="container">
+<nav aria-label="标签" class="md-tabs" data-md-component="tabs">
+<div class="md-grid">
+<ul class="md-tabs__list">
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../astronomy/">
+          
+  
+  
+    
+  
+  天文摄影理论和实践
+
+        </a>
+</li>
+<li class="md-tabs__item md-tabs__item--active">
+<a class="md-tabs__link" href="../">
+          
+  
+  
+    
+  
+  校内课程知识
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../DNN/">
+          
+  
+  
+    
+  
+  深度神经网络
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../misc/">
+          
+  
+  
+    
+  
+  配置和杂谈笔记
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../algorithm/">
+          
+  
+  
+    
+  
+  传统算法与性能
+
+        </a>
+</li>
+</ul>
+</div>
+</nav>
+<main class="md-main" data-md-component="main">
+<div class="md-main__inner md-grid">
+<div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="导航栏" class="md-nav md-nav--primary md-nav--lifted" data-md-level="0">
+<label class="md-nav__title" for="__drawer">
+<a aria-label="Dicaeopolis' Wiki" class="md-nav__button md-logo" data-md-component="logo" href="../.." title="Dicaeopolis' Wiki">
+<img alt="logo" src="../../favicon.png"/>
+</a>
+    Dicaeopolis' Wiki
+  </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_1" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../astronomy/">
+<span class="md-ellipsis">
+    
+  
+    天文摄影理论和实践
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_1_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_1">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    天文摄影理论和实践
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../astronomy/gallery/">
+<span class="md-ellipsis">
+    
+  
+    深空影集
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../astronomy/polar/">
+<span class="md-ellipsis">
+    
+  
+    看不见北极星怎么办
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../astronomy/%E6%96%B9%E4%BD%8D%E8%B0%83%E8%8A%82/">
+<span class="md-ellipsis">
+    
+  
+    方位调节
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../astronomy/%E7%BA%AC%E5%BA%A6%E8%B0%83%E8%8A%82/">
+<span class="md-ellipsis">
+    
+  
+    纬度调节
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+<input checked="" class="md-nav__toggle md-toggle" id="__nav_2" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../">
+<span class="md-ellipsis">
+    
+  
+    校内课程知识
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="true" aria-labelledby="__nav_2_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_2">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    校内课程知识
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../SDC-exams/">
+<span class="md-ellipsis">
+    
+  
+    《计算机组成与设计》部分历年题目题解
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../Discrete_exams/">
+<span class="md-ellipsis">
+    
+  
+    《离散数学》部分期末题目题解
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../Discrete_notes/">
+<span class="md-ellipsis">
+    
+  
+    离散期末复习提纲
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../Descrete_assignments/">
+<span class="md-ellipsis">
+    
+  
+    《离散数学》课程作业与笔记归档
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../Prob_Stats_assignments/">
+<span class="md-ellipsis">
+    
+  
+    《概率论与数理统计》课程作业与笔记归档
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" id="__toc" type="checkbox"/>
+<label class="md-nav__link md-nav__link--active" for="__toc">
+<span class="md-ellipsis">
+    
+  
+    《计算机组成原理》理论课程作业与笔记归档
+  
+
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<a class="md-nav__link md-nav__link--active" href="./">
+<span class="md-ellipsis">
+    
+  
+    《计算机组成原理》理论课程作业与笔记归档
+  
+
+    
+  </span>
+</a>
+<nav aria-label="目录" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_2">
+<span class="md-ellipsis">
+      
+        第一次作业
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_3">
+<span class="md-ellipsis">
+      
+        第二次作业
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_4">
+<span class="md-ellipsis">
+      
+        第三次作业
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_5">
+<span class="md-ellipsis">
+      
+        第四次作业
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_6">
+<span class="md-ellipsis">
+      
+        第五次作业
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_7">
+<span class="md-ellipsis">
+      
+        第六次作业
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_8">
+<span class="md-ellipsis">
+      
+        第七次作业
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../PU_Bii_assignments/">
+<span class="md-ellipsis">
+    
+  
+    《大学物理B下》课程作业与笔记归档
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../binmul/">
+<span class="md-ellipsis">
+<i class="fas fa-calculator"></i> 二进制乘法可视化工具
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../textbook/">
+<span class="md-ellipsis">
+    
+  
+    本科教科书电子资源
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../ds-keynote/">
+<span class="md-ellipsis">
+    
+  
+    《数据结构》划重点笔记
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../ds-write-up/">
+<span class="md-ellipsis">
+    
+  
+    《数据结构》期末复习题题解
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../autosignin/">
+<span class="md-ellipsis">
+    
+  
+    自动签到脚本
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_3" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../DNN/">
+<span class="md-ellipsis">
+    
+  
+    深度神经网络
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_3_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_3">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    深度神经网络
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/match/">
+<span class="md-ellipsis">
+    
+  
+    如何做四六级考试的段落匹配题
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/BP/">
+<span class="md-ellipsis">
+    
+  
+    前馈神经网络的反向传播
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/RL/">
+<span class="md-ellipsis">
+    
+  
+    RL学习笔记 - 上篇
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/SVM_SMO/">
+<span class="md-ellipsis">
+    
+  
+    SMO 算法的推导
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_3_6" type="checkbox"/>
+<label class="md-nav__link" for="__nav_3_6" id="__nav_3_6_label" tabindex="0">
+<span class="md-ellipsis">
+    
+  
+    Wp
+  
+
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_3_6_label" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="__nav_3_6">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    Wp
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/WP/aiwp/">
+<span class="md-ellipsis">
+    
+  
+    MISC-AI 方向 WriteUp
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_3_7" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../DNN/model-attack/">
+<span class="md-ellipsis">
+    
+  
+    深度学习模型攻击理论与复现归档
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_3_7" id="__nav_3_7_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_3_7_label" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="__nav_3_7">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    深度学习模型攻击理论与复现归档
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-attack/hsja/">
+<span class="md-ellipsis">
+    
+  
+    HSJA 攻击
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-attack/BadNets/">
+<span class="md-ellipsis">
+    
+  
+    BadNets
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-attack/CandW/">
+<span class="md-ellipsis">
+    
+  
+    C&amp;W 攻击
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-attack/pgd/">
+<span class="md-ellipsis">
+    
+  
+    PGD 攻击
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-attack/fgsm/">
+<span class="md-ellipsis">
+    
+  
+    FGSM 攻击
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_3_8" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../DNN/model-expr/">
+<span class="md-ellipsis">
+    
+  
+    深度学习相关模型理论与复现归档
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_3_8" id="__nav_3_8_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_3_8_label" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="__nav_3_8">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    深度学习相关模型理论与复现归档
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-expr/DDPM/">
+<span class="md-ellipsis">
+    
+  
+    扩散模型理论篇: 从多阶段变分自编码器到概率流常微分方程采样器系列
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-expr/S-and-D-models-replication/">
+<span class="md-ellipsis">
+    
+  
+    图像语义分割和目标检测相关模型复现手记
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-expr/Image-models-replication/">
+<span class="md-ellipsis">
+    
+  
+    图像分类相关模型复现手记
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-expr/DC-GAN-%E8%80%81%E5%A9%86%E7%94%9F%E6%88%90%E5%99%A8/">
+<span class="md-ellipsis">
+    
+  
+    DC-GAN 老婆生成器
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_3_9" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../DNN/optimizer/">
+<span class="md-ellipsis">
+    
+  
+    优化器
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_3_9" id="__nav_3_9_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_3_9_label" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="__nav_3_9">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    优化器
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/optimizer/misc/">
+<span class="md-ellipsis">
+    
+  
+    后续的写作计划
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/optimizer/SignGD/">
+<span class="md-ellipsis">
+    
+  
+    符号梯度下降
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/optimizer/Adaptive/">
+<span class="md-ellipsis">
+    
+  
+    自适应学习率改进策略
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/optimizer/SGD/">
+<span class="md-ellipsis">
+    
+  
+    SGD 系列算法
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_4" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../misc/">
+<span class="md-ellipsis">
+    
+  
+    配置和杂谈笔记
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_4_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_4">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    配置和杂谈笔记
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../misc/test/">
+<span class="md-ellipsis">
+    
+  
+    功能测试页面
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_5" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../algorithm/">
+<span class="md-ellipsis">
+    
+  
+    传统算法与性能
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_5_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_5">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    传统算法与性能
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../algorithm/benchmark-on-stl/">
+<span class="md-ellipsis">
+    
+  
+    STL的一些性能测试
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../algorithm/stl-wheels/">
+<span class="md-ellipsis">
+    
+  
+    嗯造轮子
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../algorithm/template-on-numeric-ring/">
+<span class="md-ellipsis">
+    
+  
+    整数环取模模板
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="目录" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_2">
+<span class="md-ellipsis">
+      
+        第一次作业
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_3">
+<span class="md-ellipsis">
+      
+        第二次作业
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_4">
+<span class="md-ellipsis">
+      
+        第三次作业
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_5">
+<span class="md-ellipsis">
+      
+        第四次作业
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_6">
+<span class="md-ellipsis">
+      
+        第五次作业
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_7">
+<span class="md-ellipsis">
+      
+        第六次作业
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_8">
+<span class="md-ellipsis">
+      
+        第七次作业
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-content" data-md-component="content">
+<article class="md-content__inner md-typeset">
+<h1 id="_1">《计算机组成原理》理论课程作业与笔记归档<a class="headerlink" href="#_1" title="Permanent link">¶</a></h1>
+<div class="admonition info">
+<p class="admonition-title">📖 阅读信息</p>
+<p>阅读时间约 <strong>20</strong> 分钟　|　约 <strong>3077</strong> 字　|　约 <strong>20</strong> 个公式　|　约 <strong>387</strong> 行代码</p>
+</div>
+<p>供存档和复习用。</p>
+<h2 id="_2">第一次作业<a class="headerlink" href="#_2" title="Permanent link">¶</a></h2>
+<p><img alt="alt text" src="../image.png"/></p>
+<p><img alt="alt text" src="../0848B7512D832B0543A0C429A8B7E2E9.jpg"/></p>
+<p><img alt="alt text" src="../image-1.png"/></p>
+<p><img alt="alt text" src="../image-2.png"/></p>
+<p><img alt="alt text" src="../image-3.png"/></p>
+<p><img alt="alt text" src="../image-4.png"/></p>
+<p><img alt="alt text" src="../F2909820A097989E75B1DE0CBEE3575D.jpg"/></p>
+<h2 id="_3">第二次作业<a class="headerlink" href="#_3" title="Permanent link">¶</a></h2>
+<p><img alt="alt text" src="../image-29.png"/></p>
+<p>这个题并不需要我们进行具体的运算。只需要按规则译码即可。</p>
+<p>(1) 无符号整数，直接原码译码： <span class="arithmatex">\(R_1: 108B_{16}=4235_{10}\)</span>，<span class="arithmatex">\(R_2: 8080108B_{16}=2155876491_{10}\)</span></p>
+<p>(2) 有符号整数，按补码译码： <span class="arithmatex">\(R_1: 108B_{16}=4235_{10}\)</span>，<span class="arithmatex">\(R_2\)</span> 直接模运算： <span class="arithmatex">\(2155876491-4294967296=-2139090805\)</span></p>
+<p>(3) FP32: S1E8M23, FP64: S1E11M52，首先写成二进制并且把符号位，阶码，尾数断开：</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
+<span class="normal"><a href="#__codelineno-0-2">2</a></span>
+<span class="normal"><a href="#__codelineno-0-3">3</a></span>
+<span class="normal"><a href="#__codelineno-0-4">4</a></span>
+<span class="normal"><a href="#__codelineno-0-5">5</a></span>
+<span class="normal"><a href="#__codelineno-0-6">6</a></span>
+<span class="normal"><a href="#__codelineno-0-7">7</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1"></a>R1: 0000 0000 0000 0000 0001 0000 1000 1011
+<a id="__codelineno-0-2" name="__codelineno-0-2"></a>  = 0 00000000 00000000001000010001011 是一个非规格化浮点数。
+<a id="__codelineno-0-3" name="__codelineno-0-3"></a>  = (-1)^0 * 2^(0-126) * 0.00000000001000010001011
+<a id="__codelineno-0-4" name="__codelineno-0-4"></a>
+<a id="__codelineno-0-5" name="__codelineno-0-5"></a>R2: 1000 0000 1000 0000 0001 0000 1000 1011
+<a id="__codelineno-0-6" name="__codelineno-0-6"></a>  = 1 00000001 00000000001000010001011
+<a id="__codelineno-0-7" name="__codelineno-0-7"></a>  = (-1)^1 * 2^(1-127) * 1.00000000001000010001011
+</code></pre></div></td></tr></table></div>
+<p>得到：</p>
+<div class="arithmatex">\[
+R_1 = 0.00000000001000010001011_2 \times 2^{-126}\\
+R_2 = -1.00000000001000010001011_2 \times 2^{-126}
+\]</div>
+<p><img alt="alt text" src="../image-30.png"/></p>
+<p>为简便，使用十六进制表记。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">关系表达式</th>
+<th style="text-align: center;">运算类型</th>
+<th style="text-align: center;">结果</th>
+<th style="text-align: center;">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">0==0U</td>
+<td style="text-align: center;">无符号整数</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">0000 0000H = 0000 0000H</td>
+</tr>
+<tr>
+<td style="text-align: center;">-1 &lt; 0</td>
+<td style="text-align: center;">带符号整数</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">FFFF FFFFH(-1) &lt; 0000 0000H(0)</td>
+</tr>
+<tr>
+<td style="text-align: center;">-1 &lt; 0U</td>
+<td style="text-align: center;">无符号整数</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">11…1B（2³²-1）&gt;00…0B（0）</td>
+</tr>
+<tr>
+<td style="text-align: center;">2147483647 &gt; -2147483647 - 1</td>
+<td style="text-align: center;">带符号整数</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">011…1B（2³¹-1）&gt;100…0B（-2³¹）</td>
+</tr>
+<tr>
+<td style="text-align: center;">2147483647U &gt; -2147483647 - 1</td>
+<td style="text-align: center;">无符号整数</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">7FFF FFFFH(2³¹-1) &lt; 8000 0000H (2³¹)</td>
+</tr>
+<tr>
+<td style="text-align: center;">2147483647 &gt; (int)2147483648U</td>
+<td style="text-align: center;">带符号整数</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">7FFF FFFFH &gt; 8000 0000H (-2³¹)</td>
+</tr>
+<tr>
+<td style="text-align: center;">-1 &gt; -2</td>
+<td style="text-align: center;">带符号整数</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">FFFF FFFF(-1) &gt; FFFF FFFE(-2)</td>
+</tr>
+<tr>
+<td style="text-align: center;">(unsigned)-1 &gt; -2</td>
+<td style="text-align: center;">无符号整数</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">FFFF FFFF(2³²-1) &gt; FFFF FFFE(2³²-2)</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="alt text" src="../image-31.png"/></p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-1-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-1-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-1-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-1-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-1-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-1-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-1-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-1-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-1-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-1-10">10</a></span>
+<span class="normal"><a href="#__codelineno-1-11">11</a></span>
+<span class="normal"><a href="#__codelineno-1-12">12</a></span>
+<span class="normal"><a href="#__codelineno-1-13">13</a></span>
+<span class="normal"><a href="#__codelineno-1-14">14</a></span>
+<span class="normal"><a href="#__codelineno-1-15">15</a></span>
+<span class="normal"><a href="#__codelineno-1-16">16</a></span>
+<span class="normal"><a href="#__codelineno-1-17">17</a></span>
+<span class="normal"><a href="#__codelineno-1-18">18</a></span>
+<span class="normal"><a href="#__codelineno-1-19">19</a></span>
+<span class="normal"><a href="#__codelineno-1-20">20</a></span>
+<span class="normal"><a href="#__codelineno-1-21">21</a></span>
+<span class="normal"><a href="#__codelineno-1-22">22</a></span>
+<span class="normal"><a href="#__codelineno-1-23">23</a></span>
+<span class="normal"><a href="#__codelineno-1-24">24</a></span>
+<span class="normal"><a href="#__codelineno-1-25">25</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1"></a>(1)
+<a id="__codelineno-1-2" name="__codelineno-1-2"></a>x = -FFFAH = -65530
+<a id="__codelineno-1-3" name="__codelineno-1-3"></a>
+<a id="__codelineno-1-4" name="__codelineno-1-4"></a>(2)
+<a id="__codelineno-1-5" name="__codelineno-1-5"></a>y = -2004H = -8196
+<a id="__codelineno-1-6" name="__codelineno-1-6"></a>
+<a id="__codelineno-1-7" name="__codelineno-1-7"></a>(3)
+<a id="__codelineno-1-8" name="__codelineno-1-8"></a>z = 4294967296 - 6 = 4294967290
+<a id="__codelineno-1-9" name="__codelineno-1-9"></a>
+<a id="__codelineno-1-10" name="__codelineno-1-10"></a>(4)
+<a id="__codelineno-1-11" name="__codelineno-1-11"></a>c = 2*16+10 = 42 = '*'
+<a id="__codelineno-1-12" name="__codelineno-1-12"></a>
+<a id="__codelineno-1-13" name="__codelineno-1-13"></a>(5)
+<a id="__codelineno-1-14" name="__codelineno-1-14"></a>a = 1100 0100 0100 1000 0000 0000 0000 0000
+<a id="__codelineno-1-15" name="__codelineno-1-15"></a>  = -1 * (10001000) * 1.10010000000000000000000
+<a id="__codelineno-1-16" name="__codelineno-1-16"></a>  = -1 * 2^9 * (1 + 2^-1 + 2^-4)
+<a id="__codelineno-1-17" name="__codelineno-1-17"></a>  = -1 * (512 + 256 + 32)
+<a id="__codelineno-1-18" name="__codelineno-1-18"></a>  = -800
+<a id="__codelineno-1-19" name="__codelineno-1-19"></a>
+<a id="__codelineno-1-20" name="__codelineno-1-20"></a>(6)
+<a id="__codelineno-1-21" name="__codelineno-1-21"></a>b = 1100 0000 0010 0100 1000 0000 .... 0000
+<a id="__codelineno-1-22" name="__codelineno-1-22"></a>  = -1 * (100 0000 0010) * 1.01001
+<a id="__codelineno-1-23" name="__codelineno-1-23"></a>  = -1 * 2^3 * (1 + 2^-2 + 2^-5)
+<a id="__codelineno-1-24" name="__codelineno-1-24"></a>  = -1 * (8 + 2 + 0.25)
+<a id="__codelineno-1-25" name="__codelineno-1-25"></a>  = -10.25
+</code></pre></div></td></tr></table></div>
+<p><img alt="alt text" src="../image-32.png"/></p>
+<p>我们首先得到数据的字节型表示：</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-2-1">1</a></span>
+<span class="normal"><a href="#__codelineno-2-2">2</a></span>
+<span class="normal"><a href="#__codelineno-2-3">3</a></span>
+<span class="normal"><a href="#__codelineno-2-4">4</a></span>
+<span class="normal"><a href="#__codelineno-2-5">5</a></span>
+<span class="normal"><a href="#__codelineno-2-6">6</a></span>
+<span class="normal"><a href="#__codelineno-2-7">7</a></span>
+<span class="normal"><a href="#__codelineno-2-8">8</a></span>
+<span class="normal"><a href="#__codelineno-2-9">9</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1"></a>x = -0.125 = -1 * 2^(-3) * 1.0 = -1 * 2^(124-127) * 1.0
+<a id="__codelineno-2-2" name="__codelineno-2-2"></a>  = 1 0111 1100 0000 .... 0000
+<a id="__codelineno-2-3" name="__codelineno-2-3"></a>  = 1011 1110 0000 0000 .... 0000
+<a id="__codelineno-2-4" name="__codelineno-2-4"></a>  = BF 00 00 00
+<a id="__codelineno-2-5" name="__codelineno-2-5"></a>y = 7.5 = 1 * 2^(2) * 1.111
+<a id="__codelineno-2-6" name="__codelineno-2-6"></a>  = 0 1000 0001 1110 0000 .... 0000
+<a id="__codelineno-2-7" name="__codelineno-2-7"></a>  = 0100 0000 1111 0000 0000 .... 0000
+<a id="__codelineno-2-8" name="__codelineno-2-8"></a>  = 40 F0 00 00
+<a id="__codelineno-2-9" name="__codelineno-2-9"></a>i = 100 = 64 + 32 + 4 = 0000 0000 0110 0100 = 00 64
+</code></pre></div></td></tr></table></div>
+<p>在小端序机器上面：</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-3-1">1</a></span>
+<span class="normal"><a href="#__codelineno-3-2">2</a></span>
+<span class="normal"><a href="#__codelineno-3-3">3</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1"></a>  00 00 00 BF ** ** ** ** 00 00 F0 40 64 00
+<a id="__codelineno-3-2" name="__codelineno-3-2"></a> |     x     |           |     y     |  i  |
+<a id="__codelineno-3-3" name="__codelineno-3-3"></a> 100         104         108         112   
+</code></pre></div></td></tr></table></div>
+<p>在大端序机器上面：</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-4-1">1</a></span>
+<span class="normal"><a href="#__codelineno-4-2">2</a></span>
+<span class="normal"><a href="#__codelineno-4-3">3</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1"></a>  BF 00 00 00 ** ** ** ** 40 F0 00 00 00 64
+<a id="__codelineno-4-2" name="__codelineno-4-2"></a> |     x     |           |     y     |  i  |
+<a id="__codelineno-4-3" name="__codelineno-4-3"></a> 100         104         108         112  
+</code></pre></div></td></tr></table></div>
+<h2 id="_4">第三次作业<a class="headerlink" href="#_4" title="Permanent link">¶</a></h2>
+<p><img alt="alt text" src="../image-34.png"/></p>
+<table>
+<thead>
+<tr>
+<th>w</th>
+<th></th>
+<th>func1(w)</th>
+<th></th>
+<th>func2(w)</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>机器数</td>
+<td>值</td>
+<td>机器数</td>
+<td>值</td>
+<td>机器数</td>
+<td>值</td>
+</tr>
+<tr>
+<td>0000 007F</td>
+<td>127</td>
+<td>0000 007F</td>
+<td>127</td>
+<td>0000 007F</td>
+<td>127</td>
+</tr>
+<tr>
+<td>0000 0080</td>
+<td>128</td>
+<td>0000 0080</td>
+<td>128</td>
+<td>FFFF FF80</td>
+<td>-128</td>
+</tr>
+<tr>
+<td>0000 00FF</td>
+<td>255</td>
+<td>0000 00FF</td>
+<td>255</td>
+<td>FFFF FFFF</td>
+<td>-1</td>
+</tr>
+<tr>
+<td>0000 0100</td>
+<td>256</td>
+<td>0000 0000</td>
+<td>0</td>
+<td>0000 0000</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>关键点是逻辑移位不补零，算术移位补零，以及整数移位的截断。</p>
+<p><img alt="alt text" src="../image-36.png"/></p>
+<p><img alt="alt text" src="../image-35.png"/></p>
+<table>
+<thead>
+<tr>
+<th>表示</th>
+<th>X</th>
+<th>x</th>
+<th>Y</th>
+<th>y</th>
+<th>X+Y</th>
+<th>x+y</th>
+<th>OF</th>
+<th>SF</th>
+<th>CF</th>
+<th>X-Y</th>
+<th>x-y</th>
+<th>OF</th>
+<th>SF</th>
+<th>CF</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>无符号</td>
+<td>0xB0</td>
+<td>176</td>
+<td>0x8C</td>
+<td>140</td>
+<td>0x3C</td>
+<td>316</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>0x24</td>
+<td>36</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>带符号</td>
+<td>0xB0</td>
+<td>-80</td>
+<td>0x8C</td>
+<td>-116</td>
+<td>0x3C</td>
+<td>-196</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>0x24</td>
+<td>36</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>从硬件角度理解，<span class="arithmatex">\(OF = C_{out} \oplus C_{n-1}\)</span>, <span class="arithmatex">\(SF = F_{n}\)</span>, <span class="arithmatex">\(CF = C_{out} \oplus Sub\)</span>。</p>
+<p>加法时，<span class="arithmatex">\(C_{out}=1,C_{n-1}=0,F_{n}=0,Sub=0\)</span>，根据上述计算规则可得各标志位值。</p>
+<p>减法时，<span class="arithmatex">\(C_{out}=1,C_{n-1}=1,F_{n}=0,Sub=1\)</span>，根据上述计算规则可得各标志位值。</p>
+<p>从意义上理解，加法时结果为正数，出现溢出且最高位产生进位；减法时结果也为正数，未出现溢出或产生最高位的进位。</p>
+<p><img alt="alt text" src="../image-37.png"/></p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-5-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-5-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-5-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-5-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-5-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-5-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-5-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-5-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-5-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-5-10">10</a></span>
+<span class="normal"><a href="#__codelineno-5-11">11</a></span>
+<span class="normal"><a href="#__codelineno-5-12">12</a></span>
+<span class="normal"><a href="#__codelineno-5-13">13</a></span>
+<span class="normal"><a href="#__codelineno-5-14">14</a></span>
+<span class="normal"><a href="#__codelineno-5-15">15</a></span>
+<span class="normal"><a href="#__codelineno-5-16">16</a></span>
+<span class="normal"><a href="#__codelineno-5-17">17</a></span>
+<span class="normal"><a href="#__codelineno-5-18">18</a></span>
+<span class="normal"><a href="#__codelineno-5-19">19</a></span>
+<span class="normal"><a href="#__codelineno-5-20">20</a></span>
+<span class="normal"><a href="#__codelineno-5-21">21</a></span>
+<span class="normal"><a href="#__codelineno-5-22">22</a></span>
+<span class="normal"><a href="#__codelineno-5-23">23</a></span>
+<span class="normal"><a href="#__codelineno-5-24">24</a></span>
+<span class="normal"><a href="#__codelineno-5-25">25</a></span>
+<span class="normal"><a href="#__codelineno-5-26">26</a></span>
+<span class="normal"><a href="#__codelineno-5-27">27</a></span>
+<span class="normal"><a href="#__codelineno-5-28">28</a></span>
+<span class="normal"><a href="#__codelineno-5-29">29</a></span>
+<span class="normal"><a href="#__codelineno-5-30">30</a></span>
+<span class="normal"><a href="#__codelineno-5-31">31</a></span>
+<span class="normal"><a href="#__codelineno-5-32">32</a></span>
+<span class="normal"><a href="#__codelineno-5-33">33</a></span>
+<span class="normal"><a href="#__codelineno-5-34">34</a></span>
+<span class="normal"><a href="#__codelineno-5-35">35</a></span>
+<span class="normal"><a href="#__codelineno-5-36">36</a></span>
+<span class="normal"><a href="#__codelineno-5-37">37</a></span>
+<span class="normal"><a href="#__codelineno-5-38">38</a></span>
+<span class="normal"><a href="#__codelineno-5-39">39</a></span>
+<span class="normal"><a href="#__codelineno-5-40">40</a></span>
+<span class="normal"><a href="#__codelineno-5-41">41</a></span>
+<span class="normal"><a href="#__codelineno-5-42">42</a></span>
+<span class="normal"><a href="#__codelineno-5-43">43</a></span>
+<span class="normal"><a href="#__codelineno-5-44">44</a></span>
+<span class="normal"><a href="#__codelineno-5-45">45</a></span>
+<span class="normal"><a href="#__codelineno-5-46">46</a></span>
+<span class="normal"><a href="#__codelineno-5-47">47</a></span>
+<span class="normal"><a href="#__codelineno-5-48">48</a></span>
+<span class="normal"><a href="#__codelineno-5-49">49</a></span>
+<span class="normal"><a href="#__codelineno-5-50">50</a></span>
+<span class="normal"><a href="#__codelineno-5-51">51</a></span>
+<span class="normal"><a href="#__codelineno-5-52">52</a></span>
+<span class="normal"><a href="#__codelineno-5-53">53</a></span>
+<span class="normal"><a href="#__codelineno-5-54">54</a></span>
+<span class="normal"><a href="#__codelineno-5-55">55</a></span>
+<span class="normal"><a href="#__codelineno-5-56">56</a></span>
+<span class="normal"><a href="#__codelineno-5-57">57</a></span>
+<span class="normal"><a href="#__codelineno-5-58">58</a></span>
+<span class="normal"><a href="#__codelineno-5-59">59</a></span>
+<span class="normal"><a href="#__codelineno-5-60">60</a></span>
+<span class="normal"><a href="#__codelineno-5-61">61</a></span>
+<span class="normal"><a href="#__codelineno-5-62">62</a></span>
+<span class="normal"><a href="#__codelineno-5-63">63</a></span>
+<span class="normal"><a href="#__codelineno-5-64">64</a></span>
+<span class="normal"><a href="#__codelineno-5-65">65</a></span>
+<span class="normal"><a href="#__codelineno-5-66">66</a></span>
+<span class="normal"><a href="#__codelineno-5-67">67</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1"></a>(1)
+<a id="__codelineno-5-2" name="__codelineno-5-2"></a>补码：
+<a id="__codelineno-5-3" name="__codelineno-5-3"></a> x=001010
+<a id="__codelineno-5-4" name="__codelineno-5-4"></a> y=111010
+<a id="__codelineno-5-5" name="__codelineno-5-5"></a>-y=000110
+<a id="__codelineno-5-6" name="__codelineno-5-6"></a>x+y = 000100 = 4
+<a id="__codelineno-5-7" name="__codelineno-5-7"></a>x-y = 010000 = 16
+<a id="__codelineno-5-8" name="__codelineno-5-8"></a>
+<a id="__codelineno-5-9" name="__codelineno-5-9"></a>(2)
+<a id="__codelineno-5-10" name="__codelineno-5-10"></a>原码：符号位 1
+<a id="__codelineno-5-11" name="__codelineno-5-11"></a>x=001010
+<a id="__codelineno-5-12" name="__codelineno-5-12"></a>y=000110
+<a id="__codelineno-5-13" name="__codelineno-5-13"></a>
+<a id="__codelineno-5-14" name="__codelineno-5-14"></a>       001010
+<a id="__codelineno-5-15" name="__codelineno-5-15"></a>    x  000110
+<a id="__codelineno-5-16" name="__codelineno-5-16"></a>---------------
+<a id="__codelineno-5-17" name="__codelineno-5-17"></a>      001010
+<a id="__codelineno-5-18" name="__codelineno-5-18"></a>     001010
+<a id="__codelineno-5-19" name="__codelineno-5-19"></a>---------------
+<a id="__codelineno-5-20" name="__codelineno-5-20"></a>  00000111100
+<a id="__codelineno-5-21" name="__codelineno-5-21"></a>x*y = 111100 = 28
+<a id="__codelineno-5-22" name="__codelineno-5-22"></a>
+<a id="__codelineno-5-23" name="__codelineno-5-23"></a>(3)
+<a id="__codelineno-5-24" name="__codelineno-5-24"></a> y=111010
+<a id="__codelineno-5-25" name="__codelineno-5-25"></a>-y=000110
+<a id="__codelineno-5-26" name="__codelineno-5-26"></a>
+<a id="__codelineno-5-27" name="__codelineno-5-27"></a>Q      A      Q_{0}Q_{-1}
+<a id="__codelineno-5-28" name="__codelineno-5-28"></a>000000 001010 00
+<a id="__codelineno-5-29" name="__codelineno-5-29"></a>000000 000101
+<a id="__codelineno-5-30" name="__codelineno-5-30"></a>000110 000101 10
+<a id="__codelineno-5-31" name="__codelineno-5-31"></a>000011 000010
+<a id="__codelineno-5-32" name="__codelineno-5-32"></a>111101 000010 01
+<a id="__codelineno-5-33" name="__codelineno-5-33"></a>111110 100001
+<a id="__codelineno-5-34" name="__codelineno-5-34"></a>000100 100001 10
+<a id="__codelineno-5-35" name="__codelineno-5-35"></a>000010 010000
+<a id="__codelineno-5-36" name="__codelineno-5-36"></a>111100 010000 01
+<a id="__codelineno-5-37" name="__codelineno-5-37"></a>111110 001000
+<a id="__codelineno-5-38" name="__codelineno-5-38"></a>111111 000100 00
+<a id="__codelineno-5-39" name="__codelineno-5-39"></a>
+<a id="__codelineno-5-40" name="__codelineno-5-40"></a>x*y = -60
+<a id="__codelineno-5-41" name="__codelineno-5-41"></a>
+<a id="__codelineno-5-42" name="__codelineno-5-42"></a>(4)
+<a id="__codelineno-5-43" name="__codelineno-5-43"></a>原码：符号位 1
+<a id="__codelineno-5-44" name="__codelineno-5-44"></a> x=001010
+<a id="__codelineno-5-45" name="__codelineno-5-45"></a> y=000110
+<a id="__codelineno-5-46" name="__codelineno-5-46"></a>-y=111010
+<a id="__codelineno-5-47" name="__codelineno-5-47"></a>S R      Q
+<a id="__codelineno-5-48" name="__codelineno-5-48"></a>0 000000 001010
+<a id="__codelineno-5-49" name="__codelineno-5-49"></a>0 000000 01010_
+<a id="__codelineno-5-50" name="__codelineno-5-50"></a>1 000110 01010_
+<a id="__codelineno-5-51" name="__codelineno-5-51"></a>1 000110 010100
+<a id="__codelineno-5-52" name="__codelineno-5-52"></a>1 001100 10100_
+<a id="__codelineno-5-53" name="__codelineno-5-53"></a>1 000110 10100_
+<a id="__codelineno-5-54" name="__codelineno-5-54"></a>1 000110 101000
+<a id="__codelineno-5-55" name="__codelineno-5-55"></a>1 001011 01000_
+<a id="__codelineno-5-56" name="__codelineno-5-56"></a>1 000101 01000_
+<a id="__codelineno-5-57" name="__codelineno-5-57"></a>1 000101 010000
+<a id="__codelineno-5-58" name="__codelineno-5-58"></a>1 001010 10000_
+<a id="__codelineno-5-59" name="__codelineno-5-59"></a>1 000100 10000_
+<a id="__codelineno-5-60" name="__codelineno-5-60"></a>1 000100 100000
+<a id="__codelineno-5-61" name="__codelineno-5-61"></a>1 000111 00000_
+<a id="__codelineno-5-62" name="__codelineno-5-62"></a>1 000001 00000_
+<a id="__codelineno-5-63" name="__codelineno-5-63"></a>1 000001 000000
+<a id="__codelineno-5-64" name="__codelineno-5-64"></a>1 000010 00000_
+<a id="__codelineno-5-65" name="__codelineno-5-65"></a>0 000100 00000_
+<a id="__codelineno-5-66" name="__codelineno-5-66"></a>0 000100 000001
+<a id="__codelineno-5-67" name="__codelineno-5-67"></a>R = 4, Q = -1
+</code></pre></div></td></tr></table></div>
+<p><img alt="alt text" src="../image-38.png"/></p>
+<p>如果移动 n 位需要 n 个clk:</p>
+<p>55 = 56 - 1, 56 = 7 * 8 = (8 - 1) * 8，由此可以构造：</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-6-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1"></a><span class="mi">55</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="p">(((</span><span class="n">x</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">x</span>
+</code></pre></div></td></tr></table></div>
+<p>仅需 3 + 1 + 3 + 1 = 8 个 clk.</p>
+<p>如果移位操作只需要一个 clk:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-7-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1"></a><span class="mi">55</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">4</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">x</span>
+</code></pre></div></td></tr></table></div>
+<p>仅需要 3 个 clk.</p>
+<p><img alt="alt text" src="../image-39.png"/></p>
+<p>(1) 永真。int 转 double 不会出现 INF 或者 NaN，因此无论如何都是大于零的。</p>
+<p>(2) float 在 x 接近 INT_MAX 的时候，粒度会变稀到小于 1（因为尾数只有 23 bits，无论如何不能覆盖 32 bits 的 int）。因此当 x = 2146483647 时为假。</p>
+<p>(3) 显然 x+y 溢出时两者不等。取 x = 2146483647, y = 1 即可。</p>
+<p>(4) 永真。这里没有大数吃小数的问题，因为 double 在 int 的粒度足够。</p>
+<p>(5) 永真，理由同上。</p>
+<p>(6) 取 x = 0, y = 1，这样 dx/dx = -nan。</p>
+<p><img alt="alt text" src="../image-40.png"/></p>
+<p>E4M6，规格化的浮点数指数范围是 -7 ~ 7。</p>
+<p>(1)</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-8-1">1</a></span>
+<span class="normal"><a href="#__codelineno-8-2">2</a></span>
+<span class="normal"><a href="#__codelineno-8-3">3</a></span>
+<span class="normal"><a href="#__codelineno-8-4">4</a></span>
+<span class="normal"><a href="#__codelineno-8-5">5</a></span>
+<span class="normal"><a href="#__codelineno-8-6">6</a></span>
+<span class="normal"><a href="#__codelineno-8-7">7</a></span>
+<span class="normal"><a href="#__codelineno-8-8">8</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1"></a>15/16 * 2^7 = 0.1111 * 2^7 = 1.111000 * 2^6
+<a id="__codelineno-8-2" name="__codelineno-8-2"></a>2/16 * 2^5 = 4 = 1.000000 * 2^2
+<a id="__codelineno-8-3" name="__codelineno-8-3"></a>对阶：
+<a id="__codelineno-8-4" name="__codelineno-8-4"></a>1.000000 * 2^2 = 0.000100 * 2^6
+<a id="__codelineno-8-5" name="__codelineno-8-5"></a>相加：
+<a id="__codelineno-8-6" name="__codelineno-8-6"></a>= 1.111100 * 2^6
+<a id="__codelineno-8-7" name="__codelineno-8-7"></a>结果是规格化数且不存在精度误差，因此无需重新规格化，添加保护位的结果不变。
+<a id="__codelineno-8-8" name="__codelineno-8-8"></a>= 1.111100 * 2^6 = 0 1110 111100
+</code></pre></div></td></tr></table></div>
+<p>(2)</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-9-1">1</a></span>
+<span class="normal"><a href="#__codelineno-9-2">2</a></span>
+<span class="normal"><a href="#__codelineno-9-3">3</a></span>
+<span class="normal"><a href="#__codelineno-9-4">4</a></span>
+<span class="normal"><a href="#__codelineno-9-5">5</a></span>
+<span class="normal"><a href="#__codelineno-9-6">6</a></span>
+<span class="normal"><a href="#__codelineno-9-7">7</a></span>
+<span class="normal"><a href="#__codelineno-9-8">8</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1"></a>15/16 * 2^7 = 0.1111 * 2^7 = 1.111000 * 2^6
+<a id="__codelineno-9-2" name="__codelineno-9-2"></a>-2/16 * 2^5 = -4 = 11 1.000000 * 2^2
+<a id="__codelineno-9-3" name="__codelineno-9-3"></a>对阶：
+<a id="__codelineno-9-4" name="__codelineno-9-4"></a>1.000000 * 2^2 = 1.111100 * 2^6
+<a id="__codelineno-9-5" name="__codelineno-9-5"></a>相减（补码相加）：
+<a id="__codelineno-9-6" name="__codelineno-9-6"></a>= 00 1.110100 * 2^6
+<a id="__codelineno-9-7" name="__codelineno-9-7"></a>结果是规格化数且不存在精度误差，因此无需重新规格化，添加保护位的结果不变。
+<a id="__codelineno-9-8" name="__codelineno-9-8"></a>= 1.110100 * 2^6 = 0 1110 110100
+</code></pre></div></td></tr></table></div>
+<p>(3)</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-10-1">1</a></span>
+<span class="normal"><a href="#__codelineno-10-2">2</a></span>
+<span class="normal"><a href="#__codelineno-10-3">3</a></span>
+<span class="normal"><a href="#__codelineno-10-4">4</a></span>
+<span class="normal"><a href="#__codelineno-10-5">5</a></span>
+<span class="normal"><a href="#__codelineno-10-6">6</a></span>
+<span class="normal"><a href="#__codelineno-10-7">7</a></span>
+<span class="normal"><a href="#__codelineno-10-8">8</a></span>
+<span class="normal"><a href="#__codelineno-10-9">9</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1"></a>15/16 * 2^5 = 0.1111 * 2^5 = 00 1.111000 * 2^4
+<a id="__codelineno-10-2" name="__codelineno-10-2"></a>2/16 * 2^7 = 16 = 00 1.000000 * 2^4
+<a id="__codelineno-10-3" name="__codelineno-10-3"></a>对阶：
+<a id="__codelineno-10-4" name="__codelineno-10-4"></a>已经对好。
+<a id="__codelineno-10-5" name="__codelineno-10-5"></a>相加：
+<a id="__codelineno-10-6" name="__codelineno-10-6"></a>= 00 10.111000 * 2^4
+<a id="__codelineno-10-7" name="__codelineno-10-7"></a>由于最后一位是0所以是否添加保护位都不会影响结果。
+<a id="__codelineno-10-8" name="__codelineno-10-8"></a>右规：
+<a id="__codelineno-10-9" name="__codelineno-10-9"></a>= 1.011100 * 2^5 = 0 1101 011100
+</code></pre></div></td></tr></table></div>
+<p>(4)</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-11-1">1</a></span>
+<span class="normal"><a href="#__codelineno-11-2">2</a></span>
+<span class="normal"><a href="#__codelineno-11-3">3</a></span>
+<span class="normal"><a href="#__codelineno-11-4">4</a></span>
+<span class="normal"><a href="#__codelineno-11-5">5</a></span>
+<span class="normal"><a href="#__codelineno-11-6">6</a></span>
+<span class="normal"><a href="#__codelineno-11-7">7</a></span>
+<span class="normal"><a href="#__codelineno-11-8">8</a></span>
+<span class="normal"><a href="#__codelineno-11-9">9</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1"></a>15/16 * 2^5 = 0.1111 * 2^5 = 00 1.111000 * 2^4
+<a id="__codelineno-11-2" name="__codelineno-11-2"></a>-2/16 * 2^7 = -16 = 11 1.000000 * 2^4
+<a id="__codelineno-11-3" name="__codelineno-11-3"></a>对阶：
+<a id="__codelineno-11-4" name="__codelineno-11-4"></a>已经对好。
+<a id="__codelineno-11-5" name="__codelineno-11-5"></a>相减（补码相加）：
+<a id="__codelineno-11-6" name="__codelineno-11-6"></a>= 00 0.111000 * 2^4
+<a id="__codelineno-11-7" name="__codelineno-11-7"></a>由于没有进行右规所以是否添加保护位都不会影响结果。
+<a id="__codelineno-11-8" name="__codelineno-11-8"></a>左规：
+<a id="__codelineno-11-9" name="__codelineno-11-9"></a>= 1.110000 * 2^3 = 0 1011 110000
+</code></pre></div></td></tr></table></div>
+<p><img alt="alt text" src="../image-41.png"/></p>
+<p>FP32: S1E8M23</p>
+<p>(1)</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-12-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-12-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-12-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-12-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-12-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-12-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-12-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-12-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-12-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-12-10">10</a></span>
+<span class="normal"><a href="#__codelineno-12-11">11</a></span>
+<span class="normal"><a href="#__codelineno-12-12">12</a></span>
+<span class="normal"><a href="#__codelineno-12-13">13</a></span>
+<span class="normal"><a href="#__codelineno-12-14">14</a></span>
+<span class="normal"><a href="#__codelineno-12-15">15</a></span>
+<span class="normal"><a href="#__codelineno-12-16">16</a></span>
+<span class="normal"><a href="#__codelineno-12-17">17</a></span>
+<span class="normal"><a href="#__codelineno-12-18">18</a></span>
+<span class="normal"><a href="#__codelineno-12-19">19</a></span>
+<span class="normal"><a href="#__codelineno-12-20">20</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1"></a>0.75 = 3/4 = 0.11 = 1.1 * 2^-1
+<a id="__codelineno-12-2" name="__codelineno-12-2"></a>S = 0
+<a id="__codelineno-12-3" name="__codelineno-12-3"></a>E = 0111 1111
+<a id="__codelineno-12-4" name="__codelineno-12-4"></a>M = 1000 0000 .... 0000
+<a id="__codelineno-12-5" name="__codelineno-12-5"></a>
+<a id="__codelineno-12-6" name="__codelineno-12-6"></a>65.25 = 64 + 1 + 0.25 = 1000001.01 = 1.00000101 * 2^6
+<a id="__codelineno-12-7" name="__codelineno-12-7"></a>-65.25:
+<a id="__codelineno-12-8" name="__codelineno-12-8"></a>S = 1
+<a id="__codelineno-12-9" name="__codelineno-12-9"></a>E = 1000 0110
+<a id="__codelineno-12-10" name="__codelineno-12-10"></a>M = 1111 1011 0000 .... 0000
+<a id="__codelineno-12-11" name="__codelineno-12-11"></a>
+<a id="__codelineno-12-12" name="__codelineno-12-12"></a>对阶:
+<a id="__codelineno-12-13" name="__codelineno-12-13"></a>1.1 * 2^-1 = 0.0000 0011 * 2^6
+<a id="__codelineno-12-14" name="__codelineno-12-14"></a>
+<a id="__codelineno-12-15" name="__codelineno-12-15"></a>相加：
+<a id="__codelineno-12-16" name="__codelineno-12-16"></a>S = 1
+<a id="__codelineno-12-17" name="__codelineno-12-17"></a>E = 1000 0110
+<a id="__codelineno-12-18" name="__codelineno-12-18"></a>M = 1111 1110 0000 .... 0000
+<a id="__codelineno-12-19" name="__codelineno-12-19"></a> = -1.0000 0010 * 2^6
+<a id="__codelineno-12-20" name="__codelineno-12-20"></a>也就是 -64.5
+</code></pre></div></td></tr></table></div>
+<p>(2)</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-13-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-13-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-13-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-13-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-13-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-13-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-13-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-13-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-13-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-13-10">10</a></span>
+<span class="normal"><a href="#__codelineno-13-11">11</a></span>
+<span class="normal"><a href="#__codelineno-13-12">12</a></span>
+<span class="normal"><a href="#__codelineno-13-13">13</a></span>
+<span class="normal"><a href="#__codelineno-13-14">14</a></span>
+<span class="normal"><a href="#__codelineno-13-15">15</a></span>
+<span class="normal"><a href="#__codelineno-13-16">16</a></span>
+<span class="normal"><a href="#__codelineno-13-17">17</a></span>
+<span class="normal"><a href="#__codelineno-13-18">18</a></span>
+<span class="normal"><a href="#__codelineno-13-19">19</a></span>
+<span class="normal"><a href="#__codelineno-13-20">20</a></span>
+<span class="normal"><a href="#__codelineno-13-21">21</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1"></a>0.75 = 3/4 = 0.11 = 1.1 * 2^-1
+<a id="__codelineno-13-2" name="__codelineno-13-2"></a>S = 0
+<a id="__codelineno-13-3" name="__codelineno-13-3"></a>E = 0111 1111
+<a id="__codelineno-13-4" name="__codelineno-13-4"></a>M = 1000 0000 .... 0000
+<a id="__codelineno-13-5" name="__codelineno-13-5"></a>
+<a id="__codelineno-13-6" name="__codelineno-13-6"></a>65.25 = 64 + 1 + 0.25 = 1000001.01 = 1.00000101 * 2^6
+<a id="__codelineno-13-7" name="__codelineno-13-7"></a>减去负数就是加上补码的补码也就是加上正数。
+<a id="__codelineno-13-8" name="__codelineno-13-8"></a>65.25:
+<a id="__codelineno-13-9" name="__codelineno-13-9"></a>S = 0
+<a id="__codelineno-13-10" name="__codelineno-13-10"></a>E = 1000 0110
+<a id="__codelineno-13-11" name="__codelineno-13-11"></a>M = 0000 0101 0000 .... 0000
+<a id="__codelineno-13-12" name="__codelineno-13-12"></a>
+<a id="__codelineno-13-13" name="__codelineno-13-13"></a>对阶:
+<a id="__codelineno-13-14" name="__codelineno-13-14"></a>1.1 * 2^-1 = 0.0000 0011 * 2^6
+<a id="__codelineno-13-15" name="__codelineno-13-15"></a>
+<a id="__codelineno-13-16" name="__codelineno-13-16"></a>相加：
+<a id="__codelineno-13-17" name="__codelineno-13-17"></a>S = 0
+<a id="__codelineno-13-18" name="__codelineno-13-18"></a>E = 1000 0110
+<a id="__codelineno-13-19" name="__codelineno-13-19"></a>M = 0000 1000 0000 .... 0000
+<a id="__codelineno-13-20" name="__codelineno-13-20"></a> = 1.0000 1000 * 2^6
+<a id="__codelineno-13-21" name="__codelineno-13-21"></a>也就是 66
+</code></pre></div></td></tr></table></div>
+<h2 id="_5">第四次作业<a class="headerlink" href="#_5" title="Permanent link">¶</a></h2>
+<p><img alt="alt text" src="../image-76.png"/></p>
+<p>零地址指令、单地址指令和二地址指令满足</p>
+<div class="arithmatex">\[
+k_0+2^6 k_1+2^{12}k_2=2^{16}
+\]</div>
+<p>我们没有必要像课件那样考虑怎么分配前缀才能使得编码不混淆，因为只要满足上面的等式，就必然能够不重不漏地为这三种编码分配编码空间。于是</p>
+<div class="arithmatex">\[
+k_1=2^{10}-2^6k_2-\dfrac{k_0}{2^6}
+\]</div>
+<p><img alt="alt text" src="../image-77.png"/></p>
+<p>(1) OP 占 12 到 15 位，一共 4 bits，支持 <span class="arithmatex">\(2^4=16\)</span> 条指令；单个操作数 6 bits，其中前 3 bits 拿来定义寻址方式，后 3 bits 就应该是寄存器编号，支持 <span class="arithmatex">\(2^3=8\)</span> 个通用寄存器。由于主存 128KiB，也就是 <span class="arithmatex">\(2^{16}\)</span> 个字长（1 word = 2 bytes），因此需要 16 bits 的地址寄存器 MAR，由于机器字长 16 bits，因此需要 16 bits 的数据寄存器 MDR。</p>
+<p>(2) 转移采用补码也就是 <span class="arithmatex">\([PC-32767,PC+32768]\)</span>。</p>
+<p>(3)
+机器码如下：</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-14-1">1</a></span>
+<span class="normal"><a href="#__codelineno-14-2">2</a></span>
+<span class="normal"><a href="#__codelineno-14-3">3</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1"></a>0010 001 100 010 101
+<a id="__codelineno-14-2" name="__codelineno-14-2"></a> ADD  ()  R4 ()+  R5
+<a id="__codelineno-14-3" name="__codelineno-14-3"></a>0010 0011 0001 0101B = 0x2315
+</code></pre></div></td></tr></table></div>
+<p>按指令执行，取 R4 内容 1234H 指向的地址内容 5678H，取 R5 内容 5678H 指向的地址内容 1234H，相加之后将结果 68ACH 存到地址 5678H 内（<strong>第一处改变</strong>），然后 R5 寄存器自增 1 就是 5679H（<strong>第二处改变</strong>）。</p>
+<p><img alt="alt text" src="../image-78.png"/></p>
+<p>这里的关键是 A_lower_12 进行符号扩展之后，如果 A_lower_12 的最高位是 1 就会出问题，扩展之后高 20 位全部都变成 1 了，因此这个时候我们要在高20位最后一位多加一个 1，就能把刚刚的符号扩展“翻回来”。即：</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-15-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1"></a>A_upper20_adjusted = A_upper20 + A_lower12[11]
+</code></pre></div></td></tr></table></div>
+<p><img alt="alt text" src="../image-79.png"/></p>
+<p>首先需要指出题目设计的这个算法的 Bug，如果 a0 和 a1 中间没有 0，那这个算法就会越界访问内存。</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-16-1">1</a></span>
+<span class="normal"><a href="#__codelineno-16-2">2</a></span>
+<span class="normal"><a href="#__codelineno-16-3">3</a></span>
+<span class="normal"><a href="#__codelineno-16-4">4</a></span>
+<span class="normal"><a href="#__codelineno-16-5">5</a></span>
+<span class="normal"><a href="#__codelineno-16-6">6</a></span>
+<span class="normal"><a href="#__codelineno-16-7">7</a></span>
+<span class="normal"><a href="#__codelineno-16-8">8</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1"></a><span class="w">        </span><span class="nf">addi</span><span class="w">    </span><span class="no">t0</span><span class="p">,</span><span class="w"> </span><span class="no">zero</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="w">     </span><span class="c1">;初始化 t0 &lt;- 0</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2"></a><span class="nl">loop:</span><span class="w">   </span><span class="nf">lw</span><span class="w">      </span><span class="no">t1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">(</span><span class="no">a0</span><span class="p">)</span><span class="w">       </span><span class="c1">;t1 存放 a0 内容</span>
+<a id="__codelineno-16-3" name="__codelineno-16-3"></a>
+<a id="__codelineno-16-4" name="__codelineno-16-4"></a><span class="w">        </span><span class="nf">sw</span><span class="w">      </span><span class="no">t1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">(</span><span class="no">a1</span><span class="p">)</span><span class="w">       </span><span class="c1">;将 t1 的值（a0的内容）存在 a1 里面，也就是拷贝</span>
+<a id="__codelineno-16-5" name="__codelineno-16-5"></a><span class="w">        </span><span class="nf">addi</span><span class="w">    </span><span class="no">a0</span><span class="p">,</span><span class="w"> </span><span class="no">a0</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="w">       </span><span class="c1">;a0 往后挪 1 个 int</span>
+<a id="__codelineno-16-6" name="__codelineno-16-6"></a><span class="w">        </span><span class="nf">addi</span><span class="w">    </span><span class="no">a1</span><span class="p">,</span><span class="w"> </span><span class="no">a1</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="w">       </span><span class="c1">;a1 往后挪 1 个 int </span>
+<a id="__codelineno-16-7" name="__codelineno-16-7"></a><span class="w">        </span><span class="nf">beq</span><span class="w">     </span><span class="no">t1</span><span class="p">,</span><span class="w"> </span><span class="no">zero</span><span class="p">,</span><span class="w"> </span><span class="no">loop</span><span class="w">  </span><span class="c1">;若 t1 = 0 则跳回 loop</span>
+<a id="__codelineno-16-8" name="__codelineno-16-8"></a><span class="w">        </span><span class="nf">mv</span><span class="w">      </span><span class="no">a0</span><span class="p">,</span><span class="w"> </span><span class="no">t0</span><span class="w">          </span><span class="c1">;把 t0 放到 a0</span>
+</code></pre></div></td></tr></table></div>
+<p>首先我们可以大体上知道这个代码想干什么但是失败了，我把这个意图用 C 语言简单写一下：</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-17-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-17-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-17-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-17-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-17-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-17-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-17-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-17-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-17-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-17-10">10</a></span>
+<span class="normal"><a href="#__codelineno-17-11">11</a></span>
+<span class="normal"><a href="#__codelineno-17-12">12</a></span>
+<span class="normal"><a href="#__codelineno-17-13">13</a></span>
+<span class="normal"><a href="#__codelineno-17-14">14</a></span>
+<span class="normal"><a href="#__codelineno-17-15">15</a></span>
+<span class="normal"><a href="#__codelineno-17-16">16</a></span>
+<span class="normal"><a href="#__codelineno-17-17">17</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1"></a><span class="kt">int</span><span class="w"> </span><span class="nf">memcpy_0</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">src</span><span class="p">,</span><span class="w"> </span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">dst</span><span class="p">)</span><span class="c1">// a0 -&gt; src, a1 -&gt; dst</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2"></a><span class="p">{</span>
+<a id="__codelineno-17-3" name="__codelineno-17-3"></a><span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">cnt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//t0 &lt;- 0</span>
+<a id="__codelineno-17-4" name="__codelineno-17-4"></a><span class="w">  </span><span class="c1">//loop:</span>
+<a id="__codelineno-17-5" name="__codelineno-17-5"></a><span class="w">  </span><span class="k">while</span><span class="p">(</span><span class="o">*</span><span class="n">src</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<a id="__codelineno-17-6" name="__codelineno-17-6"></a><span class="w">  </span><span class="c1">//lw t1, 0(a0); t1 = *src</span>
+<a id="__codelineno-17-7" name="__codelineno-17-7"></a><span class="w">  </span><span class="c1">//beq t1, zero, ret; *src !=0 then loop otherwise jump to ret</span>
+<a id="__codelineno-17-8" name="__codelineno-17-8"></a><span class="w">  </span><span class="p">{</span>
+<a id="__codelineno-17-9" name="__codelineno-17-9"></a><span class="w">    </span><span class="o">*</span><span class="n">dst</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">*</span><span class="n">src</span><span class="p">;</span><span class="c1">//sw t1, 0(a1)</span>
+<a id="__codelineno-17-10" name="__codelineno-17-10"></a><span class="w">    </span><span class="o">++</span><span class="n">src</span><span class="p">;</span><span class="c1">//addi a0, a0, 4</span>
+<a id="__codelineno-17-11" name="__codelineno-17-11"></a><span class="w">    </span><span class="o">++</span><span class="n">dst</span><span class="p">;</span><span class="c1">//addi a1, a1, 4</span>
+<a id="__codelineno-17-12" name="__codelineno-17-12"></a><span class="w">    </span><span class="o">++</span><span class="n">cnt</span><span class="p">;</span><span class="c1">//addi t0, t0, 1</span>
+<a id="__codelineno-17-13" name="__codelineno-17-13"></a><span class="w">    </span><span class="c1">//j loop</span>
+<a id="__codelineno-17-14" name="__codelineno-17-14"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-17-15" name="__codelineno-17-15"></a><span class="w">  </span><span class="c1">//ret: mv a0, t0</span>
+<a id="__codelineno-17-16" name="__codelineno-17-16"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">cnt</span><span class="p">;</span>
+<a id="__codelineno-17-17" name="__codelineno-17-17"></a><span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+<p>翻译成汇编如下：</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-18-1">1</a></span>
+<span class="normal"><a href="#__codelineno-18-2">2</a></span>
+<span class="normal"><a href="#__codelineno-18-3">3</a></span>
+<span class="normal"><a href="#__codelineno-18-4">4</a></span>
+<span class="normal"><a href="#__codelineno-18-5">5</a></span>
+<span class="normal"><a href="#__codelineno-18-6">6</a></span>
+<span class="normal"><a href="#__codelineno-18-7">7</a></span>
+<span class="normal"><a href="#__codelineno-18-8">8</a></span>
+<span class="normal"><a href="#__codelineno-18-9">9</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1"></a><span class="w">      </span><span class="nf">addi</span><span class="w">  </span><span class="no">t0</span><span class="p">,</span><span class="w"> </span><span class="no">zero</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span>
+<a id="__codelineno-18-2" name="__codelineno-18-2"></a><span class="nl">loop:</span><span class="w"> </span><span class="nf">lw</span><span class="w">    </span><span class="no">t1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">(</span><span class="no">a0</span><span class="p">)</span>
+<a id="__codelineno-18-3" name="__codelineno-18-3"></a><span class="w">      </span><span class="nf">beq</span><span class="w">   </span><span class="no">t1</span><span class="p">,</span><span class="w"> </span><span class="no">zero</span><span class="p">,</span><span class="w"> </span><span class="no">ret</span>
+<a id="__codelineno-18-4" name="__codelineno-18-4"></a><span class="w">      </span><span class="nf">sw</span><span class="w">    </span><span class="no">t1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">(</span><span class="no">a1</span><span class="p">)</span>
+<a id="__codelineno-18-5" name="__codelineno-18-5"></a><span class="w">      </span><span class="nf">addi</span><span class="w">  </span><span class="no">a0</span><span class="p">,</span><span class="w"> </span><span class="no">a0</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span>
+<a id="__codelineno-18-6" name="__codelineno-18-6"></a><span class="w">      </span><span class="nf">addi</span><span class="w">  </span><span class="no">a1</span><span class="p">,</span><span class="w"> </span><span class="no">a1</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span>
+<a id="__codelineno-18-7" name="__codelineno-18-7"></a><span class="w">      </span><span class="nf">addi</span><span class="w">  </span><span class="no">t0</span><span class="p">,</span><span class="w"> </span><span class="no">t0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span>
+<a id="__codelineno-18-8" name="__codelineno-18-8"></a><span class="w">      </span><span class="nf">j</span><span class="w">     </span><span class="no">loop</span>
+<a id="__codelineno-18-9" name="__codelineno-18-9"></a><span class="nl">ret:</span><span class="w">  </span><span class="nf">mv</span><span class="w">    </span><span class="no">a0</span><span class="p">,</span><span class="w"> </span><span class="no">t0</span>
+</code></pre></div></td></tr></table></div>
+<p><img alt="alt text" src="../image-80.png"/></p>
+<p><img alt="alt text" src="../image-81.png"/></p>
+<p>(1) 8位或者说一个字节，数组每个元素 4 字节。因为第一行 R[t1] = i * 4 说明一个 int 占 4 字节，这样就能正确算出基于字节地址的偏移量。</p>
+<p>(2) i 放在 s3 里面，左移两位就是 i * 4，然后放进 t1 备用。</p>
+<p>(3) R 型指令对应三个操作数的加减位运算，opcode = 0110011B = 51，也就是第二条位于内存 40004 处的指令。</p>
+<p>I 型指令对应立即数和两个操作数的加减位运算，opcode = 0010011B = 19，也就是第一条位于内存 40000 处的指令和第五条位于内存 40016 处的指令，以及 lw 指令，opcode = 0000011B = 3 也就是第三条位于内存 40008 处的指令。</p>
+<p>B 型指令就是以 B 打头的指令也就是第四条位于内存 40012 处的指令。</p>
+<p>J 型指令为最后一条位于内存 40020 处的指令。</p>
+<p>(4) 由 lw t0, 0(t1) 对应的机器码可知 t0 的编号是 5，由 add t1, t1, s6 对应的机器码可知 s6 的编号是 22。</p>
+<p>(5) jal x0, loop。操作码为 1101111</p>
+<p>(6) 如下：</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-19-1">1</a></span>
+<span class="normal"><a href="#__codelineno-19-2">2</a></span>
+<span class="normal"><a href="#__codelineno-19-3">3</a></span>
+<span class="normal"><a href="#__codelineno-19-4">4</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1"></a>0=0000000 = 0 | 000000
+<a id="__codelineno-19-2" name="__codelineno-19-2"></a>12=01100 = 0110 | 0
+<a id="__codelineno-19-3" name="__codelineno-19-3"></a>offset = 0 0 0000 0110 0 = 12
+<a id="__codelineno-19-4" name="__codelineno-19-4"></a>exit = PC + offset = 40024
+</code></pre></div></td></tr></table></div>
+<p>(7) 按理说应该是 40000 也就是带 loop 标号的内存地址的，按机器码如下：</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-20-1">1</a></span>
+<span class="normal"><a href="#__codelineno-20-2">2</a></span>
+<span class="normal"><a href="#__codelineno-20-3">3</a></span>
+<span class="normal"><a href="#__codelineno-20-4">4</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1"></a>偏移量 -20 bytes =&gt; 最后 imm = -10
+<a id="__codelineno-20-2" name="__codelineno-20-2"></a>-10 = 1 11111111 1 1111110110
+<a id="__codelineno-20-3" name="__codelineno-20-3"></a>重组: 1 1111110110 11111111 1
+<a id="__codelineno-20-4" name="__codelineno-20-4"></a>11111110110111111111 = 1043967（???）
+</code></pre></div></td></tr></table></div>
+<p>我怀疑本题数据有 typo，应该是 1043967，证据如下：</p>
+<p><img alt="alt text" src="../79e10d5eceb484237ef61c56e5427eb1.png"/></p>
+<p><img alt="alt text" src="../e9d0fdf4a1884a2a1c2ac19f19e3946f.png"/></p>
+<p><img alt="alt text" src="../image-82.png"/></p>
+<p>首先处理 <code>compare</code> 函数，这是一个叶子函数所以可以不用特意分配栈帧：</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-21-1">1</a></span>
+<span class="normal"><a href="#__codelineno-21-2">2</a></span>
+<span class="normal"><a href="#__codelineno-21-3">3</a></span>
+<span class="normal"><a href="#__codelineno-21-4">4</a></span>
+<span class="normal"><a href="#__codelineno-21-5">5</a></span>
+<span class="normal"><a href="#__codelineno-21-6">6</a></span>
+<span class="normal"><a href="#__codelineno-21-7">7</a></span>
+<span class="normal"><a href="#__codelineno-21-8">8</a></span>
+<span class="normal"><a href="#__codelineno-21-9">9</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1"></a><span class="kt">int</span><span class="w"> </span><span class="nf">compare</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">b</span><span class="p">)</span>
+<a id="__codelineno-21-2" name="__codelineno-21-2"></a><span class="c1">// a0 &lt;- a, a1 &lt;- b, ret -&gt; a0</span>
+<a id="__codelineno-21-3" name="__codelineno-21-3"></a><span class="p">{</span>
+<a id="__codelineno-21-4" name="__codelineno-21-4"></a><span class="w">  </span><span class="c1">//blt a1, a0, ret1</span>
+<a id="__codelineno-21-5" name="__codelineno-21-5"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">a</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">b</span><span class="p">)</span>
+<a id="__codelineno-21-6" name="__codelineno-21-6"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="c1">// ret1 :addi a0, zero, 1; ret</span>
+<a id="__codelineno-21-7" name="__codelineno-21-7"></a><span class="w">  </span><span class="k">else</span>
+<a id="__codelineno-21-8" name="__codelineno-21-8"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">// addi a0, zero, 0; ret</span>
+<a id="__codelineno-21-9" name="__codelineno-21-9"></a><span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+<p>组织一下：</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-22-1">1</a></span>
+<span class="normal"><a href="#__codelineno-22-2">2</a></span>
+<span class="normal"><a href="#__codelineno-22-3">3</a></span>
+<span class="normal"><a href="#__codelineno-22-4">4</a></span>
+<span class="normal"><a href="#__codelineno-22-5">5</a></span>
+<span class="normal"><a href="#__codelineno-22-6">6</a></span>
+<span class="normal"><a href="#__codelineno-22-7">7</a></span>
+<span class="normal"><a href="#__codelineno-22-8">8</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1"></a><span class="nl">compare:</span>
+<a id="__codelineno-22-2" name="__codelineno-22-2"></a><span class="w">  </span><span class="nf">blt</span><span class="w"> </span><span class="no">a1</span><span class="p">,</span><span class="w"> </span><span class="no">a0</span><span class="p">,</span><span class="w"> </span><span class="no">ret1</span>
+<a id="__codelineno-22-3" name="__codelineno-22-3"></a><span class="w">  </span><span class="nf">addi</span><span class="w"> </span><span class="no">a0</span><span class="p">,</span><span class="w"> </span><span class="no">zero</span><span class="w"> </span><span class="mi">0</span>
+<a id="__codelineno-22-4" name="__codelineno-22-4"></a><span class="w">  </span><span class="nf">ret</span>
+<a id="__codelineno-22-5" name="__codelineno-22-5"></a>
+<a id="__codelineno-22-6" name="__codelineno-22-6"></a><span class="nl">ret1:</span>
+<a id="__codelineno-22-7" name="__codelineno-22-7"></a><span class="w">  </span><span class="nf">addi</span><span class="w"> </span><span class="no">a0</span><span class="p">,</span><span class="w"> </span><span class="no">zero</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span>
+<a id="__codelineno-22-8" name="__codelineno-22-8"></a><span class="w">  </span><span class="nf">ret</span>
+</code></pre></div></td></tr></table></div>
+<p>然后看一下 <code>sum_array</code>：</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-23-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-23-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-23-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-23-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-23-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-23-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-23-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-23-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-23-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-23-10">10</a></span>
+<span class="normal"><a href="#__codelineno-23-11">11</a></span>
+<span class="normal"><a href="#__codelineno-23-12">12</a></span>
+<span class="normal"><a href="#__codelineno-23-13">13</a></span>
+<span class="normal"><a href="#__codelineno-23-14">14</a></span>
+<span class="normal"><a href="#__codelineno-23-15">15</a></span>
+<span class="normal"><a href="#__codelineno-23-16">16</a></span>
+<span class="normal"><a href="#__codelineno-23-17">17</a></span>
+<span class="normal"><a href="#__codelineno-23-18">18</a></span>
+<span class="normal"><a href="#__codelineno-23-19">19</a></span>
+<span class="normal"><a href="#__codelineno-23-20">20</a></span>
+<span class="normal"><a href="#__codelineno-23-21">21</a></span>
+<span class="normal"><a href="#__codelineno-23-22">22</a></span>
+<span class="normal"><a href="#__codelineno-23-23">23</a></span>
+<span class="normal"><a href="#__codelineno-23-24">24</a></span>
+<span class="normal"><a href="#__codelineno-23-25">25</a></span>
+<span class="normal"><a href="#__codelineno-23-26">26</a></span>
+<span class="normal"><a href="#__codelineno-23-27">27</a></span>
+<span class="normal"><a href="#__codelineno-23-28">28</a></span>
+<span class="normal"><a href="#__codelineno-23-29">29</a></span>
+<span class="normal"><a href="#__codelineno-23-30">30</a></span>
+<span class="normal"><a href="#__codelineno-23-31">31</a></span>
+<span class="normal"><a href="#__codelineno-23-32">32</a></span>
+<span class="normal"><a href="#__codelineno-23-33">33</a></span>
+<span class="normal"><a href="#__codelineno-23-34">34</a></span>
+<span class="normal"><a href="#__codelineno-23-35">35</a></span>
+<span class="normal"><a href="#__codelineno-23-36">36</a></span>
+<span class="normal"><a href="#__codelineno-23-37">37</a></span>
+<span class="normal"><a href="#__codelineno-23-38">38</a></span>
+<span class="normal"><a href="#__codelineno-23-39">39</a></span>
+<span class="normal"><a href="#__codelineno-23-40">40</a></span>
+<span class="normal"><a href="#__codelineno-23-41">41</a></span>
+<span class="normal"><a href="#__codelineno-23-42">42</a></span>
+<span class="normal"><a href="#__codelineno-23-43">43</a></span>
+<span class="normal"><a href="#__codelineno-23-44">44</a></span>
+<span class="normal"><a href="#__codelineno-23-45">45</a></span>
+<span class="normal"><a href="#__codelineno-23-46">46</a></span>
+<span class="normal"><a href="#__codelineno-23-47">47</a></span>
+<span class="normal"><a href="#__codelineno-23-48">48</a></span>
+<span class="normal"><a href="#__codelineno-23-49">49</a></span>
+<span class="normal"><a href="#__codelineno-23-50">50</a></span>
+<span class="normal"><a href="#__codelineno-23-51">51</a></span>
+<span class="normal"><a href="#__codelineno-23-52">52</a></span>
+<span class="normal"><a href="#__codelineno-23-53">53</a></span>
+<span class="normal"><a href="#__codelineno-23-54">54</a></span>
+<span class="normal"><a href="#__codelineno-23-55">55</a></span>
+<span class="normal"><a href="#__codelineno-23-56">56</a></span>
+<span class="normal"><a href="#__codelineno-23-57">57</a></span>
+<span class="normal"><a href="#__codelineno-23-58">58</a></span>
+<span class="normal"><a href="#__codelineno-23-59">59</a></span>
+<span class="normal"><a href="#__codelineno-23-60">60</a></span>
+<span class="normal"><a href="#__codelineno-23-61">61</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1"></a><span class="kt">int</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//t0 &lt;- sum</span>
+<a id="__codelineno-23-2" name="__codelineno-23-2"></a><span class="kt">int</span><span class="w"> </span><span class="nf">sum_array</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">array</span><span class="p">[],</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">num</span><span class="w"> </span><span class="p">)</span>
+<a id="__codelineno-23-3" name="__codelineno-23-3"></a><span class="c1">// a0 &lt;- array, a1 &lt;- num</span>
+<a id="__codelineno-23-4" name="__codelineno-23-4"></a><span class="p">{</span>
+<a id="__codelineno-23-5" name="__codelineno-23-5"></a><span class="w">    </span><span class="c1">// Registers needed to save: s0 for array, s1 for num, s2 for i. We also need to save ra. We will also call `compare` so </span>
+<a id="__codelineno-23-6" name="__codelineno-23-6"></a><span class="w">    </span><span class="cm">/*</span>
+<a id="__codelineno-23-7" name="__codelineno-23-7"></a><span class="cm">    Prologue:</span>
+<a id="__codelineno-23-8" name="__codelineno-23-8"></a><span class="cm">    addi sp, sp, -20</span>
+<a id="__codelineno-23-9" name="__codelineno-23-9"></a><span class="cm">    sw ra, 16(sp)</span>
+<a id="__codelineno-23-10" name="__codelineno-23-10"></a><span class="cm">    sw s0, 12(sp)</span>
+<a id="__codelineno-23-11" name="__codelineno-23-11"></a><span class="cm">    sw s1, 8(sp)</span>
+<a id="__codelineno-23-12" name="__codelineno-23-12"></a><span class="cm">    sw s2, 4(sp)</span>
+<a id="__codelineno-23-13" name="__codelineno-23-13"></a><span class="cm">    ...</span>
+<a id="__codelineno-23-14" name="__codelineno-23-14"></a><span class="cm">    Epilogue:</span>
+<a id="__codelineno-23-15" name="__codelineno-23-15"></a><span class="cm">    lw s2, 4(sp)</span>
+<a id="__codelineno-23-16" name="__codelineno-23-16"></a><span class="cm">    lw s1, 8(sp)</span>
+<a id="__codelineno-23-17" name="__codelineno-23-17"></a><span class="cm">    lw s0, 12(sp)</span>
+<a id="__codelineno-23-18" name="__codelineno-23-18"></a><span class="cm">    lw ra, 16(sp)</span>
+<a id="__codelineno-23-19" name="__codelineno-23-19"></a><span class="cm">    addi sp, sp, 20</span>
+<a id="__codelineno-23-20" name="__codelineno-23-20"></a><span class="cm">    */</span>
+<a id="__codelineno-23-21" name="__codelineno-23-21"></a><span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
+<a id="__codelineno-23-22" name="__codelineno-23-22"></a><span class="w">    </span><span class="cm">/*</span>
+<a id="__codelineno-23-23" name="__codelineno-23-23"></a><span class="cm">    Initialization:</span>
+<a id="__codelineno-23-24" name="__codelineno-23-24"></a><span class="cm">    save parameters:</span>
+<a id="__codelineno-23-25" name="__codelineno-23-25"></a><span class="cm">    addi s0, a0, 0</span>
+<a id="__codelineno-23-26" name="__codelineno-23-26"></a><span class="cm">    addi s1, a1, 0</span>
+<a id="__codelineno-23-27" name="__codelineno-23-27"></a><span class="cm">    num = 0: addi t0, zero, 0</span>
+<a id="__codelineno-23-28" name="__codelineno-23-28"></a><span class="cm">    i = 0:   addi s2, zero, 0</span>
+<a id="__codelineno-23-29" name="__codelineno-23-29"></a><span class="cm">    */</span>
+<a id="__codelineno-23-30" name="__codelineno-23-30"></a><span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">num</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<a id="__codelineno-23-31" name="__codelineno-23-31"></a><span class="w">    </span><span class="c1">//if i &gt;= num, jump to ret: bge s2, s1, ret</span>
+<a id="__codelineno-23-32" name="__codelineno-23-32"></a><span class="w">    </span><span class="c1">//loop:</span>
+<a id="__codelineno-23-33" name="__codelineno-23-33"></a><span class="w">    </span><span class="cm">/*</span>
+<a id="__codelineno-23-34" name="__codelineno-23-34"></a><span class="cm">    Now we will call `compare`.</span>
+<a id="__codelineno-23-35" name="__codelineno-23-35"></a><span class="cm">    `compare` take num(s1) as a0, i+1(s2) as a1</span>
+<a id="__codelineno-23-36" name="__codelineno-23-36"></a><span class="cm">    so we generate arguments:</span>
+<a id="__codelineno-23-37" name="__codelineno-23-37"></a><span class="cm">    addi a0, s1, 0</span>
+<a id="__codelineno-23-38" name="__codelineno-23-38"></a><span class="cm">    addi a1, s2, 1</span>
+<a id="__codelineno-23-39" name="__codelineno-23-39"></a><span class="cm">    also, we need to save t0</span>
+<a id="__codelineno-23-40" name="__codelineno-23-40"></a><span class="cm">    sw t0, 0(sp)</span>
+<a id="__codelineno-23-41" name="__codelineno-23-41"></a><span class="cm">    then call compare.</span>
+<a id="__codelineno-23-42" name="__codelineno-23-42"></a><span class="cm">    now resume t0: lw t0, 0(sp)</span>
+<a id="__codelineno-23-43" name="__codelineno-23-43"></a><span class="cm">    now a0 = compare (num, i+1)</span>
+<a id="__codelineno-23-44" name="__codelineno-23-44"></a><span class="cm">    if a0 = 0 we just skip sum += array[i]: beq a0, zero, skip</span>
+<a id="__codelineno-23-45" name="__codelineno-23-45"></a><span class="cm">    */</span>
+<a id="__codelineno-23-46" name="__codelineno-23-46"></a><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="n">compare</span><span class="w"> </span><span class="p">(</span><span class="n">num</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">array</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<a id="__codelineno-23-47" name="__codelineno-23-47"></a><span class="w">    </span><span class="cm">/*</span>
+<a id="__codelineno-23-48" name="__codelineno-23-48"></a><span class="cm">    now we calculate sum += array[i].</span>
+<a id="__codelineno-23-49" name="__codelineno-23-49"></a><span class="cm">    firstly we get the address array + i:</span>
+<a id="__codelineno-23-50" name="__codelineno-23-50"></a><span class="cm">    slli t1, s2, 2</span>
+<a id="__codelineno-23-51" name="__codelineno-23-51"></a><span class="cm">    addi t1, s0, t1</span>
+<a id="__codelineno-23-52" name="__codelineno-23-52"></a><span class="cm">    then we load array[i] = *(array + i):</span>
+<a id="__codelineno-23-53" name="__codelineno-23-53"></a><span class="cm">    lw t2, 0(t1)</span>
+<a id="__codelineno-23-54" name="__codelineno-23-54"></a><span class="cm">    finally we add it to sum:</span>
+<a id="__codelineno-23-55" name="__codelineno-23-55"></a><span class="cm">    addi t0, t0, t2</span>
+<a id="__codelineno-23-56" name="__codelineno-23-56"></a><span class="cm">    */</span>
+<a id="__codelineno-23-57" name="__codelineno-23-57"></a><span class="w">    </span><span class="c1">//skip: addi s2, s2, 1</span>
+<a id="__codelineno-23-58" name="__codelineno-23-58"></a><span class="w">    </span><span class="c1">//j loop</span>
+<a id="__codelineno-23-59" name="__codelineno-23-59"></a><span class="w">    </span><span class="c1">//ret: addi a0, t0, 0</span>
+<a id="__codelineno-23-60" name="__codelineno-23-60"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">sum</span><span class="p">;</span>
+<a id="__codelineno-23-61" name="__codelineno-23-61"></a><span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-24-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-24-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-24-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-24-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-24-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-24-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-24-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-24-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-24-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-24-10">10</a></span>
+<span class="normal"><a href="#__codelineno-24-11">11</a></span>
+<span class="normal"><a href="#__codelineno-24-12">12</a></span>
+<span class="normal"><a href="#__codelineno-24-13">13</a></span>
+<span class="normal"><a href="#__codelineno-24-14">14</a></span>
+<span class="normal"><a href="#__codelineno-24-15">15</a></span>
+<span class="normal"><a href="#__codelineno-24-16">16</a></span>
+<span class="normal"><a href="#__codelineno-24-17">17</a></span>
+<span class="normal"><a href="#__codelineno-24-18">18</a></span>
+<span class="normal"><a href="#__codelineno-24-19">19</a></span>
+<span class="normal"><a href="#__codelineno-24-20">20</a></span>
+<span class="normal"><a href="#__codelineno-24-21">21</a></span>
+<span class="normal"><a href="#__codelineno-24-22">22</a></span>
+<span class="normal"><a href="#__codelineno-24-23">23</a></span>
+<span class="normal"><a href="#__codelineno-24-24">24</a></span>
+<span class="normal"><a href="#__codelineno-24-25">25</a></span>
+<span class="normal"><a href="#__codelineno-24-26">26</a></span>
+<span class="normal"><a href="#__codelineno-24-27">27</a></span>
+<span class="normal"><a href="#__codelineno-24-28">28</a></span>
+<span class="normal"><a href="#__codelineno-24-29">29</a></span>
+<span class="normal"><a href="#__codelineno-24-30">30</a></span>
+<span class="normal"><a href="#__codelineno-24-31">31</a></span>
+<span class="normal"><a href="#__codelineno-24-32">32</a></span>
+<span class="normal"><a href="#__codelineno-24-33">33</a></span>
+<span class="normal"><a href="#__codelineno-24-34">34</a></span>
+<span class="normal"><a href="#__codelineno-24-35">35</a></span>
+<span class="normal"><a href="#__codelineno-24-36">36</a></span>
+<span class="normal"><a href="#__codelineno-24-37">37</a></span>
+<span class="normal"><a href="#__codelineno-24-38">38</a></span>
+<span class="normal"><a href="#__codelineno-24-39">39</a></span>
+<span class="normal"><a href="#__codelineno-24-40">40</a></span>
+<span class="normal"><a href="#__codelineno-24-41">41</a></span>
+<span class="normal"><a href="#__codelineno-24-42">42</a></span>
+<span class="normal"><a href="#__codelineno-24-43">43</a></span>
+<span class="normal"><a href="#__codelineno-24-44">44</a></span>
+<span class="normal"><a href="#__codelineno-24-45">45</a></span>
+<span class="normal"><a href="#__codelineno-24-46">46</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1"></a><span class="nl">sum_array:</span>
+<a id="__codelineno-24-2" name="__codelineno-24-2"></a><span class="w">    </span><span class="c1">;Prologue</span>
+<a id="__codelineno-24-3" name="__codelineno-24-3"></a><span class="w">    </span><span class="nf">addi</span><span class="w"> </span><span class="no">sp</span><span class="p">,</span><span class="w"> </span><span class="no">sp</span><span class="p">,</span><span class="w"> </span><span class="mi">-20</span>
+<a id="__codelineno-24-4" name="__codelineno-24-4"></a><span class="w">    </span><span class="nf">sw</span><span class="w"> </span><span class="no">ra</span><span class="p">,</span><span class="w"> </span><span class="mi">16</span><span class="p">(</span><span class="no">sp</span><span class="p">)</span>
+<a id="__codelineno-24-5" name="__codelineno-24-5"></a><span class="w">    </span><span class="nf">sw</span><span class="w"> </span><span class="no">s0</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">(</span><span class="no">sp</span><span class="p">)</span>
+<a id="__codelineno-24-6" name="__codelineno-24-6"></a><span class="w">    </span><span class="nf">sw</span><span class="w"> </span><span class="no">s1</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">(</span><span class="no">sp</span><span class="p">)</span>
+<a id="__codelineno-24-7" name="__codelineno-24-7"></a><span class="w">    </span><span class="nf">sw</span><span class="w"> </span><span class="no">s2</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">(</span><span class="no">sp</span><span class="p">)</span>
+<a id="__codelineno-24-8" name="__codelineno-24-8"></a>
+<a id="__codelineno-24-9" name="__codelineno-24-9"></a><span class="w">    </span><span class="c1">;Initialization</span>
+<a id="__codelineno-24-10" name="__codelineno-24-10"></a><span class="w">    </span><span class="nf">addi</span><span class="w"> </span><span class="no">s0</span><span class="p">,</span><span class="w"> </span><span class="no">a0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span>
+<a id="__codelineno-24-11" name="__codelineno-24-11"></a><span class="w">    </span><span class="nf">addi</span><span class="w"> </span><span class="no">s1</span><span class="p">,</span><span class="w"> </span><span class="no">a1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span>
+<a id="__codelineno-24-12" name="__codelineno-24-12"></a><span class="w">    </span><span class="nf">addi</span><span class="w"> </span><span class="no">t0</span><span class="p">,</span><span class="w"> </span><span class="no">zero</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span>
+<a id="__codelineno-24-13" name="__codelineno-24-13"></a><span class="w">    </span><span class="nf">addi</span><span class="w"> </span><span class="no">s2</span><span class="p">,</span><span class="w"> </span><span class="no">zero</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span>
+<a id="__codelineno-24-14" name="__codelineno-24-14"></a>
+<a id="__codelineno-24-15" name="__codelineno-24-15"></a><span class="nl">loop:</span>
+<a id="__codelineno-24-16" name="__codelineno-24-16"></a><span class="w">    </span><span class="nf">bge</span><span class="w"> </span><span class="no">s2</span><span class="p">,</span><span class="w"> </span><span class="no">s1</span><span class="p">,</span><span class="w"> </span><span class="no">ret</span>
+<a id="__codelineno-24-17" name="__codelineno-24-17"></a>
+<a id="__codelineno-24-18" name="__codelineno-24-18"></a><span class="w">    </span><span class="nf">addi</span><span class="w"> </span><span class="no">a0</span><span class="p">,</span><span class="w"> </span><span class="no">s1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span>
+<a id="__codelineno-24-19" name="__codelineno-24-19"></a><span class="w">    </span><span class="nf">addi</span><span class="w"> </span><span class="no">a1</span><span class="p">,</span><span class="w"> </span><span class="no">s2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span>
+<a id="__codelineno-24-20" name="__codelineno-24-20"></a>
+<a id="__codelineno-24-21" name="__codelineno-24-21"></a><span class="w">    </span><span class="nf">sw</span><span class="w"> </span><span class="no">t0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">(</span><span class="no">sp</span><span class="p">)</span>
+<a id="__codelineno-24-22" name="__codelineno-24-22"></a>
+<a id="__codelineno-24-23" name="__codelineno-24-23"></a><span class="w">    </span><span class="nf">jal</span><span class="w"> </span><span class="no">compare</span>
+<a id="__codelineno-24-24" name="__codelineno-24-24"></a>
+<a id="__codelineno-24-25" name="__codelineno-24-25"></a><span class="w">    </span><span class="nf">lw</span><span class="w"> </span><span class="no">t0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">(</span><span class="no">sp</span><span class="p">)</span>
+<a id="__codelineno-24-26" name="__codelineno-24-26"></a>
+<a id="__codelineno-24-27" name="__codelineno-24-27"></a><span class="w">    </span><span class="nf">beq</span><span class="w"> </span><span class="no">a0</span><span class="p">,</span><span class="w"> </span><span class="no">zero</span><span class="p">,</span><span class="w"> </span><span class="no">skip</span>
+<a id="__codelineno-24-28" name="__codelineno-24-28"></a>
+<a id="__codelineno-24-29" name="__codelineno-24-29"></a><span class="w">    </span><span class="nf">slli</span><span class="w"> </span><span class="no">t1</span><span class="p">,</span><span class="w"> </span><span class="no">s2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span>
+<a id="__codelineno-24-30" name="__codelineno-24-30"></a><span class="w">    </span><span class="nf">add</span><span class="w"> </span><span class="no">t1</span><span class="p">,</span><span class="w"> </span><span class="no">s0</span><span class="p">,</span><span class="w"> </span><span class="no">t1</span>
+<a id="__codelineno-24-31" name="__codelineno-24-31"></a><span class="w">    </span><span class="nf">lw</span><span class="w"> </span><span class="no">t2</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">(</span><span class="no">t1</span><span class="p">)</span>
+<a id="__codelineno-24-32" name="__codelineno-24-32"></a><span class="w">    </span><span class="nf">add</span><span class="w"> </span><span class="no">t0</span><span class="p">,</span><span class="w"> </span><span class="no">t0</span><span class="p">,</span><span class="w"> </span><span class="no">t2</span>
+<a id="__codelineno-24-33" name="__codelineno-24-33"></a><span class="nl">skip:</span>
+<a id="__codelineno-24-34" name="__codelineno-24-34"></a><span class="w">    </span><span class="nf">addi</span><span class="w"> </span><span class="no">s2</span><span class="p">,</span><span class="w"> </span><span class="no">s2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span>
+<a id="__codelineno-24-35" name="__codelineno-24-35"></a><span class="w">    </span><span class="nf">j</span><span class="w"> </span><span class="no">loop</span>
+<a id="__codelineno-24-36" name="__codelineno-24-36"></a>
+<a id="__codelineno-24-37" name="__codelineno-24-37"></a><span class="nl">ret:</span>
+<a id="__codelineno-24-38" name="__codelineno-24-38"></a><span class="w">    </span><span class="nf">addi</span><span class="w"> </span><span class="no">a0</span><span class="p">,</span><span class="w"> </span><span class="no">t0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span>
+<a id="__codelineno-24-39" name="__codelineno-24-39"></a><span class="w">    </span><span class="c1">;Epilogue</span>
+<a id="__codelineno-24-40" name="__codelineno-24-40"></a><span class="w">    </span><span class="nf">lw</span><span class="w"> </span><span class="no">s2</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">(</span><span class="no">sp</span><span class="p">)</span>
+<a id="__codelineno-24-41" name="__codelineno-24-41"></a><span class="w">    </span><span class="nf">lw</span><span class="w"> </span><span class="no">s1</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">(</span><span class="no">sp</span><span class="p">)</span>
+<a id="__codelineno-24-42" name="__codelineno-24-42"></a><span class="w">    </span><span class="nf">lw</span><span class="w"> </span><span class="no">s0</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">(</span><span class="no">sp</span><span class="p">)</span>
+<a id="__codelineno-24-43" name="__codelineno-24-43"></a><span class="w">    </span><span class="nf">lw</span><span class="w"> </span><span class="no">ra</span><span class="p">,</span><span class="w"> </span><span class="mi">16</span><span class="p">(</span><span class="no">sp</span><span class="p">)</span>
+<a id="__codelineno-24-44" name="__codelineno-24-44"></a><span class="w">    </span><span class="nf">addi</span><span class="w"> </span><span class="no">sp</span><span class="p">,</span><span class="w"> </span><span class="no">sp</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span>
+<a id="__codelineno-24-45" name="__codelineno-24-45"></a>
+<a id="__codelineno-24-46" name="__codelineno-24-46"></a><span class="w">    </span><span class="nf">ret</span>
+</code></pre></div></td></tr></table></div>
+<p>因此调用 sum_array 前，其栈空间里面没有东西：</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-25-1">1</a></span>
+<span class="normal"><a href="#__codelineno-25-2">2</a></span>
+<span class="normal"><a href="#__codelineno-25-3">3</a></span>
+<span class="normal"><a href="#__codelineno-25-4">4</a></span>
+<span class="normal"><a href="#__codelineno-25-5">5</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1"></a>高地址-&gt;低地址，每一格 4 bytes。
+<a id="__codelineno-25-2" name="__codelineno-25-2"></a>----+----+
+<a id="__codelineno-25-3" name="__codelineno-25-3"></a>... |    |
+<a id="__codelineno-25-4" name="__codelineno-25-4"></a>----+----+
+<a id="__codelineno-25-5" name="__codelineno-25-5"></a>      ↑sp
+</code></pre></div></td></tr></table></div>
+<p>调用 sum_array 后，调用 compare 前后：</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-26-1">1</a></span>
+<span class="normal"><a href="#__codelineno-26-2">2</a></span>
+<span class="normal"><a href="#__codelineno-26-3">3</a></span>
+<span class="normal"><a href="#__codelineno-26-4">4</a></span>
+<span class="normal"><a href="#__codelineno-26-5">5</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-26-1" name="__codelineno-26-1"></a>高地址-&gt;低地址，每一格 4 bytes。
+<a id="__codelineno-26-2" name="__codelineno-26-2"></a>----+----+----+----+----+----+
+<a id="__codelineno-26-3" name="__codelineno-26-3"></a>... | ra | s0 | s1 | s2 | t0 |
+<a id="__codelineno-26-4" name="__codelineno-26-4"></a>----+----+----+----+----+----+
+<a id="__codelineno-26-5" name="__codelineno-26-5"></a>                          ↑sp
+</code></pre></div></td></tr></table></div>
+<p>因为 compare 特别简单不涉及栈上操作，因此栈状态不变。</p>
+<p>调用 sum_array 后，释放栈空间：</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-27-1">1</a></span>
+<span class="normal"><a href="#__codelineno-27-2">2</a></span>
+<span class="normal"><a href="#__codelineno-27-3">3</a></span>
+<span class="normal"><a href="#__codelineno-27-4">4</a></span>
+<span class="normal"><a href="#__codelineno-27-5">5</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-27-1" name="__codelineno-27-1"></a>高地址-&gt;低地址，每一格 4 bytes。
+<a id="__codelineno-27-2" name="__codelineno-27-2"></a>----+----+
+<a id="__codelineno-27-3" name="__codelineno-27-3"></a>... |    |
+<a id="__codelineno-27-4" name="__codelineno-27-4"></a>----+----+
+<a id="__codelineno-27-5" name="__codelineno-27-5"></a>      ↑sp
+</code></pre></div></td></tr></table></div>
+<h2 id="_6">第五次作业<a class="headerlink" href="#_6" title="Permanent link">¶</a></h2>
+<p><img alt="alt text" src="../image-96.png"/></p>
+<p>(4) 单周期处理器的 CPI 是 1。时钟周期由耗时最长的数据通路也就是 lw 指令决定。由于顺序执行导致各个组件空闲时间长，因此性能差。</p>
+<p>(5) 把指令执行分成多个阶段，每个阶段在单个时钟周期内完成，每个阶段只能进行一次访存。因为不同指令的包含的阶段不一样，比如 jmp 直接利用 adder 修改 pc，阶段少；lw 指令涉及对内存的取址和寄存器堆的访存，阶段长。因此不同指令的 CPI 不同。</p>
+<p>(9) 流水线下，一条指令的处理时间不可能缩短，而且流水段间的数据传送也需要时间，并且由于处理冒险，对简单指令以及分支指令而言，处理时间还可能更长。但是由于组件利用效率更高，时钟频率更快，程序运行时间一般短得多。</p>
+<p>(10) 时钟周期仍旧由最复杂的 lw 指令来决定。也就是分成五级流水线，或者说五个阶段：</p>
+<ul>
+<li>IF: 取指令并更新 PC (PC &lt;- PC+4)。</li>
+<li>ID: 译码指令并从源寄存器取数。</li>
+<li>EX: 在 ALU 执行指令。对 lw 而言是计算地址</li>
+<li>M : 读取存储器内容。</li>
+<li>WB: 结果写回目标寄存器。</li>
+</ul>
+<p>让每个阶段在一个时钟周期内完成，就可以得到流水线 CPU 的时钟周期。</p>
+<p>由于一个时钟周期只有一条指令完成流水线执行，因此 CPI = 1。</p>
+<p>(13) 原因是不同流水段需要的控制信号不一样。但是各流水段所需寄存器宽度不同。比如 EX 段以前需要传递 ALUSrc 和 ALUOp 来确定 ALU 需要执行的操作，但 EX 段之后，这俩就不需要了。</p>
+<p><img alt="alt text" src="../image-97.png"/></p>
+<p>图在这：</p>
+<p><img alt="alt text" src="../image-98.png"/></p>
+<p>这个 CPU 支持的九条指令如下：</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-28-1">1</a></span>
+<span class="normal"><a href="#__codelineno-28-2">2</a></span>
+<span class="normal"><a href="#__codelineno-28-3">3</a></span>
+<span class="normal"><a href="#__codelineno-28-4">4</a></span>
+<span class="normal"><a href="#__codelineno-28-5">5</a></span>
+<span class="normal"><a href="#__codelineno-28-6">6</a></span>
+<span class="normal"><a href="#__codelineno-28-7">7</a></span>
+<span class="normal"><a href="#__codelineno-28-8">8</a></span>
+<span class="normal"><a href="#__codelineno-28-9">9</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-28-1" name="__codelineno-28-1"></a>add  rd,  rs1, rs2
+<a id="__codelineno-28-2" name="__codelineno-28-2"></a>slt  rd,  rs1, rs2
+<a id="__codelineno-28-3" name="__codelineno-28-3"></a>sltu rd,  rs1, rs2
+<a id="__codelineno-28-4" name="__codelineno-28-4"></a>ori  rd,  rs1, imm12
+<a id="__codelineno-28-5" name="__codelineno-28-5"></a>lui  rd,  imm20
+<a id="__codelineno-28-6" name="__codelineno-28-6"></a>lw   rd,  rs1, imm12
+<a id="__codelineno-28-7" name="__codelineno-28-7"></a>sw   rs1, rs2, imm12
+<a id="__codelineno-28-8" name="__codelineno-28-8"></a>beq  rs1, rs2, imm12
+<a id="__codelineno-28-9" name="__codelineno-28-9"></a>jal  rd,  imm20
+</code></pre></div></td></tr></table></div>
+<ul>
+<li>RegWr: 为 0 表征无法将结果写入寄存器。这使得 <code>add</code>, <code>slt</code>, <code>sltu</code>, <code>ori</code>, <code>lui</code>, <code>lw</code> 和 <code>jal</code> 指令无法正常执行，因为它们都有一个 <code>rd</code> 寄存器用来写回结果。</li>
+<li>ALUAsrc: 为 0 表征只能从寄存器获取 ALU 的数据源，也就是无法计算 PC + ... 的值，影响 <code>beq</code> 和 <code>jal</code> 指令。</li>
+<li>Branch: 当该信号为 0 时，意味着 <code>ZF &amp; Branch</code> 恒为 0，也就是说 <code>bne</code> 指令完全无法进行跳转。</li>
+<li>Jump: 只影响 <code>jal</code> 指令，也是导致无法进行跳转。</li>
+<li>MemWr: 只有 <code>sw</code> 涉及到对内存的写，因此会使得无法向内存写入任何数据。</li>
+<li>MemtoReg: 无法将内存数据写入寄存器，也就是让 <code>lw</code> 指令无法接受来自内存的数据，只能接受 ALU 的运算结果。</li>
+</ul>
+<p><img alt="alt text" src="../image-99.png"/></p>
+<p>图在这：</p>
+<p><img alt="alt text" src="../image-101.png"/></p>
+<p>(1) 显然不行。时钟周期的长度由最长段决定，在这里是访存的 M 段，所以尽管 EX 段加快了，也只是增加了在单个时钟周期的空闲时间而已。</p>
+<p>(2) 无影响。EX 段减慢 20% 也就是执行耗时变为 180 ps，仍然不是起到决定性的最长段。</p>
+<p>(3) 此时 EX 段耗时来到 210 ps，成为最长段，导致时钟周期也变成 210 ps，导致运行时间增加 5% 也就是性能降低 5%。</p>
+<p><img alt="alt text" src="../image-100.png"/></p>
+<p>(1)</p>
+<div class="arithmatex">\[
+10^6\times100\times 10^{-12}=10^{-4} \mathrm{s}=100 \mathrm{\mu s}
+\]</div>
+<p>(2)</p>
+<p>采用 20 级流水线，理想情况下每个流水段时间相等，20 个流水段时间之和为单条指令执行时间，则单个流水段执行时间只需要 5ps。这就是单个时钟周期长度，而理想情况下 CPI=1，则：</p>
+<div class="arithmatex">\[
+10^6\times5\times 10^{-12}=10^{-4} \mathrm{s}=5 \mathrm{\mu s}
+\]</div>
+<p>流水段中的数据传送会导致单个流水段均摊的耗时增大，也就使得单条指令执行时间变长，吞吐率下降。</p>
+<h2 id="_7">第六次作业<a class="headerlink" href="#_7" title="Permanent link">¶</a></h2>
+<p><img alt="alt text" src="../image-112.png"/></p>
+<p><img alt="alt text" src="../image-113.png"/></p>
+<p><img alt="alt text" src="../image-114.png"/></p>
+<p><img alt="alt text" src="../2a65bafd87003fa441100d753a3a0802_720.jpg"/></p>
+<p><img alt="alt text" src="../image-115.png"/></p>
+<p>（1）一共 2n 条指令，每条指令 1 个周期出结果，但是每个 <code>lw</code> 和 <code>add</code> 中间出现一次 Load-Use，因此引发了 n 次阻塞，总的周期数是 3n，也就是说 CPI = 1.5</p>
+<p>（2）如果不带转发，相当于每两个指令中间都插入两个 <code>nop</code> 指令，也就是花了 3 个周期才能处理完 1 条指令， CPI = 3。</p>
+<p><img alt="alt text" src="../image-116.png"/></p>
+<p><img alt="alt text" src="../image-117.png"/></p>
+<p>参考上面那个题的流水线时间图，<code>bne</code> 指令的EX段执行完之后，在流水线上的是下一条指令的ID段和下下条指令的IF段，因此延迟槽宽度为2。</p>
+<p>由于存在转发，因此我们只考虑 Load-Use，也就是 <code>lw</code> 指令存在 1 个周期的阻塞。</p>
+<p><img alt="alt text" src="../image-118.png"/></p>
+<p>列表如下：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">正确/总数</th>
+<th style="text-align: center;">(1)</th>
+<th style="text-align: center;">(2)</th>
+<th style="text-align: center;">(3)</th>
+<th style="text-align: center;">(4)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">分支指令1</td>
+<td style="text-align: center;">3/3</td>
+<td style="text-align: center;">0/3</td>
+<td style="text-align: center;">3/3</td>
+<td style="text-align: center;">3/3</td>
+</tr>
+<tr>
+<td style="text-align: center;">分支指令2</td>
+<td style="text-align: center;">0/3</td>
+<td style="text-align: center;">4/4</td>
+<td style="text-align: center;">¾</td>
+<td style="text-align: center;">¾</td>
+</tr>
+<tr>
+<td style="text-align: center;">分支指令3</td>
+<td style="text-align: center;">3/6</td>
+<td style="text-align: center;">3/6</td>
+<td style="text-align: center;">⅙</td>
+<td style="text-align: center;">3/6</td>
+</tr>
+<tr>
+<td style="text-align: center;">分支指令4</td>
+<td style="text-align: center;">⅘</td>
+<td style="text-align: center;">⅕</td>
+<td style="text-align: center;">⅗</td>
+<td style="text-align: center;">⅘</td>
+</tr>
+<tr>
+<td style="text-align: center;">分支指令5</td>
+<td style="text-align: center;">5/7</td>
+<td style="text-align: center;">2/7</td>
+<td style="text-align: center;">3/7</td>
+<td style="text-align: center;">5/7</td>
+</tr>
+<tr>
+<td style="text-align: center;">合计准确率</td>
+<td style="text-align: center;">15/25</td>
+<td style="text-align: center;">10/25</td>
+<td style="text-align: center;">13/25</td>
+<td style="text-align: center;">18/25</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_8">第七次作业<a class="headerlink" href="#_8" title="Permanent link">¶</a></h2>
+<p><img alt="alt text" src="../image-141.png"/></p>
+<blockquote>
+<p>(1) 4*8 = 32 片。</p>
+<p>(2) 字位扩展，每一组 8 片，编组 64K * 8 bits 的数据，一共 4 组。</p>
+<p>(3) 每一片都能并行刷新，一片有 8 行，因此扫描一次需要 16ms 即为间隔时间。</p>
+</blockquote>
+<p><img alt="alt text" src="../8244ca17b1980c789f2c87e1455efa41.jpeg"/></p>
+<p><img alt="alt text" src="../image-142.png"/></p>
+<p><img alt="alt text" src="../5c77f56e4129062863a4a4eeaa81e3ef.jpeg"/></p>
+<p><img alt="alt text" src="../image-143.png"/></p>
+<blockquote>
+<p>磁头耗时：10ms</p>
+<p>盘片耗时：½ * 1/7200 min = 1000 / 240 ms</p>
+<p>读出耗时： 40 KB/ ms -&gt; 0.1ms 等于写入耗时</p>
+<p>其他耗时：2ms</p>
+<p>处理用时：<span class="arithmatex">\(2*10^4*10^3/(500*10^6)\)</span> = 0.04 ms</p>
+<p>一次完整操作耗时 = 控制器+磁头+盘片+读出+处理+控制器+磁头+盘片+写回 = (2 + 10 + 4.17)*2 + 0.1 + 0.04 + 0.1 = 32.58 ms</p>
+<p>1000 / t = 30.69 一共可以完成 30 次。</p>
+</blockquote>
+<p><img alt="alt text" src="../image-144.png"/></p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-29-1">1</a></span>
+<span class="normal"><a href="#__codelineno-29-2">2</a></span>
+<span class="normal"><a href="#__codelineno-29-3">3</a></span>
+<span class="normal"><a href="#__codelineno-29-4">4</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-29-1" name="__codelineno-29-1"></a>8F 3C AB 96 = 
+<a id="__codelineno-29-2" name="__codelineno-29-2"></a>数据：1000 1111 0011 1100 1010 1011 1001 0110
+<a id="__codelineno-29-3" name="__codelineno-29-3"></a>校验：        0         1         0         1
+<a id="__codelineno-29-4" name="__codelineno-29-4"></a>这就是接收到的校验位，但是接收到的数据计算出的校验码为 1101B，也就是说第一个字节出错，事实上第二个半字的数据变成了 0111，符合校验逻辑。
+</code></pre></div></td></tr></table></div>
+<p><img alt="alt text" src="../image-145.png"/></p>
+<p><img alt="alt text" src="../0b27659e73868a1970ff7dba452732f2.jpeg"/></p>
+<p><img alt="alt text" src="../image-146.png"/></p>
+<blockquote>
+<p>体存储，每一个存储体只能在一个存取周期里面处理一次访问，因此只需要找相邻周期对统一存储体的访问。</p>
+<p>每次访问到存储体的编号是地址模 4，也就是</p>
+<p>3(3), 9(1), 17(1), 2(2), 51(3), 37(1), 13(1), 4(0), 8(0), 41(1), 67(3), 10(2)</p>
+<p>因此发生体冲突的地址是 17, 13, 8。</p>
+</blockquote>
+<p><img alt="alt text" src="../image-147.png"/></p>
+<p><img alt="alt text" src="../image-148.png"/></p>
+<blockquote>
+<p>主存 1GB 字节，则地址宽度是 30 位。块大小 128B = ⅛ KB，则 cache 一共 512 块，也就是块索引 9 位，块内偏移 7 位，那么 tag 就需要 14 位。</p>
+<p>由于是直接映射，不需要 LRU 的记号位；由于是通写，不需要脏位，因此只需要一个冷启动有效位，加上 tag 的 14 位，一共是 15 位。每一块的总数据是 64KB + 512 * 15 / 8 B = 64.94 KB</p>
+</blockquote>
+<p><img alt="alt text" src="../image-149.png"/></p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-30-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-30-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-30-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-30-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-30-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-30-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-30-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-30-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-30-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-30-10">10</a></span>
+<span class="normal"><a href="#__codelineno-30-11">11</a></span>
+<span class="normal"><a href="#__codelineno-30-12">12</a></span>
+<span class="normal"><a href="#__codelineno-30-13">13</a></span>
+<span class="normal"><a href="#__codelineno-30-14">14</a></span>
+<span class="normal"><a href="#__codelineno-30-15">15</a></span>
+<span class="normal"><a href="#__codelineno-30-16">16</a></span>
+<span class="normal"><a href="#__codelineno-30-17">17</a></span>
+<span class="normal"><a href="#__codelineno-30-18">18</a></span>
+<span class="normal"><a href="#__codelineno-30-19">19</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-30-1" name="__codelineno-30-1"></a>block size = 1   block size = 4
+<a id="__codelineno-30-2" name="__codelineno-30-2"></a>addr line        addr line
+<a id="__codelineno-30-3" name="__codelineno-30-3"></a>2    2   miss    2    0    miss
+<a id="__codelineno-30-4" name="__codelineno-30-4"></a>3    3   miss    3    0    hit
+<a id="__codelineno-30-5" name="__codelineno-30-5"></a>11   11  miss    11   2    miss
+<a id="__codelineno-30-6" name="__codelineno-30-6"></a>16   0   miss    16   0    miss
+<a id="__codelineno-30-7" name="__codelineno-30-7"></a>21   5   miss    21   1    miss
+<a id="__codelineno-30-8" name="__codelineno-30-8"></a>13   13  miss    13   3    miss
+<a id="__codelineno-30-9" name="__codelineno-30-9"></a>64   0   miss    64   0    miss
+<a id="__codelineno-30-10" name="__codelineno-30-10"></a>48   0   miss    48   0    miss
+<a id="__codelineno-30-11" name="__codelineno-30-11"></a>19   3   miss    19   0    miss
+<a id="__codelineno-30-12" name="__codelineno-30-12"></a>11   11  hit     11   2    hit
+<a id="__codelineno-30-13" name="__codelineno-30-13"></a>3    3   miss    3    0    miss
+<a id="__codelineno-30-14" name="__codelineno-30-14"></a>22   6   miss    22   1    hit
+<a id="__codelineno-30-15" name="__codelineno-30-15"></a>4    4   miss    4    1    miss
+<a id="__codelineno-30-16" name="__codelineno-30-16"></a>27   11  miss    27   2    miss
+<a id="__codelineno-30-17" name="__codelineno-30-17"></a>6    6   miss    6    1    hit
+<a id="__codelineno-30-18" name="__codelineno-30-18"></a>11   11  miss    11   2    miss
+<a id="__codelineno-30-19" name="__codelineno-30-19"></a>hit rate = 1/16  hit rate = 1/4
+</code></pre></div></td></tr></table></div>
+<p><img alt="alt text" src="../image-150.png"/></p>
+<blockquote>
+<p>(1) x 和 y 中的元素都是访问后就不再使用，时间局部性差。但是好在存在一个数组里面，且是顺序访问，因此空间局部性好。这个时候就该用向量指令！</p>
+<p>(2) 这个 cache 真是牛大了，只有两行，也就是说每一行只能放半个浮点向量。具体而言，我们可以把 cache line 映射到主存看一下：</p>
+</blockquote>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-31-1">1</a></span>
+<span class="normal"><a href="#__codelineno-31-2">2</a></span>
+<span class="normal"><a href="#__codelineno-31-3">3</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-31-1" name="__codelineno-31-1"></a> 40  44  48  4B  50  54  58  5B  60  64  68  6B  70  74  78  7B
+<a id="__codelineno-31-2" name="__codelineno-31-2"></a> x0  x1  x2  x3  x4  x5  x6  x7  y0  y1  y2  y3  y4  y5  y6  y7
+<a id="__codelineno-31-3" name="__codelineno-31-3"></a>| cache line 1  | cache line 2  | cache line 1  | cache line 2 |
+</code></pre></div></td></tr></table></div>
+<blockquote>
+<p>也就是说每一次计算 x[i] * y[i] 都要刷新一次 cache，命中率 0%</p>
+<p>(3) 现在映射变成了：</p>
+</blockquote>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-32-1">1</a></span>
+<span class="normal"><a href="#__codelineno-32-2">2</a></span>
+<span class="normal"><a href="#__codelineno-32-3">3</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-32-1" name="__codelineno-32-1"></a> 40  44  48  4B  50  54  58  5B  60  64  68  6B  70  74  78  7B
+<a id="__codelineno-32-2" name="__codelineno-32-2"></a> x0  x1  x2  x3  x4  x5  x6  x7  y0  y1  y2  y3  y4  y5  y6  y7
+<a id="__codelineno-32-3" name="__codelineno-32-3"></a>| line1 | line2 | line1 | line2 | line1 | line2 | line1 | line2 |
+</code></pre></div></td></tr></table></div>
+<blockquote>
+<p>每一次访问 block 的时候，虽然对应的是同一个 cache line 但是能刚好装进两个组里面，一个对应 x 一个对应 y，因此计算 x_2k * y_2k 的时候固定 miss 但后面一次计算就能利用上 cache，命中率 50%。</p>
+<p>（4）映射如下：</p>
+</blockquote>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-33-1">1</a></span>
+<span class="normal"><a href="#__codelineno-33-2">2</a></span>
+<span class="normal"><a href="#__codelineno-33-3">3</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-33-1" name="__codelineno-33-1"></a> 40  44  48  4B  50  54  58  5B  60  64  68  6B  70  74  78  7B  80  84  88  8B
+<a id="__codelineno-33-2" name="__codelineno-33-2"></a> x0  x1  x2  x3  x4  x5  x6  x7  x8  x9  xA  xB  y0  y1  y2  y3  y4  y5  y6  y7
+<a id="__codelineno-33-3" name="__codelineno-33-3"></a>| cache line 1  | cache line 2  | cache line 1  | cache line 2 | cache line 1 |
+</code></pre></div></td></tr></table></div>
+<blockquote>
+<p>这样就不会一直撞车了，只在 x0 和 x4 处两次 miss 命中率来到了 75%.</p>
+</blockquote>
+<p><img alt="alt text" src="../image-151.png"/></p>
+<p><img alt="alt text" src="../image-152.png"/></p>
+<blockquote>
+<p>主存地址线宽度 26 bits，cache 块大小 64B 则偏移位是 6 bits，一共 64 块，对应 16 行也就是 set index 是 4 位，剩下的 tag 字段就是 16 位。</p>
+<p>LRU 需要 2 位，有效位 1 位，脏位 1 位，tag 16 位，每一块的元数据是 20 位，一共 64 块，元数据字段就是 1280 位，那么总容量就是 4096 + 1280 = 5376 位。</p>
+<p>前 4096 bytes 的数据能够完整装入 cache，剩下 248 Bytes 的数据需要 4 次 LRU 替换，而根据 LRU 规则，每一组的前四行都要循环发生替换，也就是说从第二次开始，需要 4*5 = 20 次 LRU 替换。</p>
+<p>总时间计算如下：冷启动耗时(64 * 10) + 命中耗时（4344 * 1） + LRU 替换(4 * 10) + [载入的 LRU 替换(20 * 10) + 命中耗时(4344 * 1)] * 15 = 4344 * 16 + 680 + 15 * 200 = 73184</p>
+<p>平均访存为 73184 / (4344 * 16) = 1.052 Cycs</p>
+</blockquote>
+<p><img alt="alt text" src="../image-153.png"/></p>
+<p><img alt="alt text" src="../image-154.png"/></p>
+<blockquote>
+<p>页大小 128 B 则页内偏移量占用 7 bits，高 9 位是虚拟页号，TLB 一共 4 行，vindex = 2 位，则剩下的 vtag 占 7 位。</p>
+<p>物理地址的页内偏移仍然是 7 位，但是高 5 位就是物理页号。</p>
+<p>cache 的块内偏移 2 位，行号 4 位，则标签 6 位。</p>
+<p>CPU 读取地址 067AH = 0000 0110 0111 1010.</p>
+<p>首先在 TLB 里面查找：vtag = 000 0011 = 03, vindex = 0, offset = 111 1010 = 7A</p>
+<p>查到到第一条是对应的，但是有效位 = 0， TLB 缺失，需要从页表中拿映射。</p>
+<p>虚拟页号 = 0 0000 1100 = 0C，对应的页框号是 19，有效，无需从外存调取页。则得到物理地址是 19[:5]7A[:7] = 1100 1111 1010</p>
+<p>接下来在 cache 里面查找，tag = 11 0011 = 33, index = 1110 = 0E, offset = 10 = 2</p>
+<p>取得字节为 4A.</p>
+</blockquote>
+<div class="admonition info">
+<p class="admonition-title">📝 如果您需要引用本文</p>
+<p>Yan Li. (Dec. 3, 2025). 《计算机组成原理》理论课程作业与笔记归档 [Blog post]. Retrieved from <a href="https://dicaeopolis.github.io/campus-sources/SDC_assignments">https://dicaeopolis.github.io/campus-sources/SDC_assignments</a></p>
+<p>在 BibTeX 格式中：
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-34-1">1</a></span>
+<span class="normal"><a href="#__codelineno-34-2">2</a></span>
+<span class="normal"><a href="#__codelineno-34-3">3</a></span>
+<span class="normal"><a href="#__codelineno-34-4">4</a></span>
+<span class="normal"><a href="#__codelineno-34-5">5</a></span>
+<span class="normal"><a href="#__codelineno-34-6">6</a></span>
+<span class="normal"><a href="#__codelineno-34-7">7</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-34-1" name="__codelineno-34-1"></a>@online{SDC_assignments,
+<a id="__codelineno-34-2" name="__codelineno-34-2"></a>    title={《计算机组成原理》理论课程作业与笔记归档},
+<a id="__codelineno-34-3" name="__codelineno-34-3"></a>    author={Yan Li},
+<a id="__codelineno-34-4" name="__codelineno-34-4"></a>    year={2025},
+<a id="__codelineno-34-5" name="__codelineno-34-5"></a>    month={Dec},
+<a id="__codelineno-34-6" name="__codelineno-34-6"></a>    url={\url{https://dicaeopolis.github.io/campus-sources/SDC_assignments}},
+<a id="__codelineno-34-7" name="__codelineno-34-7"></a>}
+</code></pre></div></td></tr></table></div></p>
+</div>
+<form class="md-feedback" hidden="" name="feedback">
+<fieldset>
+<legend class="md-feedback__title">
+        Was this page helpful?
+      </legend>
+<div class="md-feedback__inner">
+<div class="md-feedback__list">
+<button class="md-feedback__icon md-icon" data-md-value="1" title="This page was helpful" type="submit">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 12a8 8 0 0 0-8-8 8 8 0 0 0-8 8 8 8 0 0 0 8 8 8 8 0 0 0 8-8m2 0a10 10 0 0 1-10 10A10 10 0 0 1 2 12 10 10 0 0 1 12 2a10 10 0 0 1 10 10M10 9.5c0 .8-.7 1.5-1.5 1.5S7 10.3 7 9.5 7.7 8 8.5 8s1.5.7 1.5 1.5m7 0c0 .8-.7 1.5-1.5 1.5S14 10.3 14 9.5 14.7 8 15.5 8s1.5.7 1.5 1.5m-5 7.73c-1.75 0-3.29-.73-4.19-1.81L9.23 14c.45.72 1.52 1.23 2.77 1.23s2.32-.51 2.77-1.23l1.42 1.42c-.9 1.08-2.44 1.81-4.19 1.81"></path></svg>
+</button>
+<button class="md-feedback__icon md-icon" data-md-value="0" title="This page could be improved" type="submit">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 12a8 8 0 0 0-8-8 8 8 0 0 0-8 8 8 8 0 0 0 8 8 8 8 0 0 0 8-8m2 0a10 10 0 0 1-10 10A10 10 0 0 1 2 12 10 10 0 0 1 12 2a10 10 0 0 1 10 10m-6.5-4c.8 0 1.5.7 1.5 1.5s-.7 1.5-1.5 1.5-1.5-.7-1.5-1.5.7-1.5 1.5-1.5M10 9.5c0 .8-.7 1.5-1.5 1.5S7 10.3 7 9.5 7.7 8 8.5 8s1.5.7 1.5 1.5m2 4.5c1.75 0 3.29.72 4.19 1.81l-1.42 1.42C14.32 16.5 13.25 16 12 16s-2.32.5-2.77 1.23l-1.42-1.42C8.71 14.72 10.25 14 12 14"></path></svg>
+</button>
+</div>
+<div class="md-feedback__note">
+<div data-md-value="1" hidden="">
+              
+              
+                
+              
+              
+              
+                
+                
+              
+              Thanks for your feedback!
+            </div>
+<div data-md-value="0" hidden="">
+              
+              
+                
+              
+              
+              
+                
+                
+              
+              Thanks for your feedback! Help us improve this page by using our <a href="..." rel="noopener" target="_blank">feedback form</a>.
+            </div>
+</div>
+</div>
+</fieldset>
+</form>
+</article>
+</div>
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+</div>
+</main>
+<footer class="md-footer">
+<div class="md-footer-meta md-typeset">
+<div class="md-footer-meta__inner md-grid">
+<div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" rel="noopener" target="_blank">
+      Material for MkDocs
+    </a>
+</div>
+</div>
+</div>
+</footer>
+</div>
+<div class="md-dialog" data-md-component="dialog">
+<div class="md-dialog__inner md-typeset"></div>
+</div>
+<script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.code.copy", "content.code.select", "navigation.titles", "navigation.tabs", "navigation.indexes"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+<script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+<script src="../../assets/js/custom.js"></script>
+<script src="../../themes/js/custom.js"></script>
+<script src="../../themes/js/simpleLightbox.min.js"></script>
+<script src="../../themes/js/optionalConfig.js"></script>
+<script src="../../themes/js/mermaidloader.js"></script>
+<script src="../../themes/js/umlconvert.js"></script>
+<script src="../../themes/js/mathjax.js"></script>
+<script src="../../themes/js/katex.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.17.1/flowchart.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.3.0/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.13.6/underscore-min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mermaid-js/mermaid-mindmap@9.3.0/dist/diagram-definition.0faef4c2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/markdown-it-plantuml@1.4.1/index.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/webfont/1.6.28/webfontloader.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-chtml-full.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-svg-full.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+</body>
+</html>

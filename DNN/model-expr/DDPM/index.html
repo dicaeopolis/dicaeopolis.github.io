@@ -1,0 +1,1955 @@
+
+<!DOCTYPE html>
+
+<html class="no-js" lang="zh">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<link href="../" rel="prev"/>
+<link href="../S-and-D-models-replication/" rel="next"/>
+<link href="../../../favicon.png" rel="icon"/>
+<meta content="mkdocs-1.6.1, mkdocs-material-9.7.1" name="generator"/>
+<title>扩散模型理论篇: 从多阶段变分自编码器到概率流常微分方程采样器系列 - Dicaeopolis' Wiki</title>
+<link href="../../../assets/stylesheets/main.484c7ddc.min.css" rel="stylesheet"/>
+<link href="../../../assets/stylesheets/palette.ab4e12ef.min.css" rel="stylesheet"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback" rel="stylesheet"/>
+<style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+<link href="../../../themes/css/custom.css" rel="stylesheet"/>
+<link href="../../../themes/css/simpleLightbox.min.css" rel="stylesheet"/>
+<link href="../../../themes/css/pied_piper.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css" rel="stylesheet"/>
+<link href="../../../stylesheets/customize.css" rel="stylesheet"/>
+<link href="../../../assets/css/custom.css" rel="stylesheet"/>
+<script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+</head>
+<body data-md-color-accent="indigo" data-md-color-primary="indigo" data-md-color-scheme="default" dir="ltr">
+<input autocomplete="off" class="md-toggle" data-md-toggle="drawer" id="__drawer" type="checkbox"/>
+<input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
+<label class="md-overlay" for="__drawer"></label>
+<div data-md-component="skip">
+<a class="md-skip" href="#_1">
+          跳转至
+        </a>
+</div>
+<div data-md-component="announce">
+</div>
+<header class="md-header" data-md-component="header">
+<nav aria-label="页眉" class="md-header__inner md-grid">
+<a aria-label="Dicaeopolis' Wiki" class="md-header__button md-logo" data-md-component="logo" href="../../.." title="Dicaeopolis' Wiki">
+<img alt="logo" src="../../../favicon.png"/>
+</a>
+<label class="md-header__button md-icon" for="__drawer">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"></path></svg>
+</label>
+<div class="md-header__title" data-md-component="header-title">
+<div class="md-header__ellipsis">
+<div class="md-header__topic">
+<span class="md-ellipsis">
+            Dicaeopolis' Wiki
+          </span>
+</div>
+<div class="md-header__topic" data-md-component="header-topic">
+<span class="md-ellipsis">
+            
+              扩散模型理论篇: 从多阶段变分自编码器到概率流常微分方程采样器系列
+            
+          </span>
+</div>
+</div>
+</div>
+<form class="md-header__option" data-md-component="palette">
+<input aria-label="Switch to light mode" class="md-option" data-md-color-accent="indigo" data-md-color-media="(prefers-color-scheme)" data-md-color-primary="indigo" data-md-color-scheme="default" id="__palette_0" name="__palette" type="radio"/>
+<label class="md-header__button md-icon" for="__palette_1" hidden="" title="Switch to light mode">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12zm-9.15 3.96h2.3L12 9z"></path></svg>
+</label>
+<input aria-label="Switch to dark mode" class="md-option" data-md-color-accent="indigo" data-md-color-media="(prefers-color-scheme: light)" data-md-color-primary="indigo" data-md-color-scheme="default" id="__palette_1" name="__palette" type="radio"/>
+<label class="md-header__button md-icon" for="__palette_2" hidden="" title="Switch to dark mode">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+</label>
+<input aria-label="Switch to system preference" class="md-option" data-md-color-accent="indigo" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-primary="indigo" data-md-color-scheme="slate" id="__palette_2" name="__palette" type="radio"/>
+<label class="md-header__button md-icon" for="__palette_0" hidden="" title="Switch to system preference">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+</label>
+</form>
+<script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+<label class="md-header__button md-icon" for="__search">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+</label>
+<div class="md-search" data-md-component="search" role="dialog">
+<label class="md-search__overlay" for="__search"></label>
+<div class="md-search__inner" role="search">
+<form class="md-search__form" name="search">
+<input aria-label="搜索" autocapitalize="off" autocomplete="off" autocorrect="off" class="md-search__input" data-md-component="search-query" name="query" placeholder="搜索" required="" spellcheck="false" type="text"/>
+<label class="md-search__icon md-icon" for="__search">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+</label>
+<nav aria-label="查找" class="md-search__options">
+<button aria-label="清空当前内容" class="md-search__icon md-icon" tabindex="-1" title="清空当前内容" type="reset">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+</button>
+</nav>
+</form>
+<div class="md-search__output">
+<div class="md-search__scrollwrap" data-md-scrollfix="" tabindex="0">
+<div class="md-search-result" data-md-component="search-result">
+<div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+<ol class="md-search-result__list" role="presentation"></ol>
+</div>
+</div>
+</div>
+</div>
+</div>
+</nav>
+</header>
+<div class="md-container" data-md-component="container">
+<nav aria-label="标签" class="md-tabs" data-md-component="tabs">
+<div class="md-grid">
+<ul class="md-tabs__list">
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../../astronomy/">
+          
+  
+  
+    
+  
+  天文摄影理论和实践
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../../campus-sources/">
+          
+  
+  
+    
+  
+  校内课程知识
+
+        </a>
+</li>
+<li class="md-tabs__item md-tabs__item--active">
+<a class="md-tabs__link" href="../../">
+          
+  
+  
+    
+  
+  深度神经网络
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../../misc/">
+          
+  
+  
+    
+  
+  配置和杂谈笔记
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../../algorithm/">
+          
+  
+  
+    
+  
+  传统算法与性能
+
+        </a>
+</li>
+</ul>
+</div>
+</nav>
+<main class="md-main" data-md-component="main">
+<div class="md-main__inner md-grid">
+<div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="导航栏" class="md-nav md-nav--primary md-nav--lifted" data-md-level="0">
+<label class="md-nav__title" for="__drawer">
+<a aria-label="Dicaeopolis' Wiki" class="md-nav__button md-logo" data-md-component="logo" href="../../.." title="Dicaeopolis' Wiki">
+<img alt="logo" src="../../../favicon.png"/>
+</a>
+    Dicaeopolis' Wiki
+  </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_1" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../../astronomy/">
+<span class="md-ellipsis">
+    
+  
+    天文摄影理论和实践
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_1_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_1">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    天文摄影理论和实践
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../astronomy/gallery/">
+<span class="md-ellipsis">
+    
+  
+    深空影集
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../astronomy/polar/">
+<span class="md-ellipsis">
+    
+  
+    看不见北极星怎么办
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../astronomy/%E6%96%B9%E4%BD%8D%E8%B0%83%E8%8A%82/">
+<span class="md-ellipsis">
+    
+  
+    方位调节
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../astronomy/%E7%BA%AC%E5%BA%A6%E8%B0%83%E8%8A%82/">
+<span class="md-ellipsis">
+    
+  
+    纬度调节
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_2" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../../campus-sources/">
+<span class="md-ellipsis">
+    
+  
+    校内课程知识
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_2_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_2">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    校内课程知识
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/SDC-exams/">
+<span class="md-ellipsis">
+    
+  
+    《计算机组成与设计》部分历年题目题解
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/Discrete_exams/">
+<span class="md-ellipsis">
+    
+  
+    《离散数学》部分期末题目题解
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/Discrete_notes/">
+<span class="md-ellipsis">
+    
+  
+    离散期末复习提纲
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/Descrete_assignments/">
+<span class="md-ellipsis">
+    
+  
+    《离散数学》课程作业与笔记归档
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/Prob_Stats_assignments/">
+<span class="md-ellipsis">
+    
+  
+    《概率论与数理统计》课程作业与笔记归档
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/SDC_assignments/">
+<span class="md-ellipsis">
+    
+  
+    《计算机组成原理》理论课程作业与笔记归档
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/PU_Bii_assignments/">
+<span class="md-ellipsis">
+    
+  
+    《大学物理B下》课程作业与笔记归档
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/binmul/">
+<span class="md-ellipsis">
+<i class="fas fa-calculator"></i> 二进制乘法可视化工具
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/textbook/">
+<span class="md-ellipsis">
+    
+  
+    本科教科书电子资源
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/ds-keynote/">
+<span class="md-ellipsis">
+    
+  
+    《数据结构》划重点笔记
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/ds-write-up/">
+<span class="md-ellipsis">
+    
+  
+    《数据结构》期末复习题题解
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/autosignin/">
+<span class="md-ellipsis">
+    
+  
+    自动签到脚本
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+<input checked="" class="md-nav__toggle md-toggle" id="__nav_3" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../">
+<span class="md-ellipsis">
+    
+  
+    深度神经网络
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="true" aria-labelledby="__nav_3_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_3">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    深度神经网络
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../match/">
+<span class="md-ellipsis">
+    
+  
+    如何做四六级考试的段落匹配题
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../BP/">
+<span class="md-ellipsis">
+    
+  
+    前馈神经网络的反向传播
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../RL/">
+<span class="md-ellipsis">
+    
+  
+    RL学习笔记 - 上篇
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../SVM_SMO/">
+<span class="md-ellipsis">
+    
+  
+    SMO 算法的推导
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_3_6" type="checkbox"/>
+<label class="md-nav__link" for="__nav_3_6" id="__nav_3_6_label" tabindex="0">
+<span class="md-ellipsis">
+    
+  
+    Wp
+  
+
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_3_6_label" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="__nav_3_6">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    Wp
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../WP/aiwp/">
+<span class="md-ellipsis">
+    
+  
+    MISC-AI 方向 WriteUp
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_3_7" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../model-attack/">
+<span class="md-ellipsis">
+    
+  
+    深度学习模型攻击理论与复现归档
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_3_7" id="__nav_3_7_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_3_7_label" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="__nav_3_7">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    深度学习模型攻击理论与复现归档
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../model-attack/hsja/">
+<span class="md-ellipsis">
+    
+  
+    HSJA 攻击
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../model-attack/BadNets/">
+<span class="md-ellipsis">
+    
+  
+    BadNets
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../model-attack/CandW/">
+<span class="md-ellipsis">
+    
+  
+    C&amp;W 攻击
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../model-attack/pgd/">
+<span class="md-ellipsis">
+    
+  
+    PGD 攻击
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../model-attack/fgsm/">
+<span class="md-ellipsis">
+    
+  
+    FGSM 攻击
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--active md-nav__item--nested">
+<input checked="" class="md-nav__toggle md-toggle" id="__nav_3_8" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../">
+<span class="md-ellipsis">
+    
+  
+    深度学习相关模型理论与复现归档
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_3_8" id="__nav_3_8_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="true" aria-labelledby="__nav_3_8_label" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="__nav_3_8">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    深度学习相关模型理论与复现归档
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" id="__toc" type="checkbox"/>
+<label class="md-nav__link md-nav__link--active" for="__toc">
+<span class="md-ellipsis">
+    
+  
+    扩散模型理论篇: 从多阶段变分自编码器到概率流常微分方程采样器系列
+  
+
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<a class="md-nav__link md-nav__link--active" href="./">
+<span class="md-ellipsis">
+    
+  
+    扩散模型理论篇: 从多阶段变分自编码器到概率流常微分方程采样器系列
+  
+
+    
+  </span>
+</a>
+<nav aria-label="目录" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#train-vaes-revenge">
+<span class="md-ellipsis">
+      
+        Train: VAE's revenge
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#from-the-perspective-of-sde">
+<span class="md-ellipsis">
+      
+        From the perspective of SDE
+      
+    </span>
+</a>
+<nav aria-label="From the perspective of SDE" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#ddpm">
+<span class="md-ellipsis">
+      
+        从 DDPM 到得分匹配
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_2">
+<span class="md-ellipsis">
+      
+        关联上随机微分方程
+      
+    </span>
+</a>
+<nav aria-label="关联上随机微分方程" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_3">
+<span class="md-ellipsis">
+      
+        前向过程
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_4">
+<span class="md-ellipsis">
+      
+        变量替换
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_5">
+<span class="md-ellipsis">
+      
+        反向过程
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#sde-ode">
+<span class="md-ellipsis">
+      
+        将 SDE 变成 ODE
+      
+    </span>
+</a>
+<nav aria-label="将 SDE 变成 ODE" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#fokker-planck">
+<span class="md-ellipsis">
+      
+        前向过程的 Fokker-Planck 方程
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_6">
+<span class="md-ellipsis">
+      
+        时间反演
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#inference-samplers">
+<span class="md-ellipsis">
+      
+        Inference: Samplers
+      
+    </span>
+</a>
+<nav aria-label="Inference: Samplers" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#ddpm_1">
+<span class="md-ellipsis">
+      
+        DDPM
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#euler-ddim-dpm-solver">
+<span class="md-ellipsis">
+      
+        Euler, DDIM, DPM Solver
+      
+    </span>
+</a>
+<nav aria-label="Euler, DDIM, DPM Solver" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#euler">
+<span class="md-ellipsis">
+      
+        简单 Euler 法
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#ddim">
+<span class="md-ellipsis">
+      
+        DDIM
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#dpm-solvers">
+<span class="md-ellipsis">
+      
+        DPM Solvers
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#appendices">
+<span class="md-ellipsis">
+      
+        Appendices
+      
+    </span>
+</a>
+<nav aria-label="Appendices" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#i">
+<span class="md-ellipsis">
+      
+        I. 布朗运动的二次变分
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../S-and-D-models-replication/">
+<span class="md-ellipsis">
+    
+  
+    图像语义分割和目标检测相关模型复现手记
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../Image-models-replication/">
+<span class="md-ellipsis">
+    
+  
+    图像分类相关模型复现手记
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../DC-GAN-%E8%80%81%E5%A9%86%E7%94%9F%E6%88%90%E5%99%A8/">
+<span class="md-ellipsis">
+    
+  
+    DC-GAN 老婆生成器
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_3_9" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../optimizer/">
+<span class="md-ellipsis">
+    
+  
+    优化器
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_3_9" id="__nav_3_9_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_3_9_label" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="__nav_3_9">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    优化器
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../optimizer/misc/">
+<span class="md-ellipsis">
+    
+  
+    后续的写作计划
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../optimizer/SignGD/">
+<span class="md-ellipsis">
+    
+  
+    符号梯度下降
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../optimizer/Adaptive/">
+<span class="md-ellipsis">
+    
+  
+    自适应学习率改进策略
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../optimizer/SGD/">
+<span class="md-ellipsis">
+    
+  
+    SGD 系列算法
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_4" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../../misc/">
+<span class="md-ellipsis">
+    
+  
+    配置和杂谈笔记
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_4_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_4">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    配置和杂谈笔记
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../misc/test/">
+<span class="md-ellipsis">
+    
+  
+    功能测试页面
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_5" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../../algorithm/">
+<span class="md-ellipsis">
+    
+  
+    传统算法与性能
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_5_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_5">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    传统算法与性能
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../algorithm/benchmark-on-stl/">
+<span class="md-ellipsis">
+    
+  
+    STL的一些性能测试
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../algorithm/stl-wheels/">
+<span class="md-ellipsis">
+    
+  
+    嗯造轮子
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../algorithm/template-on-numeric-ring/">
+<span class="md-ellipsis">
+    
+  
+    整数环取模模板
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="目录" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#train-vaes-revenge">
+<span class="md-ellipsis">
+      
+        Train: VAE's revenge
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#from-the-perspective-of-sde">
+<span class="md-ellipsis">
+      
+        From the perspective of SDE
+      
+    </span>
+</a>
+<nav aria-label="From the perspective of SDE" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#ddpm">
+<span class="md-ellipsis">
+      
+        从 DDPM 到得分匹配
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_2">
+<span class="md-ellipsis">
+      
+        关联上随机微分方程
+      
+    </span>
+</a>
+<nav aria-label="关联上随机微分方程" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_3">
+<span class="md-ellipsis">
+      
+        前向过程
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_4">
+<span class="md-ellipsis">
+      
+        变量替换
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_5">
+<span class="md-ellipsis">
+      
+        反向过程
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#sde-ode">
+<span class="md-ellipsis">
+      
+        将 SDE 变成 ODE
+      
+    </span>
+</a>
+<nav aria-label="将 SDE 变成 ODE" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#fokker-planck">
+<span class="md-ellipsis">
+      
+        前向过程的 Fokker-Planck 方程
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_6">
+<span class="md-ellipsis">
+      
+        时间反演
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#inference-samplers">
+<span class="md-ellipsis">
+      
+        Inference: Samplers
+      
+    </span>
+</a>
+<nav aria-label="Inference: Samplers" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#ddpm_1">
+<span class="md-ellipsis">
+      
+        DDPM
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#euler-ddim-dpm-solver">
+<span class="md-ellipsis">
+      
+        Euler, DDIM, DPM Solver
+      
+    </span>
+</a>
+<nav aria-label="Euler, DDIM, DPM Solver" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#euler">
+<span class="md-ellipsis">
+      
+        简单 Euler 法
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#ddim">
+<span class="md-ellipsis">
+      
+        DDIM
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#dpm-solvers">
+<span class="md-ellipsis">
+      
+        DPM Solvers
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#appendices">
+<span class="md-ellipsis">
+      
+        Appendices
+      
+    </span>
+</a>
+<nav aria-label="Appendices" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#i">
+<span class="md-ellipsis">
+      
+        I. 布朗运动的二次变分
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-content" data-md-component="content">
+<article class="md-content__inner md-typeset">
+<h1 id="_1">扩散模型理论篇: 从多阶段变分自编码器到概率流常微分方程采样器系列<a class="headerlink" href="#_1" title="Permanent link">¶</a></h1>
+<div class="admonition info">
+<p class="admonition-title">📖 阅读信息</p>
+<p>阅读时间约 <strong>45</strong> 分钟　|　约 <strong>4041</strong> 字　|　约 <strong>259</strong> 个公式　|　没有代码，请放心食用</p>
+</div>
+<p>观前提示：本文 <span class="arithmatex">\(\alpha\)</span> 的定义和原论文差了一个平方的阶，以及 <span class="arithmatex">\(q\)</span> 和 <span class="arithmatex">\(p\)</span> 的定义和原论文相反。</p>
+<h2 id="train-vaes-revenge">Train: VAE's revenge<a class="headerlink" href="#train-vaes-revenge" title="Permanent link">¶</a></h2>
+<p>让我们回顾一下 VAE 的建模过程：</p>
+<p>为了拟合目标分布 <span class="arithmatex">\(p(x)\)</span>，我们引入一个隐变量 <span class="arithmatex">\(z\)</span>，这样对其的建模就变成了 <span class="arithmatex">\(p(x,z)=p(x|z)p(z)\)</span>，而反过来，我们也需要对原变量编码进隐变量中，也就是建模 <span class="arithmatex">\(q(x,z)=q(z|x)q(x)\)</span>。然后我们求这两个联合分布的 KL 散度，也就是 <span class="arithmatex">\(KL(q(x,z)||p(x,z))\)</span> 来衡量拟合分布和原分布的相似性。然后我们引入强先验的正态性假设，把这个 KL 散度拆出常数得到 <span class="arithmatex">\(ELBO\)</span>，再拆成 MSE 和 KLD 两项。</p>
+<p>在对 VAE 的讨论中，我们也详细介绍了由于其强制引入的正态性假设，导致压缩率过高，生成的图像很糊。</p>
+<p>这就引入了我们介绍 DDPM 的动机——从纯噪声的 <span class="arithmatex">\(p(z)\)</span> 一步迈到多样的真实分布 <span class="arithmatex">\(p(x)\)</span>，这一步多少迈得有点大了。但是如果我们使用从 <span class="arithmatex">\(x_0, x_1, \cdots, x_T\)</span> 的多步解码来代替 VAE 的单步解码呢？</p>
+<p>也就是，引入联合分布：<span class="arithmatex">\(p(x_0, x_1, \cdots, x_T) = p(x_T | x_{T-1}) p(x_{T-1} | x_{T-2}) \cdots p(x_1 | x_0) p(x_0)\)</span> 为我们的“编码器”，负责将 <span class="arithmatex">\(x_0\)</span> 逐步映射到纯噪声分布 <span class="arithmatex">\(x_T\sim\mathcal N(0,I)\)</span>，然后反过来是“解码器” <span class="arithmatex">\(q(x_0, \cdots, x_T) = q(x_0 | x_1) q(x_1 | x_2) \cdots q(x_{T-1} | x_T) q(x_T)\)</span> 负责将噪声逐步还原到原图像。</p>
+<p>下面，让我们开始进行变分推断吧。首先是 KL 散度：</p>
+<div class="arithmatex">\[
+\begin{align*}
+    KL(p \Vert q) &amp;= \int p \log \frac{p}{q} \mathrm dx_T \cdots \mathrm dx_0\\&amp;= \int p(x_T | x_{T-1}) \cdots p(x_1 | x_0) p(x_0) \log \frac{p(x_T | x_{T-1}) \cdots p(x_1 | x_0) p(x_0)}{q(x_0 | x_1) \cdots q(x_{T-1} | x_T) q(x_T)} \mathrm dx_T \cdots \mathrm dx_0
+\end{align*}
+\]</div>
+<p>现在我们仍然需要对“编码过程” <span class="arithmatex">\(p\)</span> 引入归纳偏置。由于我们是将图像转化为纯噪声，所以我们可以把每一步 <span class="arithmatex">\(p\)</span> 看作是一个<strong>逐步加噪</strong>的过程：</p>
+<div class="arithmatex">\[
+x_i=\alpha_i x_{i-1}+\beta_i\varepsilon_i,\quad \varepsilon_i\sim\mathcal{N}(0,I)
+\]</div>
+<p>这里的 <span class="arithmatex">\(\alpha_i\)</span> 和 <span class="arithmatex">\(\beta_i\)</span> 是事前给定的参数（其实 <span class="arithmatex">\(\dfrac{\alpha_i}{\beta_i}\)</span> 可以理解成信噪比），需要满足 <span class="arithmatex">\(\alpha_i^2+\beta_i^2=1\)</span>。为什么要满足这个条件呢？让我们考虑把 <span class="arithmatex">\(x_i\)</span> 一直展开到 <span class="arithmatex">\(x_0\)</span>：</p>
+<div class="arithmatex">\[
+\begin{align*}
+    x_i&amp;=\alpha_i x_{i-1}+\beta_i\varepsilon_i\\
+    &amp;=\alpha_i (\alpha_{i-1} x_{i-2}+\beta_{i-1}\varepsilon_{i-1})+\beta_i\varepsilon_i\\
+    &amp;=(\alpha_i\alpha_{i-1}\cdots\alpha_1)x_0+\beta_i\varepsilon_i+\alpha_i\beta_{i-1}\varepsilon_{i-1}+\cdots+(\alpha_i\alpha_{i-1}\cdots\alpha_2)\beta_1\varepsilon_1
+\end{align*}
+\]</div>
+<p>由于诸 <span class="arithmatex">\(\varepsilon\)</span> 是独立的正态分布，可以叠加：</p>
+<div class="arithmatex">\[
+\beta_i\varepsilon_i+\alpha_i\beta_{i-1}\varepsilon_{i-1}+\cdots+(\alpha_i\alpha_{i-1}\cdots\alpha_2)\beta_1\varepsilon_1=\hat\beta_i\hat\varepsilon_i,\quad\hat\varepsilon_i\sim\mathcal{N}(0,I)
+\]</div>
+<p>如果我们取 <span class="arithmatex">\(\hat\alpha_i^2=(\alpha_i\alpha_{i-1}\cdots\alpha_1)^2\)</span>，且由正态分布方差的叠加得到 <span class="arithmatex">\(\hat\beta_i^2=\beta_i^2+\alpha_i^2\beta_{i-1}^2+\cdots+(\alpha_i\alpha_{i-1}\cdots\alpha_2)^2\beta_1^2\)</span>，然后把它们加起来：</p>
+<div class="arithmatex">\[
+\begin{align*}
+    \hat\alpha_i^2+\hat\beta_i^2&amp;=\beta_i^2+\alpha_i^2\beta_{i-1}^2+\cdots+(\alpha_i\alpha_{i-1}\cdots\alpha_2)^2\beta_1^2+(\alpha_i\alpha_{i-1}\cdots\alpha_1)^2\hat\beta_i^2\\
+    &amp;=\beta_i^2+\alpha_i^2\beta_{i-1}^2+\cdots+(\alpha_i\alpha_{i-1}\cdots\alpha_2)^2(\beta_1^2+\alpha_1^2)
+\end{align*}
+\]</div>
+<p>这样我们就发现，如果满足 <span class="arithmatex">\(\alpha_i^2+\beta_i^2=1\)</span>，那么就有点像高中学过的裂项相消“点鞭炮”，从后面一直算到前面，最终推出 <span class="arithmatex">\(\hat\alpha_i^2+\hat\beta_i^2=1\)</span>。</p>
+<p>这有什么用呢？刚刚的推导中，我们其实得到了一个非常有用的式子：</p>
+<div class="arithmatex">\[
+x_i=\hat\alpha_i x_0+\hat\beta_i\hat\varepsilon_i,\quad\hat\varepsilon_i\sim\mathcal{N}(0,I),\ \hat\alpha_i^2+\hat\beta_i^2=1
+\]</div>
+<p>这就意味着，为了获取加噪的中间结果，我们可以一步从 <span class="arithmatex">\(x_0\)</span> 获得。</p>
+<p>而且这个式子有非常强的几何意义：</p>
+<p><img alt="alt text" src="../image-38.png"/></p>
+<p>这个图对我们理解 DDPM 以及后面的很多模型都有很大的帮助。虽然这个图不是特别严谨，把噪声的方差干掉了。</p>
+<p>至于为什么非要拉一个圆（超球面）而不是直线或者其他东西？当然可以！如果拉直线，恭喜你发明了 Flow Matching 里面的 Rectified Flow……并且最后体现过来就是把损失函数里面的 <span class="arithmatex">\(\alpha\)</span> 和 <span class="arithmatex">\(\beta\)</span> 这些做个替换，相当于（某种意义上）线性化了 Noise Schedule。（或者说改变了每一个部分的 SNR）所以我其实很讨厌这种非要把东西扯上物理学弄出很 fancy 的理论，简简单单才是真。</p>
+<p>现在让我们回过头来，看看单步加噪过程 <span class="arithmatex">\(x_i=\alpha_i x_{i-1}+\beta_i\varepsilon_i\)</span>，我们其实可以把它看作是 <span class="arithmatex">\(\varepsilon_i\)</span> 这个<strong>正态分布的重参数化</strong>！</p>
+<p>也就是，我们可以把加噪过程的递推式写成条件分布的形式：<span class="arithmatex">\(p(x_i | x_{i-1}) = \mathcal{N}(x_i; \alpha_t x_{i-1}, \beta_i^2 I)，\alpha_i^2 + \beta_i^2 = 1\)</span></p>
+<p>基于此，我们初步来整理一下 KL 散度的式子：
+$$\int p \log \frac{p}{q} \mathrm dx_T \cdots \mathrm dx_0 = \int p \log p \mathrm dx_T \cdots \mathrm dx_0 - \int p \log q \mathrm dx_T \cdots \mathrm dx_0
+$$</p>
+<p>注意到对 <span class="arithmatex">\(p\)</span> 而言，所有参数和分布都是定死的，没有可学习的参数，那么上式的第一部分就是一个常数，可以丢掉。</p>
+<p>下面我们着重算第二部分：</p>
+<div class="arithmatex">\[
+\begin{align*}
+    ELBO &amp;=- \int \left[ p(x_T | x_{T-1}) \cdots p(x_1 | x_0) p(x_0) \right] \left( \sum_{i=1}^T \log q(x_{i-1} | x_i) + \log q(x_T) \right) \mathrm dx_T \cdots \mathrm dx_0\\
+    &amp;= - \sum_{i=1}^T \int p(x_T | x_{T-1}) \cdots p(x_1 | x_0) p(x_0) \log q(x_{i-1} | x_i) \mathrm dx_T \cdots \mathrm dx_0
+\end{align*}
+\]</div>
+<p>这里把 <span class="arithmatex">\(\log q(x_T)\)</span> 丢掉，是因为 <span class="arithmatex">\(q(x_T)\)</span> 是加噪后的图像，也没有可学习的参数。</p>
+<p>对 <span class="arithmatex">\(x_{i+1} \cdots x_T\)</span> 而言，这部分积分：</p>
+<div class="arithmatex">\[
+\int p(x_T | x_{T-1}) \cdots p(x_{i+1} | x_i)\mathrm dx_T \cdots \mathrm dx_0
+\]</div>
+<p>因为这一块和真正待学习的 <span class="arithmatex">\(x_i, x_{i-1}\)</span> 无关，可以先积出来一个常数，然后就可以丢掉了。</p>
+<p>而对 <span class="arithmatex">\(x_i \cdots x_0\)</span> 而言，我们有</p>
+<div class="arithmatex">\[
+p(x_i | x_{i-1}) \cdots p(x_1 | x_0) p(x_0) = p(x_i | x_{i-1}) p(x_{i-1} | x_0) p(x_0)
+\]</div>
+<p>也就是刚刚提到的多步并一步的加噪。现在改写得到的 ELBO 如下：</p>
+<div class="arithmatex">\[
+ELBO= - \sum_{i=1}^T \int p(x_i | x_{i-1}) p(x_{i-1} | x_0) p(x_0) \log q(x_{i-1} | x_i) \mathrm dx_T \cdots \mathrm dx_0
+\]</div>
+<p>下面我们要对 <span class="arithmatex">\(q\)</span> 进行建模了，我们还是借鉴从 VAE 里面学到的观点，它虽然作为一个在 <span class="arithmatex">\(x_i\)</span> 上“去噪”的过程，但仍然可以将其建模成一个条件正态分布：</p>
+<div class="arithmatex">\[
+q(x_{i-1} | x_i) = \mathcal{N}(x_{i-1}; x_i, \sigma_t^2)
+\]</div>
+<p>简单展开一下然后取个对数：</p>
+<div class="arithmatex">\[
+-\log q(x_{i-1} | x_i) \propto \frac{1}{2\sigma_t^2} \| x_{i-1} - \mu(x_i) \|^2
+\]</div>
+<p>下面，我们对均值 <span class="arithmatex">\(\mu(x_i)\)</span> 进行讨论。</p>
+<p>由于在生成时，<span class="arithmatex">\(x_i = \alpha_i x_{i-1} + \beta_i \varepsilon_i\)</span>，也就是 <span class="arithmatex">\(x_{i-1} = \frac{1}{\alpha_i}(x_i - \beta_i \varepsilon_i)\)</span>。我们希望去噪之后，尽量贴合原分布 <span class="arithmatex">\(x_{i-1}\)</span>，也就是取</p>
+<div class="arithmatex">\[
+\mu(x_i) = \frac{1}{\alpha_i} \left[ x_i - \beta_i \varepsilon_\theta(x_i, i) \right]
+\]</div>
+<p>这里的 <span class="arithmatex">\(\varepsilon_\theta(x_i, i)\)</span> 就是可学习的去噪网络。由此可得：</p>
+<div class="arithmatex">\[
+\begin{align*}
+    \| x_{i-1} - \mu(x_i) \|^2 &amp;= \| x_{i-1} - \frac{1}{\alpha_i} \left[ \alpha_i x_{i-1} + \beta_i \varepsilon_i - \beta_i \varepsilon_\theta(x_i, i) \right] \|^2\\
+    &amp;= \frac{\beta_i^2}{\alpha_i^2} \| \varepsilon_\theta(x_i, i) - \varepsilon_i \|^2
+\end{align*}
+\]</div>
+<p>这个损失函数的意思是，我们输入每一步的带噪图片 <span class="arithmatex">\(x_i\)</span> 以及时间参数 <span class="arithmatex">\(i\)</span>，用来预测噪声。</p>
+<p>当然，我们也可以让损失不依赖于 <span class="arithmatex">\(x_i\)</span> 而是像之前一样直接从 <span class="arithmatex">\(x_0\)</span> 获取，对其展开一下：</p>
+<div class="arithmatex">\[
+\begin{align*}
+    x_i &amp;= \alpha_i x_{i-1} + \beta_i \varepsilon_i = \alpha_i \left( \hat{\alpha}_{i-1} x_0 + \hat{\beta}_{i-1} \hat{\varepsilon}_{i-1} \right) + \beta_i \varepsilon_i\\
+    &amp;= \hat{\alpha}_i x_0 + \alpha_i \hat{\beta}_{i-1} \hat{\varepsilon}_{i-1} + \beta_i \varepsilon_i
+\end{align*}
+\]</div>
+<p>这样，我们的损失就只依赖于固定的原分布 <span class="arithmatex">\(p(x_0)\)</span> 以及两个随机变量，代回来得到损失函数：</p>
+<div class="arithmatex">\[
+\sum_{i=1}^T \frac{\beta_i^2}{\alpha_i^2 \sigma_i^2} \mathbb{E}_{x_0 \sim p(x_0), \hat{\varepsilon}_{i-1}, \varepsilon_i \sim \mathcal{N}(0, I)} \left[ \| \varepsilon_i - \varepsilon_\theta\left( \hat{\alpha}_i x_0 + \alpha_i \hat{\beta}_{i-1} \hat{\varepsilon}_{i-1} + \beta_i \varepsilon_i, i \right) \|^2 \right]\]</div>
+<p>对 <span class="arithmatex">\(\alpha_i \hat{\beta}_{i-1} \hat{\varepsilon}_{i-1} + \beta_i \varepsilon_i\)</span> 而言,其为两个正态分布的叠加，就可写作一个正态分布 <span class="arithmatex">\(\mathcal{N}\left( 0, \sqrt{\alpha_i^2 \hat{\beta}_{i-1}^2 + \beta_i^2} \right)\)</span>，其中 <span class="arithmatex">\(\alpha_i^2 (1 - \hat{\alpha}_{i-1}^2) + \beta_i^2 = 1 - \hat{\alpha}_i^2 = \hat{\beta}_i^2\)</span>，因此，我们可以写成：</p>
+<div class="arithmatex">\[
+\alpha_i \hat{\beta}_{i-1} \hat{\varepsilon}_{i-1} + \beta_i \varepsilon_i=\hat{\beta}_i^2\varepsilon,\quad\varepsilon\sim\mathcal{N}(0,I)
+\]</div>
+<p>为了消掉 <span class="arithmatex">\(\hat{\varepsilon}_{i-1}, \varepsilon_i\)</span> 中的一个，这里需要配一个 <span class="arithmatex">\(w\)</span>，主要用2条性质：
+<span class="arithmatex">\(\begin{cases} \hat{\beta}_i w, \ w \sim \mathcal{N}(0, I) \\ \mathbb{E}[\varepsilon w^\top] = 0 \end{cases}\)</span></p>
+<p>而 <span class="arithmatex">\(w\)</span> 也需要能用 <span class="arithmatex">\(\hat{\varepsilon}_{i-1}, \varepsilon_i\)</span> 表达。考虑到 <span class="arithmatex">\(\hat{\varepsilon}_{i-1}和\varepsilon_i\)</span> 的独立性，交换 <span class="arithmatex">\(\varepsilon\)</span> 中的系数，取 <span class="arithmatex">\(\hat{\beta}_i w = \beta_i \hat{\varepsilon}_{i-1} - \alpha_i \hat{\beta}_{i-1} \varepsilon_i\)</span> 即可满足以上要求。</p>
+<p>再从 <span class="arithmatex">\(\varepsilon, w\)</span> 中解出 <span class="arithmatex">\(\varepsilon_i = \frac{\beta_i \varepsilon - \alpha_i \hat{\beta}_{i-1} w}{\hat{\beta}_i}\)</span>（利用 <span class="arithmatex">\(\beta^2_t+\alpha^2_t\hat\beta^2_{t−1} = \hat\beta_i^2\)</span> ）</p>
+<p>这样期望项变成了：</p>
+<div class="arithmatex">\[
+\mathbb{E}_{w \sim \mathcal{N}(0, I), \varepsilon \sim \mathcal{N}(0, I)} \left[\| \frac{\beta_i \varepsilon - \alpha_i \hat{\beta}_{i-1} w}{\hat{\beta}_i} - \varepsilon_\theta\left( \hat{\alpha}_i x_0 + \beta_i \varepsilon, i \right)\|^2 \right]
+\]</div>
+<p>由于 <span class="arithmatex">\(w\)</span> 和 <span class="arithmatex">\(\varepsilon\)</span> 独立，先对 <span class="arithmatex">\(w\)</span> 求期望得一常数，去掉之后，就得到了原论文 DDPM 的损失：</p>
+<div class="arithmatex">\[
+\mathcal{L}_{\mathrm{DDPM}} = \sum_{i=1}^T \frac{\beta_i^4}{\hat{\beta}_i^2 \alpha_i^2 \sigma_i^2} \mathbb{E}_{\varepsilon \sim \mathcal{N}(0, I), x_0 \sim p(x_0)} \left[ \| \varepsilon - \frac{\hat{\beta}_i}{\beta_i} \varepsilon_\theta\left( \hat{\alpha}_i x_0 + \beta_i \varepsilon, i \right) \|^2 \right]
+\]</div>
+<h2 id="from-the-perspective-of-sde">From the perspective of SDE<a class="headerlink" href="#from-the-perspective-of-sde" title="Permanent link">¶</a></h2>
+<p>Yang Song 的文章 arXiv: 2011.13456 将扩散模型和得分匹配相联系，并且引入了随机微分方程作为它们共同的理论基础。这就大大提升了 DDPM 的理论高度，使之不局限于“加噪——去噪”的原初思路。</p>
+<p>引入 SDE 的意义不仅在于找到一个数学工具来研究扩散模型，更在于其可以直接转化为概率流 ODE 进行求解，这就可以将 ODE 的数值解法用来加速扩散模型的收敛。这就催生了诸如 Euler, DPM Solver 等一众采样器。</p>
+<p>让我们开始介绍 Song 的论文第一部分的工作：联系 DDPM 和得分匹配。这一节的目的，是关联上得分匹配算法的损失函数</p>
+<div class="arithmatex">\[
+\| s_\theta(x_i, i) - \nabla \log p(x_i) \|^2
+\]</div>
+<p>其中 <span class="arithmatex">\(\nabla \log p(x_i)\)</span> 被称作得分函数。感性理解，我们是在拟合一个梯度场，让这个梯度场去指引我们的生成。</p>
+<h3 id="ddpm">从 DDPM 到得分匹配<a class="headerlink" href="#ddpm" title="Permanent link">¶</a></h3>
+<p>为了推出得分匹配形式的损失，我们先引入 Tweddie's Formula。</p>
+<p>回顾前向过程 <span class="arithmatex">\(p(x_i | x_{i-1}) = \mathcal{N}(x_i; \hat{\alpha}_i x_0, \hat{\beta}_i^2 I)\)</span></p>
+<p>我们需要往回估计反向过程。考虑正态分布 <span class="arithmatex">\(p(x|\theta) = \mathcal{N}(\theta, \sigma^2 I)\)</span></p>
+<p>其边缘分布 <span class="arithmatex">\(p(x) = \int p(x|\theta) p(\theta) d\theta\)</span>，现在已知 <span class="arithmatex">\(x\)</span>，我们要求 <span class="arithmatex">\(\theta\)</span> 即：</p>
+<div class="arithmatex">\[
+\mathbb{E}[\theta | x] = \int \theta p(\theta | x) \mathrm d\theta = \int \theta \frac{p(x|\theta) p(\theta)}{p(x)} \mathrm d\theta
+\]</div>
+<p>由于 <span class="arithmatex">\(p(x)\)</span> 已知，可以提到积分号外：</p>
+<div class="arithmatex">\[
+\mathbb{E}[\theta | x]= \frac{1}{p(x)} \int \theta \cdot \frac{1}{\sigma \sqrt{2\pi}} \exp\left[ -\frac{\|x - \theta\|^2}{2\sigma^2} \right] p(\theta) \mathrm d\theta
+\]</div>
+<p>这里我们凑一个 <span class="arithmatex">\(\dfrac{\mathrm d p(x|\theta)}{\mathrm d x} = \dfrac{\theta - x}{\sigma^2} \cdot p(x|\theta)\)</span>，然后接着往下推：</p>
+<div class="arithmatex">\[
+\begin{align*}
+    \mathbb{E}[\theta | x]&amp;= \frac{\sigma^2}{p(x)} \int \frac{\theta - x}{\sigma^2} p(x|\theta) p(\theta) + \frac{x}{\sigma^2} p(x|\theta) p(\theta) \mathrm d\theta\\
+    &amp;= \frac{\sigma^2}{p(x)} \int \frac{\mathrm d p(x|\theta)}{\mathrm d x} p(\theta) \mathrm d\theta + \frac{\sigma^2}{p(x)} \int \frac{x}{\sigma^2} p(x|\theta) p(\theta) \mathrm d\theta
+\end{align*}
+\]</div>
+<p>由于 <span class="arithmatex">\(\dfrac{\mathrm d}{\mathrm d x}\)</span> 和 <span class="arithmatex">\(\theta\)</span> 无关，则</p>
+<div class="arithmatex">\[
+\int \frac{\mathrm d}{\mathrm d x} p(x|\theta) p(\theta) \mathrm d\theta = \frac{\mathrm d}{\mathrm d x} \int p(x|\theta) p(\theta) \mathrm d\theta = \frac{\mathrm d p(x)}{\mathrm d x}
+\]</div>
+<p>同理，后面一半可以提出 <span class="arithmatex">\(x\)</span>，得到</p>
+<div class="arithmatex">\[
+\frac{x}{p(x)} \int p(x|\theta) p(\theta) \mathrm d\theta = x
+\]</div>
+<p>因此：</p>
+<div class="arithmatex">\[
+\mathbb{E}[\theta | x] = x + \frac{\sigma^2}{p(x)} \frac{\mathrm d}{\mathrm d x} p(x) = x + \sigma^2 \frac{\mathrm d}{\mathrm d x} \log p(x)
+\]</div>
+<p>若 <span class="arithmatex">\(x\)</span> 为向量，则写作 <span class="arithmatex">\(x + \sigma^2 \nabla \log p(x)\)</span>，此即为 Tweedie's Formula．</p>
+<p>把这个估计代回前向过程，即 <span class="arithmatex">\({\alpha}_i x_{i-1} = x_i + {\beta}_i^2 \nabla \log p(x_i)\)</span></p>
+<p>让我们回顾一下：<span class="arithmatex">\(x_i = {\alpha}_i x_{i-1} + {\beta}_i \varepsilon_i\)</span>，代上去可得，<span class="arithmatex">\(\nabla \log p(x_i) = -\dfrac{\varepsilon_i}{{\beta}_i}\)</span>。 这里已经有点味道了：之前我们已经讨论过 DDPM 的去噪过程是去学习每一步的噪声 <span class="arithmatex">\(\varepsilon_i\)</span>，而这个得分函数恰巧也是这个形式，最多差一个系数。</p>
+<p>回顾一下之前的推导，从 <span class="arithmatex">\(\| x_{i-1} - \mu(x_i) \|^2\)</span>，我们有：</p>
+<div class="arithmatex">\[
+\begin{cases} x_{i-1} = \frac{1}{{\alpha}_i} (x_i - {\beta}_i \varepsilon_i) \\ \mu(x_i) = \frac{1}{{\alpha}_i} (x_i - {\beta}_i \varepsilon_\theta(x_i, i)) \end{cases} \implies \| x_{i-1} - \mu(x_i) \|^2 = \frac{{\beta}_i^2}{{\alpha}_i^2} \| \varepsilon_\theta(x_i, i) - \varepsilon_i \|^2
+\]</div>
+<p>由 <span class="arithmatex">\(-\varepsilon_i = {\beta}_i \nabla \log p(x_i)\)</span>，我们取 <span class="arithmatex">\(s_\theta(x_i, i) = -\dfrac{1}{{\beta}_i} \varepsilon_\theta(x_i, i)\)</span>，可得</p>
+<div class="arithmatex">\[
+\| x_{i-1} - \mu(x_i) \|^2=\dfrac{{\beta}_i^4}{{\alpha}_i^2 \sigma_i^2} \| s_\theta(x_i, i) - \nabla \log p(x_i) \|^2
+\]</div>
+<p>注意，此时它只和 <span class="arithmatex">\(x_i\)</span> 有关了。</p>
+<p>我们可以写出损失函数了：</p>
+<div class="arithmatex">\[
+\mathcal{L}_{\text{DDPM}} = \sum_{i=1}^T \dfrac{\beta_i^4}{\alpha_i^2 \sigma_i^2} \mathbb{E}_{x_i \sim p(x_i)} \left[ \| s_\theta(x_i, i) - \nabla \log p(x_i) \|^2 \right]
+\]</div>
+<p>这就是得分匹配形式的损失函数。我们需要训练一个网络 <span class="arithmatex">\(s_\theta(x_i, i)\)</span> 接受每一步的图像 <span class="arithmatex">\(x_i\)</span> 和时间 <span class="arithmatex">\(i\)</span> 去匹配这个得分函数 <span class="arithmatex">\(\nabla \log p(x_i)\)</span>。</p>
+<p>这里提一嘴，网上很多 DDPM 的得分匹配形式的推导，用的得分函数是这个条件得分函数 <span class="arithmatex">\(\nabla_{x_i}\log p(x_i|x_0)=-\dfrac{\hat\varepsilon_i}{\hat\beta_i}\)</span>。不过这样推过来就稍显复杂。只要注意到</p>
+<div class="arithmatex">\[
+p(x_i)=\int p(x_i|x_0)p(x_0)\mathrm dx_0=\mathbb{E}_{x_0\sim p(x_0)}[p(x_i|x_0)]
+\]</div>
+<p>再带入得分函数，就可以知道两者等价了。<a href="https://kexue.fm/archives/9509">此事在科学空间中已有记载</a>。</p>
+<p>事实上这个形式才更常用。因为扩散模型的一个关键 trick 就是从初始状态 <span class="arithmatex">\(x_0\)</span> 一步推到任意状态 <span class="arithmatex">\(x_i\)</span>，因此在以后的讨论中我们沿用这一得分函数。</p>
+<h3 id="_2">关联上随机微分方程<a class="headerlink" href="#_2" title="Permanent link">¶</a></h3>
+<h4 id="_3">前向过程<a class="headerlink" href="#_3" title="Permanent link">¶</a></h4>
+<p>下面我们开始介绍 Song 的论文第二部分：将加噪和去噪的过程关联上随机微分方程。</p>
+<p>为此，我们考虑把一共 <span class="arithmatex">\(T\)</span> 步的离散过程，转化为对 <span class="arithmatex">\(t\in[0,1]\)</span> 的连续过程的微元近似，因此我们先做换元，引入连续量：</p>
+<div class="arithmatex">\[
+x_i = x(t),\quad\alpha_i = \sqrt{1 - \frac{1}{T} \beta\left(t + \frac{1}{T}\right)} = \sqrt{1 - \Delta t \cdot \beta(t + \Delta t)},\quad\\
+x_{i+1} = x\left(t + \frac{1}{T}\right) = x(t + \Delta t),\quad\beta_i = \sqrt{\frac{1}{T}} \beta\left(t + \frac{1}{T}\right) = \sqrt{\Delta t \cdot \beta(t + \Delta t)}
+\]</div>
+<p>这里 <span class="arithmatex">\(T\)</span> 即总步数，<span class="arithmatex">\(\dfrac{1}{T}\)</span> 即我们要引入的时间微元 <span class="arithmatex">\(\Delta t\)</span>。</p>
+<p>我们对 <span class="arithmatex">\(\alpha_i\)</span> 作泰勒展开 <span class="arithmatex">\(\alpha_i \sim 1 - \dfrac{\beta(t + \Delta t) \cdot \Delta t}{2}\)</span>，然后替换一下，得到：</p>
+<div class="arithmatex">\[
+x(t + \Delta t) = \left[ 1 - \frac{\beta(t + \Delta t) \cdot \Delta t}{2} \right] x(t) + \sqrt{\beta(t + \Delta t)} \cdot \sqrt{\Delta t} \ \varepsilon(t)
+\]</div>
+<p>减去 <span class="arithmatex">\(x(t)\)</span> 得到：</p>
+<div class="arithmatex">\[
+\mathrm dx = -\frac{\beta(t) \cdot x(t)}{2} \mathrm dt + \sqrt{\beta(t)} \cdot \sqrt{\mathrm dt} \cdot \varepsilon(t)
+\]</div>
+<p>取 <span class="arithmatex">\(f[x(t), t] = -\dfrac{\beta(t) \cdot x(t)}{2}，g(t) = \sqrt{\beta(t)}，\mathrm dw = \varepsilon(t) \cdot \sqrt{\mathrm dt}\)</span>（其中 <span class="arithmatex">\(\mathrm dw\)</span> 为布朗运动噪声，即“扩散项”），则有：</p>
+<div class="arithmatex">\[
+\mathrm dx = f[x(t), t] \mathrm dt + g(t) \mathrm dw
+\]</div>
+<p>（为什么布朗运动的噪声和 <span class="arithmatex">\(\sqrt{\mathrm dt}\)</span> 有关呢？请参阅本文<a href="https://dicaeopolis.github.io/DNN/model-expr/DDPM/#i">附录 I</a>）</p>
+<p>这就是加噪过程满足的 SDE。在原论文中对应 VP-SDE 那一节，也就是离散近似的 SDE。</p>
+<h4 id="_4">变量替换<a class="headerlink" href="#_4" title="Permanent link">¶</a></h4>
+<p>我们对这个 SDE 做一些变换，导出其更有用的形式。</p>
+<p>从 <span class="arithmatex">\(\alpha_i \sim 1 - \dfrac{\beta(t + \Delta t) \cdot \Delta t}{2}\)</span> 也就是 <span class="arithmatex">\(\alpha_i = 1 - \dfrac{\beta(t_i)}{2}\mathrm dt\)</span></p>
+<p>让我们计算 <span class="arithmatex">\(\hat \alpha_i\)</span> 在连续意义上的对应 <span class="arithmatex">\(\hat \alpha(t)\)</span>，由于涉及到连乘，我们两边取对数：</p>
+<div class="arithmatex">\[
+\begin{align*}
+    \log \hat \alpha(t)&amp;=\sum_{k=1}^i\log \alpha_i\\
+    &amp;=\sum_{k=1}^i\log (1 - \dfrac{\beta(t_i)}{2}\mathrm dt)\\
+    &amp;\sim \sum_{k=1}^i - \dfrac{\beta(t_i)}{2}\mathrm dt\\
+    &amp;=-\frac 12\int_0^t\beta(t) \mathrm dt
+\end{align*}
+\]</div>
+<p>这里利用了 <span class="arithmatex">\(\log\)</span> 的一阶泰勒展开。对应的，我们有</p>
+<div class="arithmatex">\[
+\hat \beta^2(t)=1-\hat \alpha^2(t)=1-\exp(-\int_0^t\beta(t) \mathrm dt)
+\]</div>
+<p>以及</p>
+<div class="arithmatex">\[
+f(t)=-\dfrac{\beta(t)}{2}=\dfrac{\mathrm d \log\hat\alpha(t)}{\mathrm dt}
+\]</div>
+<p>如果我们对 <span class="arithmatex">\(\hat \beta^2(t)\)</span> 求导：</p>
+<div class="arithmatex">\[
+\dfrac{\mathrm d \hat \beta^2(t)}{\mathrm dt}=\beta(t)\left(\exp(-\int_0^t\beta(t) \mathrm dt)\right)=\beta(t)(1-\hat \beta^2(t))=\beta(t)-\beta(t)\hat \beta^2(t)
+\]</div>
+<p>也就是</p>
+<div class="arithmatex">\[
+g^2(t)=\beta(t)=\dfrac{\mathrm d \hat \beta^2(t)}{\mathrm dt}-\dfrac{2\mathrm d \log\hat\alpha(t)}{\mathrm dt}\hat \beta^2(t)
+\]</div>
+<p>在此意义下我们的 SDE 写成：</p>
+<div class="arithmatex">\[
+\mathrm dx=f(t)x(t)\mathrm dt+g(t)\mathrm dw
+\]</div>
+<p>引入这部分推导，主要是和之前 DDPM 多步并一步的目的是一样的，我们要消去比较麻烦的 <span class="arithmatex">\(\beta(t)\)</span>，转化为可以一步得到的 <span class="arithmatex">\(\hat\beta(t)\)</span> 和 <span class="arithmatex">\(\hat\alpha(t)\)</span>，同时，也是为后面 DPM Solver 的推导服务。</p>
+<h4 id="_5">反向过程<a class="headerlink" href="#_5" title="Permanent link">¶</a></h4>
+<p>那么如何获得去噪过程的反向 SDE 呢？又如何与刚才得到的得分匹配形式相联系呢？当然是利用贝叶斯公式，为此我们先将上面的 SDE 写成条件分布：</p>
+<div class="arithmatex">\[
+p(x_{t+\Delta t} | x_t) = \mathcal{N}\bigl(x_{t+\Delta t}; \ x_t + f_x(t) \mathrm dt, \ g^2(t) \mathrm dt \cdot I\bigr)
+\]</div>
+<p>现在，就可以利用贝叶斯公式了</p>
+<div class="arithmatex">\[
+\begin{align*}
+    p(x_t | x_{t+\Delta t}) &amp;= \dfrac{p(x_{t+\Delta t} | x_t) \cdot p(x_t)}{p(x_{t+\Delta t})}\\
+    &amp;= \exp\left[ \log p(x_{t+\Delta t} | x_t) + \log p(x_t) - \log p(x_{t+\Delta t}) \right]\\
+    &amp;\propto \exp\left[ -\dfrac{1}{2 g^2(t) \Delta t} \| x_{t+\Delta t} - x_t - f_x(t) \Delta t \|^2 + \log p(x_t) - \log p(x_{t+\Delta t}) \right]
+\end{align*}
+\]</div>
+<p>为了算下去，我们要对 <span class="arithmatex">\(\log p(x_{t+\Delta t})\)</span> 作展开：</p>
+<div class="arithmatex">\[
+\log p(x_{t+\Delta t}) \approx \log p(x_t) + (x_{t+\Delta t} - x_t) \cdot \nabla_x \log p(x_t) + O(\Delta t)
+\]</div>
+<p>然后作差：</p>
+<div class="arithmatex">\[
+\log p(x_t) - \log p(x_{t+\Delta t}) = -\dfrac{1}{2 g^2(t) \Delta t} \left[ (x_{t+\Delta t} - x_t) \cdot \nabla_x \log p(x_t) \cdot 2 g^2(t) \Delta t \right] + O(\Delta t)
+\]</div>
+<p>我们的目的其实是写成一个和正态分布类似的 exp 加模平方的形式。为此，这里我们可以配一个</p>
+<div class="arithmatex">\[
+\left[ g^2(t) \Delta t \cdot \nabla_x \log p(x_t) \right]^2 + 2 \left[ g^2(t) \nabla_x \log p(x_t) \Delta t \right] \times f_x(t) \Delta t
+\]</div>
+<p>因为它们都是 <span class="arithmatex">\(\Delta t\)</span> 的二阶项，最后都能消失。不过，配上之后就变成了完全平方式：</p>
+<div class="arithmatex">\[
+p(x_t | x_{t+\Delta t}) = \exp\left[ -\frac{1}{2 g^2(t) \Delta t} \left\| x_{t+\Delta t} - x_t - \left[ f_x(t) - g^2(t) \nabla_x \log p(x_t) \right] \Delta t \right\|^2 \right]
+\]</div>
+<p>写成正态分布形式：</p>
+<div class="arithmatex">\[
+p(x_t | x_{t+\Delta t})\sim \mathcal{N}\bigl( x_t; \ x_{t+\Delta t} - \left[ f_x(t) - g^2(t) \nabla_x \log p(x_{t+\Delta t}) \right] \Delta t, \ g^2(t+\Delta t) \Delta t \cdot I \bigr)
+\]</div>
+<p>求极限 <span class="arithmatex">\(\Delta t\rightarrow 0\)</span>，再由条件分布转化为 SDE，得到：</p>
+<div class="arithmatex">\[
+\mathrm dx = \left[ f[x(t), t] - g^2(t) \nabla_x \log p(x_t) \right] \mathrm dt + g(t) \mathrm dw
+\]</div>
+<p>这就是反向过程的 SDE 了。</p>
+<p>对于 <span class="arithmatex">\(f, g\)</span> 而言，它们完全确定，因此我们需要估计得分函数 <span class="arithmatex">\(\nabla_x \log p(x_t)\)</span>；或者换成离散形式的记号：<span class="arithmatex">\(\nabla \log p(x_i)\)</span>。</p>
+<p>使用一个神经网络 <span class="arithmatex">\(s_\theta(x_i, i)\)</span> 来拟合得分函数，就得到目标函数：</p>
+<div class="arithmatex">\[
+\sum_{i=1}^T \lambda_i \mathbb{E}_{x_i \sim p(x_i)} \left[ \| s_\theta(x_i, i) - \nabla \log p(x_i) \|^2 \right] = \mathcal{L}_{\mathrm{DDPM}}
+\]</div>
+<p>这里 <span class="arithmatex">\(\lambda_i\)</span> 是基于 <span class="arithmatex">\(p(x_i)\)</span> 引入“噪声尺度不一”的归一化因子。</p>
+<p>至此，DDPM、得分匹配和 SDE 的理论已然打通。我们就可以基于丰富发展的 SDE 理论，玩一些花活了。</p>
+<h3 id="sde-ode">将 SDE 变成 ODE<a class="headerlink" href="#sde-ode" title="Permanent link">¶</a></h3>
+<p>这一节介绍 Song 的论文的第三部分：概率流 ODE 的推导。</p>
+<p>也就是，将</p>
+<div class="arithmatex">\[
+\mathrm dx = \left[ f[x(t), t] - g^2(t) \nabla_x \log p(x_t) \right] \mathrm dt + g(t) \mathrm dw
+\]</div>
+<p>转化为概率流 ODE。</p>
+<p>我们<strong>肯定不能</strong>直接把 <span class="arithmatex">\(g(t) \mathrm dw\)</span> 项给丢掉，因为方差影响了 SDE 诸多解的“弥散程度”。因此我们需要考虑这一项对总体趋势的影响。或者我们也可以这样看：能不能使用什么手段，手动引入一个可控的方差也就是 <span class="arithmatex">\(\sigma(t) \mathrm dw\)</span> 来代替原来扩散项，这样就能间接实现整合。</p>
+<p>这个手段就是 Fokker-Planck 方程。</p>
+<h4 id="fokker-planck">前向过程的 Fokker-Planck 方程<a class="headerlink" href="#fokker-planck" title="Permanent link">¶</a></h4>
+<p>考虑让 <span class="arithmatex">\(y\)</span> 和 <span class="arithmatex">\(x\)</span> 一一对应，那么</p>
+<div class="arithmatex">\[
+p(x)=\int \delta(x-y)p(y)\mathrm dy=\mathbb E_{y}[\delta(x-y)]
+\]</div>
+<p>那么对于 <span class="arithmatex">\(p(x_{t+\Delta t})\)</span> 而言：</p>
+<div class="arithmatex">\[
+\begin{align*}
+    p(x_{t+\Delta t})&amp;=\mathbb E_{x_{t+\Delta t}}[\delta(x-x_{t+\Delta t})]\\
+    &amp;=\mathbb E_{x_{t+\Delta t}}[\delta(x-x_{t}-\Delta x)]\\
+    &amp;\approx\mathbb E_{x_{t+\Delta t}}[\delta(x-x_{t})-\Delta x\cdot\nabla_x\delta(x-x_{t})+\dfrac 12 \Delta x^2\cdot\nabla_x^2\delta(x-x_{t})]\\
+    &amp;=\mathbb E_{x_{t+\Delta t}}[\delta(x-x_{t})-(f(t)x_t\mathrm dt)\cdot\nabla_x\delta(x-x_{t})+\dfrac 12 g^2(t)\mathrm dt\cdot\nabla_x^2\delta(x-x_{t})]\\
+    &amp;=p(x_t)-\nabla_x [f(t)x_t p(x_t)\mathrm dt]+\dfrac 12g^2(t)\mathrm dt\nabla_x^2p(x_t)
+\end{align*}
+\]</div>
+<p>此即为 Fokker-Planck 方程：</p>
+<div class="arithmatex">\[
+\dfrac{\partial p}{\partial t}=-\nabla_x [f(t)x_t p(x_t)]+\dfrac 12g^2(t)\nabla_x^2p(x_t)
+\]</div>
+<h4 id="_6">时间反演<a class="headerlink" href="#_6" title="Permanent link">¶</a></h4>
+<p>注意到整个推导是和前向过程的 <span class="arithmatex">\(\mathrm dt\)</span> 前面的系数无关的，因此对于反向过程我们也可以带进去得到：</p>
+<div class="arithmatex">\[
+\dfrac{\partial p}{\partial t}=\nabla_x [ \left[ f[x(t), t] - g^2(t) \nabla_x \log p(x_t) \right] p(x_t)]+\dfrac 12g^2(t)\nabla_x^2p(x_t)
+\]</div>
+<p><strong>但是反向过程是时间反演的，因此我们要对第一项加负号！</strong></p>
+<p>由于二阶项前面的系数直接对应 <span class="arithmatex">\(\mathrm dw\)</span> 前面的系数，这样就给了我们操作空间，也就是引入一个 <span class="arithmatex">\(\dfrac 12\sigma^2(t)\nabla_x^2p(x_t)\)</span>：</p>
+<div class="arithmatex">\[
+\begin{align*}
+    \dfrac{\partial p}{\partial t}&amp;=\nabla_x [ \left[ f[x(t), t] - g^2(t) \nabla_x \log p(x_t) \right] p(x_t)]+\dfrac 12\nabla_x\left([g^2(t)-\sigma^2(t)]\nabla_x p(x_t)\right)+\dfrac 12\sigma^2(t)\nabla_x^2p(x_t)\\
+    &amp;=\nabla_x [ \left[ f[x(t), t] - g^2(t) \nabla_x \log p(x_t) \right] p(x_t)+\dfrac{1}{2}[g^2(t)-\sigma^2(t)]\nabla_x p(x_t)]+\dfrac 12\sigma^2(t)\nabla_x^2p(x_t)\\
+    &amp;=\nabla_x [ \left[ f[x(t), t] - \dfrac 12\left(g^2(t)+\sigma^2(t)\right) \nabla_x \log p(x_t) \right] p(x_t)]+\dfrac 12\sigma^2(t)\nabla_x^2p(x_t)
+\end{align*}
+\]</div>
+<p>那么我们根据这个 Fokker-Planck 方程，就可以写出对应的 SDE 了，但是这一次，方差由我们控制：</p>
+<div class="arithmatex">\[
+\mathrm dx = \left[ f[x(t), t] - \dfrac 12\left(g^2(t)+\sigma^2(t)\right) \nabla_x \log p(x_t) \right] \mathrm dt + \sigma(t) \mathrm dw
+\]</div>
+<p>那么我们让方差变成 <span class="arithmatex">\(0\)</span>，就可以得到对应的<strong>概率流 ODE</strong> 了：</p>
+<div class="arithmatex">\[
+\mathrm dx = \left[ f(t)x(t) - \dfrac 12g^2(t)\nabla_x \log p(x_t) \right] \mathrm dt
+\]</div>
+<p>事实上根据之前的结果，我们是在用神经网络 <span class="arithmatex">\(s_{\theta}(x_t,t)\)</span> 来拟合得分函数 <span class="arithmatex">\(\nabla_x \log p(x_t)\)</span>，也就是说，我们真正需要对付的 ODE 是这个：</p>
+<div class="arithmatex">\[
+\mathrm dx = \left[ f(t)x(t) - \dfrac 12g^2(t)s_{\theta}(x_t,t) \right] \mathrm dt
+\]</div>
+<p>这一结果为后面的诸多采样器奠定了基础。因为我们可以用各种方法来解出 <span class="arithmatex">\(x\)</span>，也就是我们期望生成的图片，而收敛更快的采样器可以花费更少的计算代价得到更精确的解，也就是更高质量的图片。而这一切甚至只需要我们修改推理的代码，完全不需要动基模。</p>
+<h2 id="inference-samplers">Inference: Samplers<a class="headerlink" href="#inference-samplers" title="Permanent link">¶</a></h2>
+<h3 id="ddpm_1">DDPM<a class="headerlink" href="#ddpm_1" title="Permanent link">¶</a></h3>
+<p>回忆一下 DDPM 的训练：</p>
+<div class="arithmatex">\[
+x_{i-1}=\mu(x_i) = \frac{1}{\alpha_i} \left[ x_i - \beta_i \varepsilon_\theta(x_i, i) \right]
+\]</div>
+<p>使用的损失：</p>
+<div class="arithmatex">\[
+\| \varepsilon - \frac{\hat{\beta}_i}{\beta_i} \varepsilon_\theta\left( \hat{\alpha}_i x_0 + \beta_i \varepsilon, i \right) \|^2=\|\varepsilon-s_\theta\|^2
+\]</div>
+<p>但实际上我们训练的是预测噪声，因此得到的是 <span class="arithmatex">\(s_\theta\)</span>，所以要得到 <span class="arithmatex">\(x_{i-1}\)</span> 就需要：</p>
+<div class="arithmatex">\[
+x_{i-1}= \frac{1}{\alpha_i} \left[ x_i - \dfrac{\beta_i^2}{\hat\beta_i} s_\theta(x_i, i) \right]+\sigma_i z,\quad z\sim\mathcal{N}(0,I)
+\]</div>
+<p>引入的噪声项是基于和反向过程的完全对应。这就得到了 DDPM 的采样公式。从 <span class="arithmatex">\(\mathcal N(0,1)\)</span> 中采样一个 <span class="arithmatex">\(x_T\)</span>，然后逐步往前推，就能生成图片了。</p>
+<p>让我们看看一个在 Anime Face Dataset 训练的 DDPM 采样 100 步的动图吧：</p>
+<div style="text-align: center; margin: 20px 0;">
+<img src="../anim_ddpm_s100.gif">
+</img></div>
+<h3 id="euler-ddim-dpm-solver">Euler, DDIM, DPM Solver<a class="headerlink" href="#euler-ddim-dpm-solver" title="Permanent link">¶</a></h3>
+<p>本节主要介绍 arXiv:2206.00927 的工作，也就是 DPM Solver。</p>
+<p>在此之前，让我们收集一下前面的理论成果。</p>
+<p>首先，经过漫长的理论推导，我们得到了这个概率流 ODE：</p>
+<div class="arithmatex">\[
+\mathrm dx = \left[ f(t)x(t) - \dfrac 12g^2(t)s_{\theta}(x_t,t) \right] \mathrm dt
+\]</div>
+<p>其中出现了很多函数，还有一个神经网络。在“变量替换”这一小节，我们得到：</p>
+<div class="arithmatex">\[
+f(t)=-\dfrac{\beta(t)}{2}=\dfrac{\mathrm d \log\hat\alpha(t)}{\mathrm dt}
+\]</div>
+<p>以及</p>
+<div class="arithmatex">\[
+g^2(t)=\beta(t)=\dfrac{\mathrm d \hat \beta^2(t)}{\mathrm dt}-\dfrac{2\mathrm d \log\hat\alpha(t)}{\mathrm dt}\hat \beta^2(t)
+\]</div>
+<p>其中的参数函数 <span class="arithmatex">\(\hat\alpha\)</span> 和 <span class="arithmatex">\(\hat\beta\)</span> 是固定的，可以通过我们的参数调度 <span class="arithmatex">\(\alpha_i\)</span> 和 <span class="arithmatex">\(\beta_i\)</span> 轻松计算出来。</p>
+<p>其中的神经网络 <span class="arithmatex">\(s_\theta(x_t,t)\)</span> 是通过得分匹配得到的，也就是利用 <span class="arithmatex">\(\mathcal{L}_\mathrm{DDPM}\)</span> 来预测噪声也就是近似得分函数：</p>
+<div class="arithmatex">\[
+s_\theta(x_t,t)\sim\nabla_{x_t}\log p(x_t|x_0)=-\dfrac{\hat\varepsilon_t}{\hat\beta_t}
+\]</div>
+<p>现在这个网络已经训练好了（如果还没有，快去训练！），也就是概率流 ODE 里面的 <span class="arithmatex">\(f\)</span>, <span class="arithmatex">\(g^2\)</span> 以及 <span class="arithmatex">\(s_\theta\)</span> 已经确定了，就剩我们的样本 <span class="arithmatex">\(x\)</span> 需要生成了。</p>
+<h4 id="euler">简单 Euler 法<a class="headerlink" href="#euler" title="Permanent link">¶</a></h4>
+<p>最简单最朴实的方法就是将概率流 ODE 看成</p>
+<div class="arithmatex">\[
+\mathrm{d}x = \epsilon_\theta(x_t, t)\mathrm{d} t
+\]</div>
+<p>然后离散化：</p>
+<div class="arithmatex">\[
+\Delta x = \epsilon_\theta(x_t, t)\Delta t\Rightarrow x_{t-1}=x_t+\epsilon_\theta(x_t, t)\Delta t=[1-\dfrac{\beta(t)}{2T}]x_t-\dfrac{\beta(t)}{2T}s_\theta
+\]</div>
+<p>最后得到</p>
+<div class="arithmatex">\[
+x_{t-1}=[1-\dfrac{\beta(t)}{2T}]x_t-\dfrac{\beta(t)}{2T\hat\beta_t}\varepsilon_\theta
+\]</div>
+<p>当然这里的离散化我只挑了最简单的线性近似，当然可以使用 Runge-Kutta 法求解。同时还可以像 DDPM 采样器一样，添入一个噪声项得到祖先采样器（名字后面带 a 的）。</p>
+<h4 id="ddim">DDIM<a class="headerlink" href="#ddim" title="Permanent link">¶</a></h4>
+<p>概率流 ODE 相对比较特殊，它可以拆成两半，前面不含神经网络参数，后面只含有神经网络参数：</p>
+<div class="arithmatex">\[
+\mathrm dx = \underbrace{f(t)x(t)\mathrm dt}_{\mathrm{Linear\ part}} - \underbrace{\dfrac 12g^2(t)s_{\theta}(x_t,t)  \mathrm dt}_\mathrm{Neural\ part}
+\]</div>
+<p>由于 <span class="arithmatex">\(f\)</span> 已知，所以前面的线性项可以精确地积出来！也就是利用常数变易法：</p>
+<div class="arithmatex">\[
+x_t=\exp\left(\int_s^tf(\tau)\mathrm{d}\tau\right)x_s-\int_s^t\left(\exp(\int_\tau^tf(r)\mathrm{d}r)\cdot \dfrac 12g^2(\tau)s_{\theta}(x_\tau,\tau)\right)\mathrm{d}\tau
+\]</div>
+<p>然后第一项就可以直接积出来了：</p>
+<div class="arithmatex">\[
+f(t)=\dfrac{\mathrm d \log\hat\alpha(t)}{\mathrm dt}\Rightarrow \exp\left(\int_s^tf(\tau)\mathrm{d}\tau\right)=\dfrac{\hat\alpha(t)}{\hat\alpha(s)}
+\]</div>
+<p>对 <span class="arithmatex">\(g^2\)</span> 做一个换元：</p>
+<div class="arithmatex">\[
+g^2(t)=\dfrac{\mathrm d \hat \beta^2(t)}{\mathrm dt}-\dfrac{2\mathrm d \log\hat\alpha(t)}{\mathrm dt}\hat \beta^2(t)=2\hat\beta^2(t)\left(\dfrac{\mathrm d\log\hat\beta(t)}{\mathrm dt}-\dfrac{\mathrm d \log\hat\alpha(t)}{\mathrm dt}\right):=-2\hat\beta^2(t)\dfrac{\mathrm d\lambda(t)}{\mathrm dt}
+\]</div>
+<p>丢进前面的式子：</p>
+<div class="arithmatex">\[
+\begin{align*}
+    x_t&amp;=\exp\left(\int_s^tf(\tau)\mathrm{d}\tau\right)x_s-\int_s^t\left(\exp(\int_\tau^tf(r)\mathrm{d}r)\cdot \dfrac 12g^2(\tau)s_{\theta}(x_\tau,\tau)\right)\mathrm{d}\tau\\
+    &amp;=\dfrac{\hat\alpha(t)}{\hat\alpha(s)}x_s+\int^t_s\left(\dfrac{\hat\alpha(t)}{\hat\alpha(\tau)}\hat\beta^2(\tau)\dfrac{\mathrm d\lambda(\tau)}{\mathrm d\tau}s_{\theta}(x_\tau,\tau)\right)\mathrm{d}\tau\\
+    &amp;=\dfrac{\hat\alpha(t)}{\hat\alpha(s)}x_s-\hat\alpha(t)\int^t_s\left(\dfrac{\hat\beta(\tau)}{\hat\alpha(\tau)}\dfrac{\mathrm d\lambda(\tau)}{\mathrm d\tau}\varepsilon_{\theta}(x_\tau,\tau)\right)\mathrm{d}\tau\\
+    &amp;=\dfrac{\hat\alpha(t)}{\hat\alpha(s)}x_s-\hat\alpha(t)\int^{\lambda_t}_{\lambda_s}e^{-\lambda}\varepsilon_{\theta}(x_{\lambda},\lambda)\mathrm{d}\lambda
+\end{align*}
+\]</div>
+<p>最后一步是换元，利用了：</p>
+<div class="arithmatex">\[
+\dfrac{\mathrm d\log\hat\beta(t)}{\mathrm dt}-\dfrac{\mathrm d \log\hat\alpha(t)}{\mathrm dt}=\dfrac{\mathrm d \log\dfrac{\hat\beta(t)}{\hat\alpha(t)}}{\mathrm dt}=-\dfrac{\mathrm d\lambda(t)}{\mathrm dt}
+\]</div>
+<p>下面的任务是对积分</p>
+<div class="arithmatex">\[
+\int^{\lambda_t}_{\lambda_s}e^{-\lambda}\varepsilon_{\theta}(x_{\lambda},\lambda)\mathrm{d}\lambda
+\]</div>
+<p>进行近似。我们考虑最简单的近似法，把神经网络的参数看作常量：</p>
+<div class="arithmatex">\[
+\begin{align*}
+    \int^{\lambda_t}_{\lambda_s}e^{-\lambda}\varepsilon_{\theta}(x_{\lambda},\lambda)\mathrm{d}\lambda&amp;\approx\varepsilon_{\theta}(x_{\lambda_s},\lambda_s)\int^{\lambda_t}_{\lambda_s}e^{-\lambda}\mathrm{d}\lambda\\
+    &amp;=(e^{-\lambda_s}-e^{-\lambda_t})\varepsilon_{\theta}(x_{\lambda_s},\lambda_s)\\
+    &amp;=e^{-\lambda_t}(e^{h_i}-1)\varepsilon_{\theta}(x_{\lambda_s},\lambda_s)\\
+    &amp;=\dfrac{\hat\beta(t)}{\hat\alpha(t)}(e^{h_i}-1)\varepsilon_{\theta}(x_{\lambda_s},\lambda_s),\quad h_i=\lambda_t-\lambda_s
+\end{align*}
+\]</div>
+<p>这样我们就得到了<strong>一阶近似</strong>，也就是 DDIM 采样器：</p>
+<div class="arithmatex">\[
+x_{t-1}=\dfrac{\hat\alpha(t)}{\hat\alpha(t-1)}x_t-\hat\beta(t)(e^{h_i}-1)\varepsilon_{\theta}(x_{\lambda_{t-1}},\lambda_{t-1}),\quad h_i=\lambda_t-\lambda_{t-1}
+\]</div>
+<h4 id="dpm-solvers">DPM Solvers<a class="headerlink" href="#dpm-solvers" title="Permanent link">¶</a></h4>
+<p>其实这个积分</p>
+<div class="arithmatex">\[
+\int^{\lambda_t}_{\lambda_s}e^{-\lambda}\varepsilon_{\theta}(x_{\lambda},\lambda)\mathrm{d}\lambda
+\]</div>
+<p>还有更好的近似方法。刚刚是把 <span class="arithmatex">\(\varepsilon_{\theta}(x_{\lambda},\lambda)\)</span> 估计成常数，但我们也可以对其进行泰勒展开：</p>
+<div class="arithmatex">\[
+\varepsilon_{\theta}(x_{\lambda},\lambda)=\sum^{k-1}_{n=0}\varepsilon_{\theta}^{(n)}(x_{\lambda_{i-1}},\lambda_{i-1})\cdot\dfrac{(\lambda-\lambda_{i-1})^n}{n!}
+\]</div>
+<p>对各阶导数估计到常数，就只剩下了</p>
+<div class="arithmatex">\[
+\int^{\lambda_t}_{\lambda_s}e^{-\lambda}\dfrac{(\lambda-\lambda_{i-1})^n}{n!}\mathrm{d}\lambda
+\]</div>
+<p>要求出来，而这是一个正整数次数多项式乘以指数的积分，<strong>完全可以使用分部积分法解出解析解</strong>！</p>
+<p>我们取前 <span class="arithmatex">\(k\)</span> 阶泰勒展开得到的采样器，就叫做 DPM-Solver-k。具体的积分计算，可以交给 Mathematica 得到闭式解。于是可以得到论文里面的采样器流程了：</p>
+<p>DPM-Solver-2:</p>
+<div class="arithmatex">\[
+\begin{align*}
+&amp;\mathrm{Require}: \text{ initial value } x_T, \text{ time steps } \{t_i\}_{i=0}^M, \text{ model } \epsilon_\theta \\
+&amp;\tilde{x}_{t_0} \leftarrow x_T \\
+&amp;\mathrm{for} \ i \leftarrow 1 \ \mathrm{to} \ M \ \mathrm{do} \\
+&amp;\quad s_i \leftarrow \lambda \left( \frac{\lambda t_{i-1} + \lambda t_i}{2} \right) \\
+&amp;\quad u_i \leftarrow \frac{\alpha_{s_i}}{\alpha_{t_{i-1}}} \tilde{x}_{t_{i-1}} - \sigma_{s_i} \left( e^{\frac{h_i}{2}} - 1 \right) \epsilon_\theta(\tilde{x}_{t_{i-1}}, t_{i-1}) \\
+&amp;\quad \tilde{x}_{t_i} \leftarrow \frac{\alpha_{t_i}}{\alpha_{t_{i-1}}} \tilde{x}_{t_{i-1}} - \sigma_{t_i} \left( e^{h_i} - 1 \right) \epsilon_\theta(u_i, s_i) \\
+&amp;\mathrm{end \ for} \\
+&amp;\mathrm{return} \ \tilde{x}_{t_M}
+\end{align*}
+\]</div>
+<p>以及 DPM-Solver-3:</p>
+<div class="arithmatex">\[
+\begin{align*}
+&amp;\mathrm{Require}: \text{ initial value } x_T, \text{ time steps } \{t_i\}_{i=0}^M, \text{ model } \epsilon_\theta \\
+&amp;\tilde{x}_{t_0} \leftarrow x_T, \ r_1 \leftarrow \frac{1}{3}, \ r_2 \leftarrow \frac{2}{3} \\
+&amp;\mathrm{for} \ i \leftarrow 1 \ \mathrm{to} \ M \ \mathrm{do} \\
+&amp;\quad s_{2i-1} \leftarrow t_\lambda \left( \lambda t_{i-1} + r_1 h_i \right), \quad s_{2i} \leftarrow t_\lambda \left( \lambda t_{i-1} + r_2 h_i \right) \\
+&amp;\quad u_{2i-1} \leftarrow \frac{\alpha_{s_{2i-1}}}{\alpha_{t_{i-1}}} \tilde{x}_{t_{i-1}} - \sigma_{s_{2i-1}} \left( e^{r_1 h_i} - 1 \right) \epsilon_\theta(\tilde{x}_{t_{i-1}}, t_{i-1}) \\
+&amp;\quad D_{2i-1} \leftarrow \epsilon_\theta(u_{2i-1}, s_{2i-1}) - \epsilon_\theta(\tilde{x}_{t_{i-1}}, t_{i-1}) \\
+&amp;\quad u_{2i} \leftarrow \frac{\alpha_{s_{2i}}}{\alpha_{t_{i-1}}} \tilde{x}_{t_{i-1}} - \sigma_{s_{2i}} \left( e^{r_2 h_i} - 1 \right) \epsilon_\theta(\tilde{x}_{t_{i-1}}, t_{i-1}) - \frac{\sigma_{s_{2i}} r_2}{r_1} \left( \frac{e^{r_2 h_i} - 1}{r_2 h_i} - 1 \right) D_{2i-1} \\
+&amp;\quad D_{2i} \leftarrow \epsilon_\theta(u_{2i}, s_{2i}) - \epsilon_\theta(\tilde{x}_{t_{i-1}}, t_{i-1}) \\
+&amp;\quad \tilde{x}_{t_i} \leftarrow \frac{\alpha_{t_i}}{\alpha_{t_{i-1}}} \tilde{x}_{t_{i-1}} - \sigma_{t_i} \left( e^{h_i} - 1 \right) \epsilon_\theta(\tilde{x}_{t_{i-1}}, t_{i-1}) - \frac{\sigma_{t_i}}{r_2} \left( \frac{e^{h_i} - 1}{h_i} - 1 \right) D_{2i} \\
+&amp;\mathrm{end \ for} \\
+&amp;\mathrm{return} \ \tilde{x}_{t_M}
+\end{align*}
+\]</div>
+<h2 id="appendices">Appendices<a class="headerlink" href="#appendices" title="Permanent link">¶</a></h2>
+<h3 id="i">I. 布朗运动的二次变分<a class="headerlink" href="#i" title="Permanent link">¶</a></h3>
+<p>我们要推导一个布朗运动 <span class="arithmatex">\(B(t)\)</span> 满足 <span class="arithmatex">\(\mathrm dB=\sqrt{\mathrm dt}\)</span>，即 <span class="arithmatex">\((\mathrm{d}B)^2=\mathrm{d}t\)</span>。</p>
+<p>我们换成积分式，也就是在 <span class="arithmatex">\([0,T]\)</span> 内有</p>
+<div class="arithmatex">\[
+\int_0^T (\mathrm{d}B)^2=\int_0^T\mathrm{d}t=T
+\]</div>
+<p>换成定义式，也就是对该区间的一个划分 <span class="arithmatex">\(\Pi\)</span>，最大步长记作 <span class="arithmatex">\(|\Pi|\)</span>，然后证明极限：</p>
+<div class="arithmatex">\[
+\lim_{|\Pi|\rightarrow0}\sum_{i}[B(t_{i+1})-B(t_i)]^2=\lim_{|\Pi|\rightarrow0} S_n=T
+\]</div>
+<p>这就是布朗运动的<strong>二次变分</strong>。由于布朗运动的独立性，有</p>
+<div class="arithmatex">\[
+B(t_{i+1})-B(t_i)=\Delta B_i\sim N(0,\Delta t_i)
+\]</div>
+<p>则根据正态分布二阶矩的性质， <span class="arithmatex">\(\mathbb{E}[(\Delta B_i)^2]=\Delta t_i\)</span>，叠在一起就可以得到</p>
+<div class="arithmatex">\[
+\mathbb{E}[S_n]=\sum\Delta t_i=\int_0^T\mathrm{d}t=T
+\]</div>
+<p>而 <span class="arithmatex">\(\mathrm{Var}[(\Delta B_i)^2]=\mathbb{E}[(\Delta B_i)^4]-\mathbb{E}[(\Delta B_i)^2]^2=3(\Delta t_i)^2-(\Delta t_i)^2=2(\Delta t_i)^2\)</span>，即</p>
+<div class="arithmatex">\[
+\mathrm{Var}[S_n]=\sum 2(\Delta t_i)^2\le 2|\Pi|T
+\]</div>
+<p>故 <span class="arithmatex">\(|\Pi|\to 0\)</span> 则 <span class="arithmatex">\(\mathrm{Var}[S_n]\to 0\)</span>，根据大数定律，</p>
+<div class="arithmatex">\[
+\lim_{|\Pi|\rightarrow0} S_n=\lim_{|\Pi|\rightarrow0} \mathbb{E}[S_n]=T
+\]</div>
+<p>这样就得到了 <span class="arithmatex">\((\mathrm{d}B)^2=\mathrm{d}t\)</span>。</p>
+<p>题外话：由于布朗运动是处处连续处处不可导的，这才导致了其二次变分的值不为零。考虑一个连续函数 <span class="arithmatex">\(f\)</span>，我们来考虑其二次变分，利用中值定理：</p>
+<div class="arithmatex">\[
+\begin{align*}
+    \lim_{|\Pi|\rightarrow0}\sum_{i}[f(t_{i+1})-f(t_i)]^2&amp;=\lim_{|\Pi|\rightarrow0}\sum_{i}[\Delta t_i f'(s_i)]^2\\
+    &amp;\le \lim_{|\Pi|\rightarrow0}|\Pi|\sup_{x\in[0,T]} f(x) \sum_i\Delta t_i\\
+    &amp;=\lim_{|\Pi|\rightarrow0}|\Pi|\sup_{x\in[0,T]} f(x) T\\
+    &amp;=\lim_{|\Pi|\rightarrow0}O(|\Pi|)\\
+    &amp;=0
+\end{align*}
+\]</div>
+<p>这其实揭示了随机过程和连续过程蛮本本质的一个区别点。</p>
+<div class="admonition info">
+<p class="admonition-title">📝 如果您需要引用本文</p>
+<p>Yan Li. (Oct. 9, 2025). 扩散模型理论篇: 从多阶段变分自编码器到概率流常微分方程采样器系列 [Blog post]. Retrieved from <a href="https://dicaeopolis.github.io/DNN/model-expr/DDPM">https://dicaeopolis.github.io/DNN/model-expr/DDPM</a></p>
+<p>在 BibTeX 格式中：
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
+<span class="normal"><a href="#__codelineno-0-2">2</a></span>
+<span class="normal"><a href="#__codelineno-0-3">3</a></span>
+<span class="normal"><a href="#__codelineno-0-4">4</a></span>
+<span class="normal"><a href="#__codelineno-0-5">5</a></span>
+<span class="normal"><a href="#__codelineno-0-6">6</a></span>
+<span class="normal"><a href="#__codelineno-0-7">7</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1"></a>@online{DDPM,
+<a id="__codelineno-0-2" name="__codelineno-0-2"></a>    title={扩散模型理论篇: 从多阶段变分自编码器到概率流常微分方程采样器系列},
+<a id="__codelineno-0-3" name="__codelineno-0-3"></a>    author={Yan Li},
+<a id="__codelineno-0-4" name="__codelineno-0-4"></a>    year={2025},
+<a id="__codelineno-0-5" name="__codelineno-0-5"></a>    month={Oct},
+<a id="__codelineno-0-6" name="__codelineno-0-6"></a>    url={\url{https://dicaeopolis.github.io/DNN/model-expr/DDPM}},
+<a id="__codelineno-0-7" name="__codelineno-0-7"></a>}
+</code></pre></div></td></tr></table></div></p>
+</div>
+<form class="md-feedback" hidden="" name="feedback">
+<fieldset>
+<legend class="md-feedback__title">
+        Was this page helpful?
+      </legend>
+<div class="md-feedback__inner">
+<div class="md-feedback__list">
+<button class="md-feedback__icon md-icon" data-md-value="1" title="This page was helpful" type="submit">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 12a8 8 0 0 0-8-8 8 8 0 0 0-8 8 8 8 0 0 0 8 8 8 8 0 0 0 8-8m2 0a10 10 0 0 1-10 10A10 10 0 0 1 2 12 10 10 0 0 1 12 2a10 10 0 0 1 10 10M10 9.5c0 .8-.7 1.5-1.5 1.5S7 10.3 7 9.5 7.7 8 8.5 8s1.5.7 1.5 1.5m7 0c0 .8-.7 1.5-1.5 1.5S14 10.3 14 9.5 14.7 8 15.5 8s1.5.7 1.5 1.5m-5 7.73c-1.75 0-3.29-.73-4.19-1.81L9.23 14c.45.72 1.52 1.23 2.77 1.23s2.32-.51 2.77-1.23l1.42 1.42c-.9 1.08-2.44 1.81-4.19 1.81"></path></svg>
+</button>
+<button class="md-feedback__icon md-icon" data-md-value="0" title="This page could be improved" type="submit">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 12a8 8 0 0 0-8-8 8 8 0 0 0-8 8 8 8 0 0 0 8 8 8 8 0 0 0 8-8m2 0a10 10 0 0 1-10 10A10 10 0 0 1 2 12 10 10 0 0 1 12 2a10 10 0 0 1 10 10m-6.5-4c.8 0 1.5.7 1.5 1.5s-.7 1.5-1.5 1.5-1.5-.7-1.5-1.5.7-1.5 1.5-1.5M10 9.5c0 .8-.7 1.5-1.5 1.5S7 10.3 7 9.5 7.7 8 8.5 8s1.5.7 1.5 1.5m2 4.5c1.75 0 3.29.72 4.19 1.81l-1.42 1.42C14.32 16.5 13.25 16 12 16s-2.32.5-2.77 1.23l-1.42-1.42C8.71 14.72 10.25 14 12 14"></path></svg>
+</button>
+</div>
+<div class="md-feedback__note">
+<div data-md-value="1" hidden="">
+              
+              
+                
+              
+              
+              
+                
+                
+              
+              Thanks for your feedback!
+            </div>
+<div data-md-value="0" hidden="">
+              
+              
+                
+              
+              
+              
+                
+                
+              
+              Thanks for your feedback! Help us improve this page by using our <a href="..." rel="noopener" target="_blank">feedback form</a>.
+            </div>
+</div>
+</div>
+</fieldset>
+</form>
+</article>
+</div>
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+</div>
+</main>
+<footer class="md-footer">
+<div class="md-footer-meta md-typeset">
+<div class="md-footer-meta__inner md-grid">
+<div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" rel="noopener" target="_blank">
+      Material for MkDocs
+    </a>
+</div>
+</div>
+</div>
+</footer>
+</div>
+<div class="md-dialog" data-md-component="dialog">
+<div class="md-dialog__inner md-typeset"></div>
+</div>
+<script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["content.code.copy", "content.code.select", "navigation.titles", "navigation.tabs", "navigation.indexes"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+<script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+<script src="../../../assets/js/custom.js"></script>
+<script src="../../../themes/js/custom.js"></script>
+<script src="../../../themes/js/simpleLightbox.min.js"></script>
+<script src="../../../themes/js/optionalConfig.js"></script>
+<script src="../../../themes/js/mermaidloader.js"></script>
+<script src="../../../themes/js/umlconvert.js"></script>
+<script src="../../../themes/js/mathjax.js"></script>
+<script src="../../../themes/js/katex.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.17.1/flowchart.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.3.0/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.13.6/underscore-min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mermaid-js/mermaid-mindmap@9.3.0/dist/diagram-definition.0faef4c2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/markdown-it-plantuml@1.4.1/index.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/webfont/1.6.28/webfontloader.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-chtml-full.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-svg-full.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+</body>
+</html>

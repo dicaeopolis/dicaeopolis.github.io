@@ -1,0 +1,1702 @@
+
+<!DOCTYPE html>
+
+<html class="no-js" lang="zh">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<link href="../Adaptive/" rel="prev"/>
+<link href="../../../misc/" rel="next"/>
+<link href="../../../favicon.png" rel="icon"/>
+<meta content="mkdocs-1.6.1, mkdocs-material-9.7.1" name="generator"/>
+<title>SGD 系列算法 - Dicaeopolis' Wiki</title>
+<link href="../../../assets/stylesheets/main.484c7ddc.min.css" rel="stylesheet"/>
+<link href="../../../assets/stylesheets/palette.ab4e12ef.min.css" rel="stylesheet"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback" rel="stylesheet"/>
+<style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+<link href="../../../themes/css/custom.css" rel="stylesheet"/>
+<link href="../../../themes/css/simpleLightbox.min.css" rel="stylesheet"/>
+<link href="../../../themes/css/pied_piper.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css" rel="stylesheet"/>
+<link href="../../../stylesheets/customize.css" rel="stylesheet"/>
+<link href="../../../assets/css/custom.css" rel="stylesheet"/>
+<script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+</head>
+<body data-md-color-accent="indigo" data-md-color-primary="indigo" data-md-color-scheme="default" dir="ltr">
+<input autocomplete="off" class="md-toggle" data-md-toggle="drawer" id="__drawer" type="checkbox"/>
+<input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
+<label class="md-overlay" for="__drawer"></label>
+<div data-md-component="skip">
+<a class="md-skip" href="#sgd">
+          跳转至
+        </a>
+</div>
+<div data-md-component="announce">
+</div>
+<header class="md-header" data-md-component="header">
+<nav aria-label="页眉" class="md-header__inner md-grid">
+<a aria-label="Dicaeopolis' Wiki" class="md-header__button md-logo" data-md-component="logo" href="../../.." title="Dicaeopolis' Wiki">
+<img alt="logo" src="../../../favicon.png"/>
+</a>
+<label class="md-header__button md-icon" for="__drawer">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"></path></svg>
+</label>
+<div class="md-header__title" data-md-component="header-title">
+<div class="md-header__ellipsis">
+<div class="md-header__topic">
+<span class="md-ellipsis">
+            Dicaeopolis' Wiki
+          </span>
+</div>
+<div class="md-header__topic" data-md-component="header-topic">
+<span class="md-ellipsis">
+            
+              SGD 系列算法
+            
+          </span>
+</div>
+</div>
+</div>
+<form class="md-header__option" data-md-component="palette">
+<input aria-label="Switch to light mode" class="md-option" data-md-color-accent="indigo" data-md-color-media="(prefers-color-scheme)" data-md-color-primary="indigo" data-md-color-scheme="default" id="__palette_0" name="__palette" type="radio"/>
+<label class="md-header__button md-icon" for="__palette_1" hidden="" title="Switch to light mode">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12zm-9.15 3.96h2.3L12 9z"></path></svg>
+</label>
+<input aria-label="Switch to dark mode" class="md-option" data-md-color-accent="indigo" data-md-color-media="(prefers-color-scheme: light)" data-md-color-primary="indigo" data-md-color-scheme="default" id="__palette_1" name="__palette" type="radio"/>
+<label class="md-header__button md-icon" for="__palette_2" hidden="" title="Switch to dark mode">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+</label>
+<input aria-label="Switch to system preference" class="md-option" data-md-color-accent="indigo" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-primary="indigo" data-md-color-scheme="slate" id="__palette_2" name="__palette" type="radio"/>
+<label class="md-header__button md-icon" for="__palette_0" hidden="" title="Switch to system preference">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+</label>
+</form>
+<script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+<label class="md-header__button md-icon" for="__search">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+</label>
+<div class="md-search" data-md-component="search" role="dialog">
+<label class="md-search__overlay" for="__search"></label>
+<div class="md-search__inner" role="search">
+<form class="md-search__form" name="search">
+<input aria-label="搜索" autocapitalize="off" autocomplete="off" autocorrect="off" class="md-search__input" data-md-component="search-query" name="query" placeholder="搜索" required="" spellcheck="false" type="text"/>
+<label class="md-search__icon md-icon" for="__search">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+</label>
+<nav aria-label="查找" class="md-search__options">
+<button aria-label="清空当前内容" class="md-search__icon md-icon" tabindex="-1" title="清空当前内容" type="reset">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+</button>
+</nav>
+</form>
+<div class="md-search__output">
+<div class="md-search__scrollwrap" data-md-scrollfix="" tabindex="0">
+<div class="md-search-result" data-md-component="search-result">
+<div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+<ol class="md-search-result__list" role="presentation"></ol>
+</div>
+</div>
+</div>
+</div>
+</div>
+</nav>
+</header>
+<div class="md-container" data-md-component="container">
+<nav aria-label="标签" class="md-tabs" data-md-component="tabs">
+<div class="md-grid">
+<ul class="md-tabs__list">
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../../astronomy/">
+          
+  
+  
+    
+  
+  天文摄影理论和实践
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../../campus-sources/">
+          
+  
+  
+    
+  
+  校内课程知识
+
+        </a>
+</li>
+<li class="md-tabs__item md-tabs__item--active">
+<a class="md-tabs__link" href="../../">
+          
+  
+  
+    
+  
+  深度神经网络
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../../misc/">
+          
+  
+  
+    
+  
+  配置和杂谈笔记
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../../algorithm/">
+          
+  
+  
+    
+  
+  传统算法与性能
+
+        </a>
+</li>
+</ul>
+</div>
+</nav>
+<main class="md-main" data-md-component="main">
+<div class="md-main__inner md-grid">
+<div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="导航栏" class="md-nav md-nav--primary md-nav--lifted" data-md-level="0">
+<label class="md-nav__title" for="__drawer">
+<a aria-label="Dicaeopolis' Wiki" class="md-nav__button md-logo" data-md-component="logo" href="../../.." title="Dicaeopolis' Wiki">
+<img alt="logo" src="../../../favicon.png"/>
+</a>
+    Dicaeopolis' Wiki
+  </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_1" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../../astronomy/">
+<span class="md-ellipsis">
+    
+  
+    天文摄影理论和实践
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_1_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_1">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    天文摄影理论和实践
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../astronomy/gallery/">
+<span class="md-ellipsis">
+    
+  
+    深空影集
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../astronomy/polar/">
+<span class="md-ellipsis">
+    
+  
+    看不见北极星怎么办
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../astronomy/%E6%96%B9%E4%BD%8D%E8%B0%83%E8%8A%82/">
+<span class="md-ellipsis">
+    
+  
+    方位调节
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../astronomy/%E7%BA%AC%E5%BA%A6%E8%B0%83%E8%8A%82/">
+<span class="md-ellipsis">
+    
+  
+    纬度调节
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_2" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../../campus-sources/">
+<span class="md-ellipsis">
+    
+  
+    校内课程知识
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_2_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_2">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    校内课程知识
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/SDC-exams/">
+<span class="md-ellipsis">
+    
+  
+    《计算机组成与设计》部分历年题目题解
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/Discrete_exams/">
+<span class="md-ellipsis">
+    
+  
+    《离散数学》部分期末题目题解
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/Discrete_notes/">
+<span class="md-ellipsis">
+    
+  
+    离散期末复习提纲
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/Descrete_assignments/">
+<span class="md-ellipsis">
+    
+  
+    《离散数学》课程作业与笔记归档
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/Prob_Stats_assignments/">
+<span class="md-ellipsis">
+    
+  
+    《概率论与数理统计》课程作业与笔记归档
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/SDC_assignments/">
+<span class="md-ellipsis">
+    
+  
+    《计算机组成原理》理论课程作业与笔记归档
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/PU_Bii_assignments/">
+<span class="md-ellipsis">
+    
+  
+    《大学物理B下》课程作业与笔记归档
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/binmul/">
+<span class="md-ellipsis">
+<i class="fas fa-calculator"></i> 二进制乘法可视化工具
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/textbook/">
+<span class="md-ellipsis">
+    
+  
+    本科教科书电子资源
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/ds-keynote/">
+<span class="md-ellipsis">
+    
+  
+    《数据结构》划重点笔记
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/ds-write-up/">
+<span class="md-ellipsis">
+    
+  
+    《数据结构》期末复习题题解
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../campus-sources/autosignin/">
+<span class="md-ellipsis">
+    
+  
+    自动签到脚本
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+<input checked="" class="md-nav__toggle md-toggle" id="__nav_3" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../">
+<span class="md-ellipsis">
+    
+  
+    深度神经网络
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="true" aria-labelledby="__nav_3_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_3">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    深度神经网络
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../match/">
+<span class="md-ellipsis">
+    
+  
+    如何做四六级考试的段落匹配题
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../BP/">
+<span class="md-ellipsis">
+    
+  
+    前馈神经网络的反向传播
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../RL/">
+<span class="md-ellipsis">
+    
+  
+    RL学习笔记 - 上篇
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../SVM_SMO/">
+<span class="md-ellipsis">
+    
+  
+    SMO 算法的推导
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_3_6" type="checkbox"/>
+<label class="md-nav__link" for="__nav_3_6" id="__nav_3_6_label" tabindex="0">
+<span class="md-ellipsis">
+    
+  
+    Wp
+  
+
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_3_6_label" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="__nav_3_6">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    Wp
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../WP/aiwp/">
+<span class="md-ellipsis">
+    
+  
+    MISC-AI 方向 WriteUp
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_3_7" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../model-attack/">
+<span class="md-ellipsis">
+    
+  
+    深度学习模型攻击理论与复现归档
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_3_7" id="__nav_3_7_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_3_7_label" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="__nav_3_7">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    深度学习模型攻击理论与复现归档
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../model-attack/hsja/">
+<span class="md-ellipsis">
+    
+  
+    HSJA 攻击
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../model-attack/BadNets/">
+<span class="md-ellipsis">
+    
+  
+    BadNets
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../model-attack/CandW/">
+<span class="md-ellipsis">
+    
+  
+    C&amp;W 攻击
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../model-attack/pgd/">
+<span class="md-ellipsis">
+    
+  
+    PGD 攻击
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../model-attack/fgsm/">
+<span class="md-ellipsis">
+    
+  
+    FGSM 攻击
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_3_8" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../model-expr/">
+<span class="md-ellipsis">
+    
+  
+    深度学习相关模型理论与复现归档
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_3_8" id="__nav_3_8_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_3_8_label" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="__nav_3_8">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    深度学习相关模型理论与复现归档
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../model-expr/DDPM/">
+<span class="md-ellipsis">
+    
+  
+    扩散模型理论篇: 从多阶段变分自编码器到概率流常微分方程采样器系列
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../model-expr/S-and-D-models-replication/">
+<span class="md-ellipsis">
+    
+  
+    图像语义分割和目标检测相关模型复现手记
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../model-expr/Image-models-replication/">
+<span class="md-ellipsis">
+    
+  
+    图像分类相关模型复现手记
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../model-expr/DC-GAN-%E8%80%81%E5%A9%86%E7%94%9F%E6%88%90%E5%99%A8/">
+<span class="md-ellipsis">
+    
+  
+    DC-GAN 老婆生成器
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--active md-nav__item--nested">
+<input checked="" class="md-nav__toggle md-toggle" id="__nav_3_9" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../">
+<span class="md-ellipsis">
+    
+  
+    优化器
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_3_9" id="__nav_3_9_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="true" aria-labelledby="__nav_3_9_label" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="__nav_3_9">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    优化器
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../misc/">
+<span class="md-ellipsis">
+    
+  
+    后续的写作计划
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../SignGD/">
+<span class="md-ellipsis">
+    
+  
+    符号梯度下降
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../Adaptive/">
+<span class="md-ellipsis">
+    
+  
+    自适应学习率改进策略
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" id="__toc" type="checkbox"/>
+<label class="md-nav__link md-nav__link--active" for="__toc">
+<span class="md-ellipsis">
+    
+  
+    SGD 系列算法
+  
+
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<a class="md-nav__link md-nav__link--active" href="./">
+<span class="md-ellipsis">
+    
+  
+    SGD 系列算法
+  
+
+    
+  </span>
+</a>
+<nav aria-label="目录" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#sgd_1">
+<span class="md-ellipsis">
+      
+        随机梯度下降 SGD
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#sgdm">
+<span class="md-ellipsis">
+      
+        动量法随机梯度下降 SGDM
+      
+    </span>
+</a>
+<nav aria-label="动量法随机梯度下降 SGDM" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_1">
+<span class="md-ellipsis">
+      
+        动量的引入
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#nesterov-nag">
+<span class="md-ellipsis">
+      
+        Nesterov 加速梯度（NAG）
+      
+    </span>
+</a>
+<nav aria-label="Nesterov 加速梯度（NAG）" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_2">
+<span class="md-ellipsis">
+      
+        进阶推导
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_3">
+<span class="md-ellipsis">
+      
+        评述
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_4">
+<span class="md-ellipsis">
+      
+        正则化优化
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#sgdm_1">
+<span class="md-ellipsis">
+      
+        SGDM 的代码实现
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_5">
+<span class="md-ellipsis">
+      
+        其他讨论
+      
+    </span>
+</a>
+<nav aria-label="其他讨论" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_6">
+<span class="md-ellipsis">
+      
+        梯度与海森矩阵估计
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_4" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../../misc/">
+<span class="md-ellipsis">
+    
+  
+    配置和杂谈笔记
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_4_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_4">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    配置和杂谈笔记
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../misc/test/">
+<span class="md-ellipsis">
+    
+  
+    功能测试页面
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_5" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../../algorithm/">
+<span class="md-ellipsis">
+    
+  
+    传统算法与性能
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_5_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_5">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    传统算法与性能
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../algorithm/benchmark-on-stl/">
+<span class="md-ellipsis">
+    
+  
+    STL的一些性能测试
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../algorithm/stl-wheels/">
+<span class="md-ellipsis">
+    
+  
+    嗯造轮子
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../../algorithm/template-on-numeric-ring/">
+<span class="md-ellipsis">
+    
+  
+    整数环取模模板
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="目录" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#sgd_1">
+<span class="md-ellipsis">
+      
+        随机梯度下降 SGD
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#sgdm">
+<span class="md-ellipsis">
+      
+        动量法随机梯度下降 SGDM
+      
+    </span>
+</a>
+<nav aria-label="动量法随机梯度下降 SGDM" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_1">
+<span class="md-ellipsis">
+      
+        动量的引入
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#nesterov-nag">
+<span class="md-ellipsis">
+      
+        Nesterov 加速梯度（NAG）
+      
+    </span>
+</a>
+<nav aria-label="Nesterov 加速梯度（NAG）" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_2">
+<span class="md-ellipsis">
+      
+        进阶推导
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_3">
+<span class="md-ellipsis">
+      
+        评述
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_4">
+<span class="md-ellipsis">
+      
+        正则化优化
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#sgdm_1">
+<span class="md-ellipsis">
+      
+        SGDM 的代码实现
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_5">
+<span class="md-ellipsis">
+      
+        其他讨论
+      
+    </span>
+</a>
+<nav aria-label="其他讨论" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#_6">
+<span class="md-ellipsis">
+      
+        梯度与海森矩阵估计
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-content" data-md-component="content">
+<article class="md-content__inner md-typeset">
+<h1 id="sgd">SGD 系列算法<a class="headerlink" href="#sgd" title="Permanent link">¶</a></h1>
+<div class="admonition info">
+<p class="admonition-title">📖 阅读信息</p>
+<p>阅读时间约 <strong>27</strong> 分钟　|　约 <strong>3446</strong> 字　|　约 <strong>107</strong> 个公式　|　约 <strong>77</strong> 行代码</p>
+</div>
+<h2 id="sgd_1">随机梯度下降 SGD<a class="headerlink" href="#sgd_1" title="Permanent link">¶</a></h2>
+<p>所有的SGD理论讲解都会使用下山的比喻。我们也接着沿用。考虑我们在半山腰，浓雾笼罩，只能看到脚底一片地。如果我们要尽可能快地下山，肯定是<strong>沿着最陡的方向往下</strong>走。</p>
+<p>考虑泛函 <span class="arithmatex">\(\mathcal{L(x; \theta)}\)</span> 是当前的模型 <span class="arithmatex">\(\theta\)</span> 在某一训练数据 <span class="arithmatex">\(x\)</span> 下的损失地形。什么地方最陡呢？当然是 <span class="arithmatex">\(\nabla\mathcal{L(x;\theta)} = \sum_{i=1}^{n} \dfrac{\partial\mathcal{L(x;\theta)}}{\partial \theta_i}\vec{e}_i\)</span> 也就是梯度方向了。证明也很简单，由于各个分量 <span class="arithmatex">\(\vec{e}_i\)</span> 正交，让每个方向都朝自己的方向变化就可以叠加出最大的变化率。</p>
+<p>但是我们不能光看一个数据，那样的话针对性过强了，容易过拟合。那怎么办呢？我们可以一次性取多个数据，具体而言，我们在训练集里面随机取 <span class="arithmatex">\(|\mathcal{B}|\)</span> 个数据，称作一个 Batch（批量），在这个 Batch 下面我们计算平均梯度 <span class="arithmatex">\(\dfrac{1}{|\mathcal{B}|}\sum_{i=1}^{|\mathcal{B}|} \nabla\mathcal{L}(x_i;\theta)\)</span>，作为“最陡”方向的参考。</p>
+<p>下面的问题就是往这个方向走多远的问题了。这是一个我们可以调整的超参数，大了，走得更快，但是容易震荡；小了，收敛又太慢。（此处埋一个伏笔，嘻嘻）这个超参数叫做学习率，用来表征当前的梯度对模型权重进行更新的参考价值。</p>
+<p>现在就可以祭出我们的 mini-batch SGD 算法了！对于数据集 <span class="arithmatex">\(X\)</span> 而言，每次随机抽取 <span class="arithmatex">\(|\mathcal{B}|\)</span> 条数据 <span class="arithmatex">\(x\)</span>。计算上一代模型 <span class="arithmatex">\(\theta_{n-1}\)</span> 的更新步长</p>
+<div class="arithmatex">\[
+\begin{align*}
+    \Delta \theta &amp;= -\dfrac{\eta}{|\mathcal{B}|}\sum^{|\mathcal{B}|}_{i=1}\nabla\mathcal{L}(x_i;\theta_{n-1})\\
+    \theta_n &amp;= \theta_{n-1}+\Delta \theta
+\end{align*}
+\]</div>
+<p>这里加负号意思是“下降”。</p>
+<p>这样不仅使用的平均梯度，参考价值较强（而且如果 batch size 更大，对原有数据集分布的估计就更好），更赞的是一个 Batch 里面所有梯度的计算都是独立的，所以天生适合利用 GPU 进行高度并行化的计算！</p>
+<p>下面我们来评估一下这个 mini-batch SGD 算法。</p>
+<ul>
+<li>收敛速率上，对于梯度大的方向收敛快，梯度小的方向收敛慢。如果说损失地形的最低点四周都是很陡的斜坡，那很好，但存在这种混合情况：考虑一个开口向上的椭圆抛物面，并假设我们初始点在椭圆长轴端点附近，这样梯度方向近似和短轴方向平行，模型就一直在前后横跳，真正向下移动（长轴分量）很少。事实上这种情况对应的是一个条件数很大的海森矩阵，相关分析参考后文。</li>
+<li>寻找全局最小值的能力：在一个平缓的鞍点处算法表现得很“懒”，除非把学习率调大，但是过大的学习率会导致损失不收敛。</li>
+<li>小学习率当然会使得训练稳定。但是还是那个老生常谈的问题……</li>
+</ul>
+<p>为了更直观地理解 SGD 的过程和缺陷，我制作了两个动图，它们是 SGD 在两个二元函数作为损失函数下的运动轨迹。第一个叫做 rosenbrock，解析式为</p>
+<div class="arithmatex">\[
+z=(1 - x)^2 + 100  (y - x^2)^2
+\]</div>
+<p>它体现为一个香蕉状弯曲的峡谷地形，可以用来观察优化器在面对条件数大的海森矩阵采用的策略。</p>
+<p>第二个叫做 rastrigin，解析式为</p>
+<div class="arithmatex">\[
+\begin{align*}
+    A &amp;= 10\\
+    z &amp;= 2A+ (x^2 - A\cos(2\pi x))+ (y^2 - A\cos(2\pi y))
+\end{align*}
+\]</div>
+<p>它体现为一个鸡蛋托地形，具有很多局部极小值和鞍点。</p>
+<p>这是 SGD 在 rosenbrock 函数下的表现：</p>
+<p><img alt="rosenbrock_SGD" src="../optimizer_pics/rosenbrock_SGD.gif"/></p>
+<p>可以看到确实出现了这种“反复横跳”。</p>
+<p>这是 SGD 在 rastrigin 函数下的表现：</p>
+<p><img alt="rastrigin_SGD" src="../optimizer_pics/rastrigin_SGD.gif"/></p>
+<p>可以看到它确实变得很“懒”，陷入离初始点最近的局部最小值了。</p>
+<p>我也在 Fashion-MNIST 上面利用 SGD 优化了一个 CNN，这是其损失曲线和损失地形下的优化轨迹：</p>
+<p><img alt="SGD_performance_curves" src="../optimizer_pics/SGD_performance_curves.png"/></p>
+<p><img alt="SGD_landscape_pca" src="../optimizer_pics/SGD_landscape_pca.png"/></p>
+<p>收敛速度上，大概在第 4500 个 batch 下的 train_loss 能够降到 0.1 的量级，并在第 1000 个 batch 下面 acc 能基本上稳定收敛到 0.9 以上。最终得到的最优解附近的损失地形类似一个具有一定条件数的海森矩阵（后面会讲到），并且相对平坦。</p>
+<h2 id="sgdm">动量法随机梯度下降 SGDM<a class="headerlink" href="#sgdm" title="Permanent link">¶</a></h2>
+<h3 id="_1">动量的引入<a class="headerlink" href="#_1" title="Permanent link">¶</a></h3>
+<p>人往高处走，水往低处流。我们可以感性体会一下，相比其我们根据坡度（梯度）小心翼翼地下山，从山顶滚落的巨石似乎能比我们更快且更好地找到真正谷底的位置。</p>
+<p>让我们对这块石头进行建模。考虑一个单位物体在势场 <span class="arithmatex">\(U\)</span> 中做带阻尼的自由运动。（带阻尼是为了让物体的动能耗散，以停止在最小值）那么它所受梯度力 <span class="arithmatex">\(F=-\nabla U\)</span>，即 <span class="arithmatex">\(ma = -\nabla U\)</span>。取时间微元 <span class="arithmatex">\(\beta_3\)</span>，则速度更新为 <span class="arithmatex">\(-v_{n+1} = -\beta_1v_n - \beta_3 a = -\beta_1v_n - \beta_3\dfrac{\nabla U}{m}\)</span>，其中 <span class="arithmatex">\(\beta_1&lt;1\)</span> 表征阻尼损耗，位置更新为 <span class="arithmatex">\(\theta_{n+1} = \theta_n - \beta_3v_n\)</span>。事实上这里 <span class="arithmatex">\(m\)</span> 表征惯性的大小，惯性大，不易受力移动；惯性小，容易往下移动。这也体现出学习率的一点性质。在更新权重的时候我们可以把时间步长和质量两个参量统一考虑成学习率 <span class="arithmatex">\(\eta\)</span>。现在我们可以把质量乘上去，也就是考虑<strong>动量</strong>：</p>
+<div class="arithmatex">\[
+\begin{align*}
+    g_n&amp;=\nabla\mathcal{L({x};\theta_{n-1})}\\
+    M_{n}&amp;=\beta_1M_{n-1}+\beta_3g_n\\
+    \theta_n&amp;=\theta_{n-1}-\eta M_n
+\end{align*}
+\]</div>
+<p>（若不做特殊说明，<span class="arithmatex">\(\nabla\mathcal{L({x};\theta_{n-1})}\)</span> 一概指一个 mini-batch 的平均梯度即 <span class="arithmatex">\(\dfrac{1}{|\mathcal{B}|}\sum^{|\mathcal{B}|}_{i=1}\nabla\mathcal{L}(x_i;\theta_{n-1})\)</span>）</p>
+<p>这样就得到了<strong>动量法随机梯度下降</strong>即 SGD with Momentum 或 SGDM 算法了。式子里面的 <span class="arithmatex">\(\beta_1\)</span> 指的是动量衰减因子，可以理解成某种摩擦阻力，要不然就会一直在极小值周围做（近似）的椭圆天体运动不收敛， <span class="arithmatex">\(\beta_3\)</span> 是梯度的参考系数，而 <span class="arithmatex">\(\eta\)</span> 就是学习率了。</p>
+<p>这是动量法随机梯度下降在之前两个函数的运动轨迹：</p>
+<p><img alt="rastrigin_SGD_Momentum" src="../optimizer_pics/rastrigin_SGD_Momentum.gif"/></p>
+<p><img alt="rosenbrock_SGD_Momentum" src="../optimizer_pics/rosenbrock_SGD_Momentum.gif"/></p>
+<p>可以看见在算法初期，SGDM 的步长较长（因为累积的动量较大），这有利于增大搜索空间，直到进入一个平缓的谷底之后，动量开始衰减并且向最小值靠近。</p>
+<p>下面看看 SGDM 在 Fashion-MNIST 下面的表现：</p>
+<p><img alt="SGD_Momentum_performance_curves" src="../optimizer_pics/SGD_Momentum_performance_curves.png"/></p>
+<p><img alt="SGD_Momentum_landscape_pca" src="../optimizer_pics/SGD_Momentum_landscape_pca.png"/></p>
+<p>SGDM 在约 4000 个 Batch 后 train_loss 收敛到 0.1 量级，约 1000 个 Batch 后 acc 收敛到 0.9 以上。损失地形平缓。相比于 SGD 可见有更高的收敛速度。</p>
+<h3 id="nesterov-nag">Nesterov 加速梯度（NAG）<a class="headerlink" href="#nesterov-nag" title="Permanent link">¶</a></h3>
+<p>如果把刚刚 SGDM 的式子展开：</p>
+<div class="arithmatex">\[
+\begin{align*}
+    g_n&amp;=\nabla\mathcal{L({x};\theta_{n-1})}\\
+    \theta_n&amp;=\theta_{n-1}-\eta (\beta_1M_{n-1}+\beta_3g_n)\\
+    &amp;=\theta_{n-1}-\eta \beta_1M_{n-1}-\eta\beta_3g_n
+\end{align*}
+\]</div>
+<p>可以看到其实我们对参数进行了<strong>两步</strong>更新，而第二步更新使用的梯度却是更新前参数的梯度。如果我们考虑让第二步更新使用的梯度是<strong>第一步更新后参数的梯度</strong>，也就是让 <span class="arithmatex">\(g'_n=\nabla\mathcal{L}({x};\theta_{n-1}-\eta \beta_1M_{n-1})\)</span>，就得到了 Nesterov 加速优化后的 SGDM。</p>
+<p>虽然网上99%对这个的讲解都是停留在这里就完了，但是我们很难对 <span class="arithmatex">\(\theta_{n-1}-\eta \beta_1M_{n-1}\)</span> 这个前瞻位置的参数直接求一次梯度。为什么？因为我们最后要在代码里面使用 <code>loss.backward()</code> 把梯度求出来，但是这个梯度不是前瞻位置的梯度，这不就废了吗，说好的加速，计算量反倒翻倍了……</p>
+<p>为此，我们需要寻找无需进行前瞻位置梯度计算的等效形式。</p>
+<h4 id="_2">进阶推导<a class="headerlink" href="#_2" title="Permanent link">¶</a></h4>
+<p>为简便起见，下面的推导统一设 <span class="arithmatex">\(\beta_3=1\)</span>。</p>
+<p>让我们从</p>
+<div class="arithmatex">\[
+\theta_n=\theta_{n-1}-\eta \beta_1M_{n-1}-\eta g'_n
+\]</div>
+<p>入手（其中 <span class="arithmatex">\(g'_n=\nabla\mathcal{L}({x};\theta_{n-1}-\eta \beta_1M_{n-1})\)</span>），为了让这个 <span class="arithmatex">\(g'_n\)</span> 能够较好地被分离出去，首先在左右两边配上一个 <span class="arithmatex">\(-\eta \beta_1M_n\)</span>，有点类似于去找前瞻位置。然后：</p>
+<div class="arithmatex">\[
+\begin{align*}
+    \theta_n-\eta\beta_1M_n&amp;=\theta_{n-1}-\eta(1+\beta_1)M_n\\
+    &amp;=\theta_{n-1}-\eta(1+\beta_1)(\beta_1M_{n-1}+g'_n)\\
+    &amp;=(\theta_{n-1}-\eta\beta_1M_{n-1})-\eta[(1+\beta_1)g'_n+\beta_1^2M_{n-1}]
+\end{align*}
+\]</div>
+<p>我们可以做一个代换：</p>
+<div class="arithmatex">\[
+\begin{align*}
+    \hat\theta_n&amp;=\theta_n-\eta\beta_1M_n\\
+    \hat M_n &amp;= (1+\beta_1)g'_n+\beta_1^2M_{n-1}
+\end{align*}
+\]</div>
+<p>这样就有了</p>
+<div class="arithmatex">\[
+\hat\theta_n=\hat\theta_{n-1}-\eta\hat M_n
+\]</div>
+<p>并且循环带入 <span class="arithmatex">\(M_n\)</span> 的定义式展开 <span class="arithmatex">\(\hat M_n\)</span>：</p>
+<div class="arithmatex">\[
+\begin{align*}
+    \hat M_n &amp;= (1+\beta_1)g'_n+\beta_1^2M_{n-1}\\
+    &amp;=(1+\beta_1)g'_n+\beta_1^2g'_{n-1}+\beta_1^3g'_{n-2}+\cdots
+\end{align*}
+\]</div>
+<p>利用高中就学过的错位相减（让 <span class="arithmatex">\(\hat M_n\)</span> 和  <span class="arithmatex">\(\beta\hat M_{n-1}\)</span> 相减），我们可以得到 <span class="arithmatex">\(\hat M_n\)</span> 的递推式：</p>
+<div class="arithmatex">\[
+\hat M_n = \beta_1\hat M_{n-1}+g'_n+\beta_1(g'_n-g'_{n-1})
+\]</div>
+<p>整理一下我们得到递推公式：</p>
+<div class="arithmatex">\[
+\begin{align*}
+    g'_n&amp;=\nabla\mathcal{L({x};\hat\theta_{n-1})}\\
+    \hat M_{n}&amp;=\beta_1\hat M_{n-1}+g'_n+\beta_1(g'_n-g'_{n-1})\\
+    \hat\theta_n&amp;=\hat\theta_{n-1}-\eta\hat M_n
+\end{align*}
+\]</div>
+<p>由于初始时的 Nesterov 修正项是 <span class="arithmatex">\(0\)</span>，这个递推式可以保证与原来的形式完全等效。</p>
+<p>但是我们可以发现，即使这个 <span class="arithmatex">\(g_n\)</span> 取到原来的梯度，也能通过这种方式（两次迭代的梯度之差）来得到 Nesterov 加速等效的结果。</p>
+<p>但是这样做要我们保存两份梯度，有没有更省显存的做法呢？有的。</p>
+<p>还是一个和高中数列题很像的思路，我们把在 <span class="arithmatex">\(\hat M_n\)</span> 的计算中长得比较像的拉到一边去：</p>
+<div class="arithmatex">\[
+\begin{align*}
+    \hat M_n - g'_n &amp;= \beta_1 g'_n + \beta_1(\hat M_{n-1} - g'_{n-1})\\
+    \dfrac{\hat M_n - g'_n}{\beta_1}&amp;=g'_n + (\hat M_{n-1} - g'_{n-1})
+\end{align*}
+\]</div>
+<p>这里有一个分母 <span class="arithmatex">\(\beta_1\)</span> 不好看，我们做代换 <span class="arithmatex">\(\beta_1\tilde M_n = \hat M_n - g'_n\)</span>，就有：</p>
+<div class="arithmatex">\[
+\tilde M_n=g'_n+\beta_1\tilde M_{n-1}
+\]</div>
+<p>整理一下我们得到递推公式：</p>
+<div class="arithmatex">\[
+\begin{align*}
+    g'_n&amp;=\nabla\mathcal{L({x};\hat\theta_{n-1})}\\
+    \tilde M_n&amp;=g'_n+\beta_1\tilde M_{n-1}\\
+    \hat\theta_n&amp;=\hat\theta_{n-1}-\eta(\beta_1\tilde M_n+ g'_n)
+\end{align*}
+\]</div>
+<p>由于我们在整个变换过程中只是使用了变量代换，和一开始的 Nesterov 加速法是等效的，所以对于这个式子而言，我们完全可以这样写：</p>
+<div class="arithmatex">\[
+\begin{align*}
+    g_n&amp;=\nabla\mathcal{L({x};\theta_{n-1})}\\
+    M_n&amp;=g_n+\beta_1M_{n-1}\\
+    \theta_n&amp;=\theta_{n-1}-\eta(\beta_1 M_n+ g_n)
+\end{align*}
+\]</div>
+<p>这样对 Nesterov 加速的实现就非常简单了！只需要把权重更新项从 <span class="arithmatex">\(\eta M_n\)</span> 换成 <span class="arithmatex">\(\eta(\beta_1 M_n+ g_n)\)</span> 即可。</p>
+<p>当然有的实现会考虑 <span class="arithmatex">\(\beta_3=(1-\beta_1)\)</span>，这个时候权重更新项就变成了 <span class="arithmatex">\(\eta[\beta_1 M_n+ (1-\beta_1)g_n]\)</span>。</p>
+<h3 id="_3">评述<a class="headerlink" href="#_3" title="Permanent link">¶</a></h3>
+<p>让我们看看 NAG 的轨迹：</p>
+<p><img alt="rastrigin_NAG" src="../optimizer_pics/rastrigin_NAG.gif"/></p>
+<p><img alt="rosenbrock_NAG" src="../optimizer_pics/rosenbrock_NAG.gif"/></p>
+<p>下面是 NAG 在 Fashion-MNIST 下面的表现：</p>
+<p><img alt="NAG_performance_curves" src="../optimizer_pics/NAG_performance_curves.png"/></p>
+<p><img alt="NAG_landscape_pca" src="../optimizer_pics/NAG_landscape_pca.png"/></p>
+<p>对比一下可以发现 NAG 和朴素的 SGDW 效果有提升，但是提升不大。</p>
+<p>SGDM 能够具有更快的收敛速率，尤其对于梯度不对称场景下，能够实现均衡的梯度累积，即减缓前后横跳，加速向下滚动。动量居功至伟。尤其是引入 Nesterov 加速后，动量的针对性更强，收敛速率也更快了。</p>
+<h2 id="_4">正则化优化<a class="headerlink" href="#_4" title="Permanent link">¶</a></h2>
+<p>我们考虑一般的 <span class="arithmatex">\(L_2\)</span> 正则化用以对权重大小进行惩罚限制。在 SGD 场景下：</p>
+<div class="arithmatex">\[
+\begin{align*}
+    g_{n} &amp;= -\eta\nabla\left(\mathcal{L}({x};\theta_{n-1})+\dfrac{\lambda}{2}|\theta_{n-1}|^2\right)\\
+    &amp;=-\eta\nabla\mathcal{L}({x};\theta_{n-1})-\eta\lambda\theta_{n-1}\\
+    \theta_n&amp;=\theta_{n-1}+g_n\\
+    &amp;=(1-\eta\lambda)\theta_{n-1}-\eta\nabla\mathcal{L}(x;\theta_{n-1})
+\end{align*}
+\]</div>
+<p>这样我们就可以以数乘代替繁琐且耗时的梯度计算，这被叫做“解耦的权重衰减”（Decoupled Weight Decay）。如果还想解耦更彻底些，可以写成 <span class="arithmatex">\((1-\lambda)\theta_{n-1}-\eta\nabla\mathcal{L}(x;\theta_{n-1})\)</span>，也就是甚至把学习率和正则化参数解耦。在后面的优化器中（比如 AdamW），我们基本不会直接使用原教旨主义的 <span class="arithmatex">\(L_2\)</span> 正则化，而是采用这种权重衰减的方式，尽管在更复杂的优化器下，这两者数学上并不等效。</p>
+<h2 id="sgdm_1">SGDM 的代码实现<a class="headerlink" href="#sgdm_1" title="Permanent link">¶</a></h2>
+<p>下面，让我们来赏析一下 <code>torch.optim.SGD</code> 对 SGDM 的实现。中文注释是我让 Gemini 帮我读代码给出的注解。</p>
+<details>
+<summary>SGDM 的实现</summary>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-0-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-0-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-0-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-0-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-0-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-0-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-0-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-0-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-0-10">10</a></span>
+<span class="normal"><a href="#__codelineno-0-11">11</a></span>
+<span class="normal"><a href="#__codelineno-0-12">12</a></span>
+<span class="normal"><a href="#__codelineno-0-13">13</a></span>
+<span class="normal"><a href="#__codelineno-0-14">14</a></span>
+<span class="normal"><a href="#__codelineno-0-15">15</a></span>
+<span class="normal"><a href="#__codelineno-0-16">16</a></span>
+<span class="normal"><a href="#__codelineno-0-17">17</a></span>
+<span class="normal"><a href="#__codelineno-0-18">18</a></span>
+<span class="normal"><a href="#__codelineno-0-19">19</a></span>
+<span class="normal"><a href="#__codelineno-0-20">20</a></span>
+<span class="normal"><a href="#__codelineno-0-21">21</a></span>
+<span class="normal"><a href="#__codelineno-0-22">22</a></span>
+<span class="normal"><a href="#__codelineno-0-23">23</a></span>
+<span class="normal"><a href="#__codelineno-0-24">24</a></span>
+<span class="normal"><a href="#__codelineno-0-25">25</a></span>
+<span class="normal"><a href="#__codelineno-0-26">26</a></span>
+<span class="normal"><a href="#__codelineno-0-27">27</a></span>
+<span class="normal"><a href="#__codelineno-0-28">28</a></span>
+<span class="normal"><a href="#__codelineno-0-29">29</a></span>
+<span class="normal"><a href="#__codelineno-0-30">30</a></span>
+<span class="normal"><a href="#__codelineno-0-31">31</a></span>
+<span class="normal"><a href="#__codelineno-0-32">32</a></span>
+<span class="normal"><a href="#__codelineno-0-33">33</a></span>
+<span class="normal"><a href="#__codelineno-0-34">34</a></span>
+<span class="normal"><a href="#__codelineno-0-35">35</a></span>
+<span class="normal"><a href="#__codelineno-0-36">36</a></span>
+<span class="normal"><a href="#__codelineno-0-37">37</a></span>
+<span class="normal"><a href="#__codelineno-0-38">38</a></span>
+<span class="normal"><a href="#__codelineno-0-39">39</a></span>
+<span class="normal"><a href="#__codelineno-0-40">40</a></span>
+<span class="normal"><a href="#__codelineno-0-41">41</a></span>
+<span class="normal"><a href="#__codelineno-0-42">42</a></span>
+<span class="normal"><a href="#__codelineno-0-43">43</a></span>
+<span class="normal"><a href="#__codelineno-0-44">44</a></span>
+<span class="normal"><a href="#__codelineno-0-45">45</a></span>
+<span class="normal"><a href="#__codelineno-0-46">46</a></span>
+<span class="normal"><a href="#__codelineno-0-47">47</a></span>
+<span class="normal"><a href="#__codelineno-0-48">48</a></span>
+<span class="normal"><a href="#__codelineno-0-49">49</a></span>
+<span class="normal"><a href="#__codelineno-0-50">50</a></span>
+<span class="normal"><a href="#__codelineno-0-51">51</a></span>
+<span class="normal"><a href="#__codelineno-0-52">52</a></span>
+<span class="normal"><a href="#__codelineno-0-53">53</a></span>
+<span class="normal"><a href="#__codelineno-0-54">54</a></span>
+<span class="normal"><a href="#__codelineno-0-55">55</a></span>
+<span class="normal"><a href="#__codelineno-0-56">56</a></span>
+<span class="normal"><a href="#__codelineno-0-57">57</a></span>
+<span class="normal"><a href="#__codelineno-0-58">58</a></span>
+<span class="normal"><a href="#__codelineno-0-59">59</a></span>
+<span class="normal"><a href="#__codelineno-0-60">60</a></span>
+<span class="normal"><a href="#__codelineno-0-61">61</a></span>
+<span class="normal"><a href="#__codelineno-0-62">62</a></span>
+<span class="normal"><a href="#__codelineno-0-63">63</a></span>
+<span class="normal"><a href="#__codelineno-0-64">64</a></span>
+<span class="normal"><a href="#__codelineno-0-65">65</a></span>
+<span class="normal"><a href="#__codelineno-0-66">66</a></span>
+<span class="normal"><a href="#__codelineno-0-67">67</a></span>
+<span class="normal"><a href="#__codelineno-0-68">68</a></span>
+<span class="normal"><a href="#__codelineno-0-69">69</a></span>
+<span class="normal"><a href="#__codelineno-0-70">70</a></span>
+<span class="normal"><a href="#__codelineno-0-71">71</a></span>
+<span class="normal"><a href="#__codelineno-0-72">72</a></span>
+<span class="normal"><a href="#__codelineno-0-73">73</a></span>
+<span class="normal"><a href="#__codelineno-0-74">74</a></span>
+<span class="normal"><a href="#__codelineno-0-75">75</a></span>
+<span class="normal"><a href="#__codelineno-0-76">76</a></span>
+<span class="normal"><a href="#__codelineno-0-77">77</a></span>
+<span class="normal"><a href="#__codelineno-0-78">78</a></span>
+<span class="normal"><a href="#__codelineno-0-79">79</a></span>
+<span class="normal"><a href="#__codelineno-0-80">80</a></span>
+<span class="normal"><a href="#__codelineno-0-81">81</a></span>
+<span class="normal"><a href="#__codelineno-0-82">82</a></span>
+<span class="normal"><a href="#__codelineno-0-83">83</a></span>
+<span class="normal"><a href="#__codelineno-0-84">84</a></span>
+<span class="normal"><a href="#__codelineno-0-85">85</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">_single_tensor_sgd</span><span class="p">(</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2"></a>    <span class="n">params</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3"></a>    <span class="n">grads</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4"></a>    <span class="n">momentum_buffer_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]],</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5"></a>    <span class="n">grad_scale</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6"></a>    <span class="n">found_inf</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7"></a>    <span class="o">*</span><span class="p">,</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8"></a>    <span class="n">weight_decay</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9"></a>    <span class="n">momentum</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10"></a>    <span class="n">lr</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11"></a>    <span class="n">dampening</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12"></a>    <span class="n">nesterov</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13"></a>    <span class="n">maximize</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14"></a>    <span class="n">has_sparse_grad</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15"></a><span class="p">):</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16"></a>    <span class="c1"># 这两个参数与自动混合精度（AMP）中的梯度缩放有关，用于跳过无效更新。</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17"></a>    <span class="c1"># 此函数是基础实现，不处理这些情况，故断言它们为 None。</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18"></a>    <span class="k">assert</span> <span class="n">grad_scale</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">found_inf</span> <span class="ow">is</span> <span class="kc">None</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19"></a>
+<a id="__codelineno-0-20" name="__codelineno-0-20"></a>    <span class="c1"># 循环遍历每一个参数及其对应的梯度和动量缓冲区</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21"></a>    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22"></a>        <span class="c1"># 获取当前参数的梯度。如果目标是最大化（maximize=True），则反转梯度方向。</span>
+<a id="__codelineno-0-23" name="__codelineno-0-23"></a>        <span class="n">grad</span> <span class="o">=</span> <span class="n">grads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">maximize</span> <span class="k">else</span> <span class="o">-</span><span class="n">grads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+<a id="__codelineno-0-24" name="__codelineno-0-24"></a>
+<a id="__codelineno-0-25" name="__codelineno-0-25"></a>        <span class="c1"># --- 步骤 1: 应用权重衰减 (Weight Decay / L2 正则化) ---</span>
+<a id="__codelineno-0-26" name="__codelineno-0-26"></a>        <span class="k">if</span> <span class="n">weight_decay</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+<a id="__codelineno-0-27" name="__codelineno-0-27"></a>            <span class="c1"># 注意: 这里的实现是将权重衰减项加到梯度上，而不是从权重中直接减去（解耦权重衰减）。</span>
+<a id="__codelineno-0-28" name="__codelineno-0-28"></a>            <span class="c1"># 这等价于在损失函数中加入了 L2 正则化项 0.5 * weight_decay * param^2。</span>
+<a id="__codelineno-0-29" name="__codelineno-0-29"></a>            <span class="c1"># 更新前的梯度 g' = g + w * theta</span>
+<a id="__codelineno-0-30" name="__codelineno-0-30"></a>
+<a id="__codelineno-0-31" name="__codelineno-0-31"></a>            <span class="c1"># 使用嵌套 if 是为了绕过 TorchScript JIT 编译器的规则，并处理可微的 weight_decay。</span>
+<a id="__codelineno-0-32" name="__codelineno-0-32"></a>            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">weight_decay</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">):</span>
+<a id="__codelineno-0-33" name="__codelineno-0-33"></a>                <span class="k">if</span> <span class="n">weight_decay</span><span class="o">.</span><span class="n">requires_grad</span><span class="p">:</span>
+<a id="__codelineno-0-34" name="__codelineno-0-34"></a>                    <span class="c1"># 如果 weight_decay 本身是需要计算梯度的张量（例如在元学习中），</span>
+<a id="__codelineno-0-35" name="__codelineno-0-35"></a>                    <span class="c1"># 必须克隆 param 来进行乘法，以避免在反向传播中出现原地修改错误。</span>
+<a id="__codelineno-0-36" name="__codelineno-0-36"></a>                    <span class="n">grad</span> <span class="o">=</span> <span class="n">grad</span><span class="o">.</span><span class="n">addcmul</span><span class="p">(</span><span class="n">param</span><span class="o">.</span><span class="n">clone</span><span class="p">(),</span> <span class="n">weight_decay</span><span class="p">)</span>
+<a id="__codelineno-0-37" name="__codelineno-0-37"></a>                <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-0-38" name="__codelineno-0-38"></a>                    <span class="c1"># 如果 weight_decay 是张量但无需梯度，则使用常规的 add 操作。</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39"></a>                    <span class="n">grad</span> <span class="o">=</span> <span class="n">grad</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">weight_decay</span><span class="p">)</span>
+<a id="__codelineno-0-40" name="__codelineno-0-40"></a>            <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-0-41" name="__codelineno-0-41"></a>                <span class="c1"># 如果 weight_decay 是一个普通的浮点数，这是最常见的情况。</span>
+<a id="__codelineno-0-42" name="__codelineno-0-42"></a>                <span class="n">grad</span> <span class="o">=</span> <span class="n">grad</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">weight_decay</span><span class="p">)</span>
+<a id="__codelineno-0-43" name="__codelineno-0-43"></a>
+<a id="__codelineno-0-44" name="__codelineno-0-44"></a>        <span class="c1"># --- 步骤 2: 计算动量并更新梯度 ---</span>
+<a id="__codelineno-0-45" name="__codelineno-0-45"></a>        <span class="k">if</span> <span class="n">momentum</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+<a id="__codelineno-0-46" name="__codelineno-0-46"></a>            <span class="c1"># 获取当前参数的动量缓冲区（momentum buffer），我们称之为 M</span>
+<a id="__codelineno-0-47" name="__codelineno-0-47"></a>            <span class="n">buf</span> <span class="o">=</span> <span class="n">momentum_buffer_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+<a id="__codelineno-0-48" name="__codelineno-0-48"></a>
+<a id="__codelineno-0-49" name="__codelineno-0-49"></a>            <span class="k">if</span> <span class="n">buf</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50"></a>                <span class="c1"># 如果是第一次更新该参数，动量缓冲区为空。</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51"></a>                <span class="c1"># 初始化动量 M_0 = g' (当前梯度)</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52"></a>                <span class="c1"># 使用 clone().detach() 来创建一个不带梯度历史的新张量作为初始动量。</span>
+<a id="__codelineno-0-53" name="__codelineno-0-53"></a>                <span class="n">buf</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span><span class="n">grad</span><span class="p">)</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54"></a>                <span class="n">momentum_buffer_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">buf</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55"></a>            <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56"></a>                <span class="c1"># 如果已有动量，则进行更新。</span>
+<a id="__codelineno-0-57" name="__codelineno-0-57"></a>                <span class="c1"># 公式: M_t = momentum * M_{t-1} + (1 - dampening) * g'_t</span>
+<a id="__codelineno-0-58" name="__codelineno-0-58"></a>                <span class="c1"># momentum 是动量因子 (β)，dampening 抑制了新梯度对动量的影响。</span>
+<a id="__codelineno-0-59" name="__codelineno-0-59"></a>                <span class="c1"># 当 dampening=0 时，这就是标准动量更新公式 M_t = β * M_{t-1} + g'_t</span>
+<a id="__codelineno-0-60" name="__codelineno-0-60"></a>                <span class="n">buf</span><span class="o">.</span><span class="n">mul_</span><span class="p">(</span><span class="n">momentum</span><span class="p">)</span><span class="o">.</span><span class="n">add_</span><span class="p">(</span><span class="n">grad</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span> <span class="o">-</span> <span class="n">dampening</span><span class="p">)</span>
+<a id="__codelineno-0-61" name="__codelineno-0-61"></a>
+<a id="__codelineno-0-62" name="__codelineno-0-62"></a>            <span class="k">if</span> <span class="n">nesterov</span><span class="p">:</span>
+<a id="__codelineno-0-63" name="__codelineno-0-63"></a>                <span class="c1"># 如果使用 Nesterov 加速梯度 (NAG):</span>
+<a id="__codelineno-0-64" name="__codelineno-0-64"></a>                <span class="c1"># 更新所用的梯度变为: g''_t = g'_t + momentum * M_t</span>
+<a id="__codelineno-0-65" name="__codelineno-0-65"></a>                <span class="n">grad</span> <span class="o">=</span> <span class="n">grad</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">momentum</span><span class="p">)</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66"></a>            <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-0-67" name="__codelineno-0-67"></a>                <span class="c1"># 如果使用标准动量:</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68"></a>                <span class="c1"># 更新所用的梯度就是动量本身: g''_t = M_t</span>
+<a id="__codelineno-0-69" name="__codelineno-0-69"></a>                <span class="n">grad</span> <span class="o">=</span> <span class="n">buf</span>
+<a id="__codelineno-0-70" name="__codelineno-0-70"></a>
+<a id="__codelineno-0-71" name="__codelineno-0-71"></a>        <span class="c1"># --- 步骤 3: 使用最终的梯度更新参数 ---</span>
+<a id="__codelineno-0-72" name="__codelineno-0-72"></a>        <span class="c1"># 最终更新公式: param_t = param_{t-1} - lr * g''_t</span>
+<a id="__codelineno-0-73" name="__codelineno-0-73"></a>
+<a id="__codelineno-0-74" name="__codelineno-0-74"></a>        <span class="c1"># 同样，使用嵌套 if 来处理 lr 可能是一个需要梯度的张量的情况。</span>
+<a id="__codelineno-0-75" name="__codelineno-0-75"></a>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lr</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">):</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76"></a>            <span class="k">if</span> <span class="n">lr</span><span class="o">.</span><span class="n">requires_grad</span><span class="p">:</span>
+<a id="__codelineno-0-77" name="__codelineno-0-77"></a>                <span class="c1"># 如果 lr 需要梯度，必须使用 addcmul，它有为所有输入（包括lr）定义的导数。</span>
+<a id="__codelineno-0-78" name="__codelineno-0-78"></a>                <span class="c1"># value=-1 实现减法。</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79"></a>                <span class="n">param</span><span class="o">.</span><span class="n">addcmul_</span><span class="p">(</span><span class="n">grad</span><span class="p">,</span> <span class="n">lr</span><span class="p">,</span> <span class="n">value</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<a id="__codelineno-0-80" name="__codelineno-0-80"></a>            <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-0-81" name="__codelineno-0-81"></a>                <span class="c1"># 如果 lr 是张量但无需梯度，使用 add_ 和 alpha=-lr。</span>
+<a id="__codelineno-0-82" name="__codelineno-0-82"></a>                <span class="n">param</span><span class="o">.</span><span class="n">add_</span><span class="p">(</span><span class="n">grad</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=-</span><span class="n">lr</span><span class="p">)</span>
+<a id="__codelineno-0-83" name="__codelineno-0-83"></a>        <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-0-84" name="__codelineno-0-84"></a>            <span class="c1"># 如果 lr 是一个普通的浮点数（最常见情况），使用最高效的 add_ 操作。</span>
+<a id="__codelineno-0-85" name="__codelineno-0-85"></a>            <span class="n">param</span><span class="o">.</span><span class="n">add_</span><span class="p">(</span><span class="n">grad</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=-</span><span class="n">lr</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+</details>
+<h2 id="_5">其他讨论<a class="headerlink" href="#_5" title="Permanent link">¶</a></h2>
+<h3 id="_6">梯度与海森矩阵估计<a class="headerlink" href="#_6" title="Permanent link">¶</a></h3>
+<p>我们回顾一下怎么给一个多元函数 <span class="arithmatex">\(f({x})\)</span> 做二阶泰勒展开。</p>
+<p>在一阶的情况下，很明显有</p>
+<div class="arithmatex">\[
+f({x})\approx f({x_0})+\nabla f({x_0})\cdot ({x-x_0})
+\]</div>
+<p>类似的，我们可以把求导算子应用到梯度上面，也就是得到梯度的雅可比矩阵，或者叫做<strong>海森矩阵</strong>：</p>
+<div class="arithmatex">\[
+H=\left(\frac{\partial^2}{\partial x_i\partial x_j}\right)_{1\le i,j\le n}=\left(
+\begin{matrix}
+    \frac{\partial^2}{\partial x_1^2} &amp; \frac{\partial^2}{\partial x_1\partial x_2} &amp; \cdots &amp; \frac{\partial^2}{\partial x_1\partial x_n}\\
+    \frac{\partial^2}{\partial x_2\partial x_1} &amp; \frac{\partial^2}{\partial x_2^2} &amp; \cdots &amp; \frac{\partial^2}{\partial x_2\partial x_n}\\
+    \vdots &amp; \vdots &amp; \ddots &amp; \vdots\\
+    \frac{\partial^2}{\partial x_n\partial x_1} &amp; \frac{\partial^2}{\partial x_n\partial x_2} &amp; \cdots &amp; \frac{\partial^2}{\partial x_n^2}\\
+\end{matrix}
+\right)
+\]</div>
+<p>那么二阶的泰勒展开就变成了</p>
+<div class="arithmatex">\[
+f({x})\approx f({x_0})+\nabla f({x_0})({x-x_0})+\dfrac{1}{2}({x-x_0})^\top H f({x_0})({x-x_0})
+\]</div>
+<p>让我们用熟悉的记号重写一下：</p>
+<div class="arithmatex">\[
+\mathcal{L}(\theta_n+\Delta\theta)\approx \mathcal{L}(\theta_n)+g_n^\top\Delta\theta+\dfrac{1}{2}\Delta\theta^\top H \mathcal{L}(\theta_n)\Delta\theta
+\]</div>
+<p>在 SGD 场景下，<span class="arithmatex">\(\Delta\theta=-\eta g_n\)</span>，损失函数的改变量为：</p>
+<div class="arithmatex">\[
+\mathcal{L}(\theta_n+\Delta\theta)- \mathcal{L}(\theta_n)\approx -\eta g_n^\top g_n+\dfrac{1}{2}\eta^2g_n^\top H \mathcal{L}(\theta_n)g_n
+\]</div>
+<p>可见，在 <span class="arithmatex">\(H\)</span> 较大（尤其是条件数较大，对应之前说的椭圆抛物面）的地方，SGD 的更新是相当低效的。</p>
+<p>让我们以另外一个视角观察前面的式子。为了找到最小值，事实上我们是在寻找损失函数<strong>梯度的零点</strong>。这样我们可以挪用数值分析里面找零点相当高效的算法：牛顿迭代法。</p>
+<p>回顾一下牛顿法的内容，对于函数 <span class="arithmatex">\(f(x)\)</span> 和初始估计 <span class="arithmatex">\(x_{n-1}\)</span>，更新方式为：</p>
+<div class="arithmatex">\[
+\Delta x = -\dfrac{f(x_{n-1})}{f'(x_{n-1})}\\
+x_n=x_{n-1}+\Delta x
+\]</div>
+<p>牛顿法的特征就是收敛高效，且是<strong>自适应</strong>的，陡峭的地方下降快，平缓的地方精度高。</p>
+<p>在优化器的语境里面，其实就是让参数更新量 <span class="arithmatex">\(\Delta \theta=-[H\mathcal{L}]^{-1}\nabla \mathcal{L}\)</span>。而前面所述的“陡峭”和“平缓”恰巧对应的就是一阶导（梯度）的导数也就是<strong>海森矩阵</strong>！</p>
+<p>由于海森矩阵（及其逆矩阵）的计算量非常之大，与其计算它不如用这个时间跑几轮算得快的近似算法。</p>
+<p>而 SGD 其实就是取的 <span class="arithmatex">\([H\mathcal{L}]^{-1}=\eta I\)</span> 这个估计，相当于抹平各个方向的差异做了统一的更新。</p>
+<p>对于海森矩阵而言，有没有更好的估计方式呢？有的！要不然为什么我们会引入动量呢？</p>
+<p>让我们考虑一个椭圆抛物面</p>
+<div class="arithmatex">\[
+f({x})=\dfrac 12{x}^\top A{x}+{b}^\top {x}
+\]</div>
+<p>那么在这个面上的任一点有梯度 <span class="arithmatex">\(\nabla f=A{x}-{b}\)</span> 以及海森矩阵 <span class="arithmatex">\(Hf=A\)</span>。</p>
+<p>令梯度等于 <span class="arithmatex">\(0\)</span>，实质就是求解线性方程组 <span class="arithmatex">\(H{x}={b}\)</span>，为此我们定义残差 <span class="arithmatex">\({r}=H{x}-{b}\)</span></p>
+<p>在任意一本数值分析教材里面都会讲到求解线性方程组的一百万种方法，包括高斯消元法，雅可比迭代，预条件法等。在其中和先前我们提到的动量法最相关的是<strong>共轭梯度法</strong>。下面简要介绍一下这个方法。</p>
+<p><strong>定义</strong>：若 <span class="arithmatex">\(A\)</span> 为 <span class="arithmatex">\(n\times n\)</span> 的对称正定矩阵，<span class="arithmatex">\(u,v\)</span> 为两个 <span class="arithmatex">\(n\)</span> 维的向量，则两者的 <strong><span class="arithmatex">\(A\)</span>-内积</strong> 定义为：</p>
+<div class="arithmatex">\[
+\langle u,v\rangle _A=u^\top Av
+\]</div>
+<p>特别的，如果 <span class="arithmatex">\(\langle u, v\rangle _A=0\)</span>，则称两个向量关于 <span class="arithmatex">\(A\)</span> 共轭。</p>
+<p>现在我们有一个参数的初始估计 <span class="arithmatex">\(\theta_n\)</span>，得到了梯度 <span class="arithmatex">\(g_n\)</span> 也就是之前提到的残差。</p>
+<p>下面我们需要寻找参数更新量 <span class="arithmatex">\(M_n\)</span>，吸纳之前关于“共轭”的讨论，我们希望各个 <span class="arithmatex">\(M\)</span> 之间的优化是独立的，也就是 <span class="arithmatex">\(\langle M_i,M_j\rangle _H=0\quad(i\ne j)\)</span> 成立。</p>
+<p>感觉是否很像 Gram-Schmidt 正交化？是的！当然共轭梯度法使用的是一个等效更简单的形式（具体怎么从正交化等式推到这个简单形式比较复杂而且也有点跑题了，我视情况在后面给一个附录进行证明），也就是</p>
+<div class="arithmatex">\[
+\beta_n = \dfrac{g_n^\top g_n}{g_{n-1}^\top g_{n-1}}\\
+M_n=g_n+\beta_nM_{n-1}
+\]</div>
+<p>其实直接用 Gram-Schmidt 正交化也无可厚非（虽然这就涉及到要把 <span class="arithmatex">\(H\)</span> 纳入计算），因为无论如何我们都要把 <span class="arithmatex">\(\beta_n\)</span> 估计为一个固定的超参数 <span class="arithmatex">\(\beta\)</span>，我们要的是下面那个动量式子的结构而不是参数的表达式，毕竟参数可以估计。</p>
+<p>当然共轭梯度还利用 <span class="arithmatex">\(\alpha_i=\dfrac{g_n^\top g_n}{M_n^\top H M_n}\)</span> 来计算更新步长，不过这个的计算意义不大，因为我们一是不知道 <span class="arithmatex">\(H\)</span>，二是利用的固定学习率 <span class="arithmatex">\(\eta\)</span> 来近似替代。</p>
+<p>现在我们把 <span class="arithmatex">\(\beta_i\)</span> 也估计为固定的超参数 <span class="arithmatex">\(\beta\)</span>，那我们就可以下论断了：<strong>动量法随机梯度下降是采用固定参数近似对 <span class="arithmatex">\(H^{-1}\)</span> 的共轭梯度法求解</strong>。</p>
+<p>对于海森矩阵而言，有没有更好的估计方式呢？有的！让我们不要把参数固定死，来一个自适应调节。</p>
+<div class="admonition info">
+<p class="admonition-title">📝 如果您需要引用本文</p>
+<p>Yan Li. (Sep. 1, 2025). SGD 系列算法 [Blog post]. Retrieved from <a href="https://dicaeopolis.github.io/DNN/optimizer/SGD">https://dicaeopolis.github.io/DNN/optimizer/SGD</a></p>
+<p>在 BibTeX 格式中：
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-1-1">1</a></span>
+<span class="normal"><a href="#__codelineno-1-2">2</a></span>
+<span class="normal"><a href="#__codelineno-1-3">3</a></span>
+<span class="normal"><a href="#__codelineno-1-4">4</a></span>
+<span class="normal"><a href="#__codelineno-1-5">5</a></span>
+<span class="normal"><a href="#__codelineno-1-6">6</a></span>
+<span class="normal"><a href="#__codelineno-1-7">7</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1"></a>@online{SGD,
+<a id="__codelineno-1-2" name="__codelineno-1-2"></a>    title={SGD 系列算法},
+<a id="__codelineno-1-3" name="__codelineno-1-3"></a>    author={Yan Li},
+<a id="__codelineno-1-4" name="__codelineno-1-4"></a>    year={2025},
+<a id="__codelineno-1-5" name="__codelineno-1-5"></a>    month={Sep},
+<a id="__codelineno-1-6" name="__codelineno-1-6"></a>    url={\url{https://dicaeopolis.github.io/DNN/optimizer/SGD}},
+<a id="__codelineno-1-7" name="__codelineno-1-7"></a>}
+</code></pre></div></td></tr></table></div></p>
+</div>
+<form class="md-feedback" hidden="" name="feedback">
+<fieldset>
+<legend class="md-feedback__title">
+        Was this page helpful?
+      </legend>
+<div class="md-feedback__inner">
+<div class="md-feedback__list">
+<button class="md-feedback__icon md-icon" data-md-value="1" title="This page was helpful" type="submit">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 12a8 8 0 0 0-8-8 8 8 0 0 0-8 8 8 8 0 0 0 8 8 8 8 0 0 0 8-8m2 0a10 10 0 0 1-10 10A10 10 0 0 1 2 12 10 10 0 0 1 12 2a10 10 0 0 1 10 10M10 9.5c0 .8-.7 1.5-1.5 1.5S7 10.3 7 9.5 7.7 8 8.5 8s1.5.7 1.5 1.5m7 0c0 .8-.7 1.5-1.5 1.5S14 10.3 14 9.5 14.7 8 15.5 8s1.5.7 1.5 1.5m-5 7.73c-1.75 0-3.29-.73-4.19-1.81L9.23 14c.45.72 1.52 1.23 2.77 1.23s2.32-.51 2.77-1.23l1.42 1.42c-.9 1.08-2.44 1.81-4.19 1.81"></path></svg>
+</button>
+<button class="md-feedback__icon md-icon" data-md-value="0" title="This page could be improved" type="submit">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 12a8 8 0 0 0-8-8 8 8 0 0 0-8 8 8 8 0 0 0 8 8 8 8 0 0 0 8-8m2 0a10 10 0 0 1-10 10A10 10 0 0 1 2 12 10 10 0 0 1 12 2a10 10 0 0 1 10 10m-6.5-4c.8 0 1.5.7 1.5 1.5s-.7 1.5-1.5 1.5-1.5-.7-1.5-1.5.7-1.5 1.5-1.5M10 9.5c0 .8-.7 1.5-1.5 1.5S7 10.3 7 9.5 7.7 8 8.5 8s1.5.7 1.5 1.5m2 4.5c1.75 0 3.29.72 4.19 1.81l-1.42 1.42C14.32 16.5 13.25 16 12 16s-2.32.5-2.77 1.23l-1.42-1.42C8.71 14.72 10.25 14 12 14"></path></svg>
+</button>
+</div>
+<div class="md-feedback__note">
+<div data-md-value="1" hidden="">
+              
+              
+                
+              
+              
+              
+                
+                
+              
+              Thanks for your feedback!
+            </div>
+<div data-md-value="0" hidden="">
+              
+              
+                
+              
+              
+              
+                
+                
+              
+              Thanks for your feedback! Help us improve this page by using our <a href="..." rel="noopener" target="_blank">feedback form</a>.
+            </div>
+</div>
+</div>
+</fieldset>
+</form>
+<h2 id="__comments">评论</h2>
+<!-- Giscus 脚本粘贴在这里 -->
+<script async="" crossorigin="anonymous" data-category="Comments" data-category-id="DIC_kwDOOfbpCM4CtuiH" data-emit-metadata="0" data-input-position="bottom" data-lang="zh-CN" data-mapping="pathname" data-reactions-enabled="1" data-repo="dicaeopolis/dicaeopolis.github.io" data-repo-id="R_kgDOOfbpCA" data-strict="0" data-theme="preferred_color_scheme" src="https://giscus.app/client.js">
+</script>
+<!-- 这段脚本用于同步 Giscus 和 mkdocs-material 的主题 -->
+<script>
+    var giscus = document.querySelector("script[src*=giscus]");
+    document.addEventListener("DOMContentLoaded", function () {
+      var palette = __md_get("__palette");
+      if (palette && typeof palette.color === "object") {
+        var theme = palette.color.scheme === "slate" ? "transparent_dark" : "light";
+        giscus.setAttribute("data-theme", theme);
+      }
+      var ref = document.querySelector("[data-md-component=palette]");
+      ref.addEventListener("change", function () {
+        var palette = __md_get("__palette");
+        if (palette && typeof palette.color === "object") {
+          var theme = palette.color.scheme === "slate" ? "transparent_dark" : "light";
+          var message = { setConfig: { theme: theme } };
+          var frame = document.querySelector(".giscus-frame");
+          frame.contentWindow.postMessage({ giscus: message }, "https://giscus.app");
+        }
+      });
+    });
+  </script>
+</article>
+</div>
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+</div>
+</main>
+<footer class="md-footer">
+<div class="md-footer-meta md-typeset">
+<div class="md-footer-meta__inner md-grid">
+<div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" rel="noopener" target="_blank">
+      Material for MkDocs
+    </a>
+</div>
+</div>
+</div>
+</footer>
+</div>
+<div class="md-dialog" data-md-component="dialog">
+<div class="md-dialog__inner md-typeset"></div>
+</div>
+<script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["content.code.copy", "content.code.select", "navigation.titles", "navigation.tabs", "navigation.indexes"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+<script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+<script src="../../../assets/js/custom.js"></script>
+<script src="../../../themes/js/custom.js"></script>
+<script src="../../../themes/js/simpleLightbox.min.js"></script>
+<script src="../../../themes/js/optionalConfig.js"></script>
+<script src="../../../themes/js/mermaidloader.js"></script>
+<script src="../../../themes/js/umlconvert.js"></script>
+<script src="../../../themes/js/mathjax.js"></script>
+<script src="../../../themes/js/katex.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.17.1/flowchart.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.3.0/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.13.6/underscore-min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mermaid-js/mermaid-mindmap@9.3.0/dist/diagram-definition.0faef4c2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/markdown-it-plantuml@1.4.1/index.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/webfont/1.6.28/webfontloader.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-chtml-full.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-svg-full.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+</body>
+</html>

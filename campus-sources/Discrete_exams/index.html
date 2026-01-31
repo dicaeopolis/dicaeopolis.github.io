@@ -1,0 +1,2455 @@
+
+<!DOCTYPE html>
+
+<html class="no-js" lang="zh">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<link href="../SDC-exams/" rel="prev"/>
+<link href="../Discrete_notes/" rel="next"/>
+<link href="../../favicon.png" rel="icon"/>
+<meta content="mkdocs-1.6.1, mkdocs-material-9.7.1" name="generator"/>
+<title>《离散数学》部分期末题目题解 - Dicaeopolis' Wiki</title>
+<link href="../../assets/stylesheets/main.484c7ddc.min.css" rel="stylesheet"/>
+<link href="../../assets/stylesheets/palette.ab4e12ef.min.css" rel="stylesheet"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback" rel="stylesheet"/>
+<style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+<link href="../../themes/css/custom.css" rel="stylesheet"/>
+<link href="../../themes/css/simpleLightbox.min.css" rel="stylesheet"/>
+<link href="../../themes/css/pied_piper.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css" rel="stylesheet"/>
+<link href="../../stylesheets/customize.css" rel="stylesheet"/>
+<link href="../../assets/css/custom.css" rel="stylesheet"/>
+<script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+</head>
+<body data-md-color-accent="indigo" data-md-color-primary="indigo" data-md-color-scheme="default" dir="ltr">
+<input autocomplete="off" class="md-toggle" data-md-toggle="drawer" id="__drawer" type="checkbox"/>
+<input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
+<label class="md-overlay" for="__drawer"></label>
+<div data-md-component="skip">
+<a class="md-skip" href="#_1">
+          跳转至
+        </a>
+</div>
+<div data-md-component="announce">
+</div>
+<header class="md-header" data-md-component="header">
+<nav aria-label="页眉" class="md-header__inner md-grid">
+<a aria-label="Dicaeopolis' Wiki" class="md-header__button md-logo" data-md-component="logo" href="../.." title="Dicaeopolis' Wiki">
+<img alt="logo" src="../../favicon.png"/>
+</a>
+<label class="md-header__button md-icon" for="__drawer">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"></path></svg>
+</label>
+<div class="md-header__title" data-md-component="header-title">
+<div class="md-header__ellipsis">
+<div class="md-header__topic">
+<span class="md-ellipsis">
+            Dicaeopolis' Wiki
+          </span>
+</div>
+<div class="md-header__topic" data-md-component="header-topic">
+<span class="md-ellipsis">
+            
+              《离散数学》部分期末题目题解
+            
+          </span>
+</div>
+</div>
+</div>
+<form class="md-header__option" data-md-component="palette">
+<input aria-label="Switch to light mode" class="md-option" data-md-color-accent="indigo" data-md-color-media="(prefers-color-scheme)" data-md-color-primary="indigo" data-md-color-scheme="default" id="__palette_0" name="__palette" type="radio"/>
+<label class="md-header__button md-icon" for="__palette_1" hidden="" title="Switch to light mode">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12zm-9.15 3.96h2.3L12 9z"></path></svg>
+</label>
+<input aria-label="Switch to dark mode" class="md-option" data-md-color-accent="indigo" data-md-color-media="(prefers-color-scheme: light)" data-md-color-primary="indigo" data-md-color-scheme="default" id="__palette_1" name="__palette" type="radio"/>
+<label class="md-header__button md-icon" for="__palette_2" hidden="" title="Switch to dark mode">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+</label>
+<input aria-label="Switch to system preference" class="md-option" data-md-color-accent="indigo" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-primary="indigo" data-md-color-scheme="slate" id="__palette_2" name="__palette" type="radio"/>
+<label class="md-header__button md-icon" for="__palette_0" hidden="" title="Switch to system preference">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+</label>
+</form>
+<script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+<label class="md-header__button md-icon" for="__search">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+</label>
+<div class="md-search" data-md-component="search" role="dialog">
+<label class="md-search__overlay" for="__search"></label>
+<div class="md-search__inner" role="search">
+<form class="md-search__form" name="search">
+<input aria-label="搜索" autocapitalize="off" autocomplete="off" autocorrect="off" class="md-search__input" data-md-component="search-query" name="query" placeholder="搜索" required="" spellcheck="false" type="text"/>
+<label class="md-search__icon md-icon" for="__search">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+</label>
+<nav aria-label="查找" class="md-search__options">
+<button aria-label="清空当前内容" class="md-search__icon md-icon" tabindex="-1" title="清空当前内容" type="reset">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+</button>
+</nav>
+</form>
+<div class="md-search__output">
+<div class="md-search__scrollwrap" data-md-scrollfix="" tabindex="0">
+<div class="md-search-result" data-md-component="search-result">
+<div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+<ol class="md-search-result__list" role="presentation"></ol>
+</div>
+</div>
+</div>
+</div>
+</div>
+</nav>
+</header>
+<div class="md-container" data-md-component="container">
+<nav aria-label="标签" class="md-tabs" data-md-component="tabs">
+<div class="md-grid">
+<ul class="md-tabs__list">
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../astronomy/">
+          
+  
+  
+    
+  
+  天文摄影理论和实践
+
+        </a>
+</li>
+<li class="md-tabs__item md-tabs__item--active">
+<a class="md-tabs__link" href="../">
+          
+  
+  
+    
+  
+  校内课程知识
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../DNN/">
+          
+  
+  
+    
+  
+  深度神经网络
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../misc/">
+          
+  
+  
+    
+  
+  配置和杂谈笔记
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../algorithm/">
+          
+  
+  
+    
+  
+  传统算法与性能
+
+        </a>
+</li>
+</ul>
+</div>
+</nav>
+<main class="md-main" data-md-component="main">
+<div class="md-main__inner md-grid">
+<div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="导航栏" class="md-nav md-nav--primary md-nav--lifted" data-md-level="0">
+<label class="md-nav__title" for="__drawer">
+<a aria-label="Dicaeopolis' Wiki" class="md-nav__button md-logo" data-md-component="logo" href="../.." title="Dicaeopolis' Wiki">
+<img alt="logo" src="../../favicon.png"/>
+</a>
+    Dicaeopolis' Wiki
+  </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_1" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../astronomy/">
+<span class="md-ellipsis">
+    
+  
+    天文摄影理论和实践
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_1_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_1">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    天文摄影理论和实践
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../astronomy/gallery/">
+<span class="md-ellipsis">
+    
+  
+    深空影集
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../astronomy/polar/">
+<span class="md-ellipsis">
+    
+  
+    看不见北极星怎么办
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../astronomy/%E6%96%B9%E4%BD%8D%E8%B0%83%E8%8A%82/">
+<span class="md-ellipsis">
+    
+  
+    方位调节
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../astronomy/%E7%BA%AC%E5%BA%A6%E8%B0%83%E8%8A%82/">
+<span class="md-ellipsis">
+    
+  
+    纬度调节
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+<input checked="" class="md-nav__toggle md-toggle" id="__nav_2" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../">
+<span class="md-ellipsis">
+    
+  
+    校内课程知识
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="true" aria-labelledby="__nav_2_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_2">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    校内课程知识
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../SDC-exams/">
+<span class="md-ellipsis">
+    
+  
+    《计算机组成与设计》部分历年题目题解
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" id="__toc" type="checkbox"/>
+<label class="md-nav__link md-nav__link--active" for="__toc">
+<span class="md-ellipsis">
+    
+  
+    《离散数学》部分期末题目题解
+  
+
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<a class="md-nav__link md-nav__link--active" href="./">
+<span class="md-ellipsis">
+    
+  
+    《离散数学》部分期末题目题解
+  
+
+    
+  </span>
+</a>
+<nav aria-label="目录" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#18-19-a">
+<span class="md-ellipsis">
+      
+        18-19 A
+      
+    </span>
+</a>
+<nav aria-label="18-19 A" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#10110">
+<span class="md-ellipsis">
+      
+        一、判断题（共10小题，每小题1分，共10分）
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#10220">
+<span class="md-ellipsis">
+      
+        二、单项选择题（共10小题，每小题2分，共20分）
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#10220_1">
+<span class="md-ellipsis">
+      
+        三、填空题（共10小题，每空2分，共20分）
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#5630">
+<span class="md-ellipsis">
+      
+        四、计算和解答题（共5小题，每小题6分，共30分）
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#21020">
+<span class="md-ellipsis">
+      
+        五、证明题（共2小题，每题10分，共20分）
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#18-19-b">
+<span class="md-ellipsis">
+      
+        18-19 B
+      
+    </span>
+</a>
+<nav aria-label="18-19 B" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#10110_1">
+<span class="md-ellipsis">
+      
+        一、判断题 (共10小题,每小题1分,共10分)
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#10220_2">
+<span class="md-ellipsis">
+      
+        二、单项选择题(共10小题,每小题2分,共20分)
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#10230">
+<span class="md-ellipsis">
+      
+        三、填空题(共10小题,每空2分,共30分)
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#1-5661040">
+<span class="md-ellipsis">
+      
+        四、计算和解答题(1-5每小题6分,6小题10分,共40分)
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#2021a">
+<span class="md-ellipsis">
+      
+        2021A
+      
+    </span>
+</a>
+<nav aria-label="2021A" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#10110_2">
+<span class="md-ellipsis">
+      
+        一、判断题（共10小题，每小题1分，共10分）
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#10110_3">
+<span class="md-ellipsis">
+      
+        二、单项选择题（共10小题，每小题1分，共10分）
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#15230">
+<span class="md-ellipsis">
+      
+        三、填空题（共15空，每空2分，共30分）
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#5630_1">
+<span class="md-ellipsis">
+      
+        四、计算与解答题(共5小题，每小题6分，共30分)
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#320">
+<span class="md-ellipsis">
+      
+        五、证明题(共3小题，共20分)
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../Discrete_notes/">
+<span class="md-ellipsis">
+    
+  
+    离散期末复习提纲
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../Descrete_assignments/">
+<span class="md-ellipsis">
+    
+  
+    《离散数学》课程作业与笔记归档
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../Prob_Stats_assignments/">
+<span class="md-ellipsis">
+    
+  
+    《概率论与数理统计》课程作业与笔记归档
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../SDC_assignments/">
+<span class="md-ellipsis">
+    
+  
+    《计算机组成原理》理论课程作业与笔记归档
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../PU_Bii_assignments/">
+<span class="md-ellipsis">
+    
+  
+    《大学物理B下》课程作业与笔记归档
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../binmul/">
+<span class="md-ellipsis">
+<i class="fas fa-calculator"></i> 二进制乘法可视化工具
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../textbook/">
+<span class="md-ellipsis">
+    
+  
+    本科教科书电子资源
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../ds-keynote/">
+<span class="md-ellipsis">
+    
+  
+    《数据结构》划重点笔记
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../ds-write-up/">
+<span class="md-ellipsis">
+    
+  
+    《数据结构》期末复习题题解
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../autosignin/">
+<span class="md-ellipsis">
+    
+  
+    自动签到脚本
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_3" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../DNN/">
+<span class="md-ellipsis">
+    
+  
+    深度神经网络
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_3_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_3">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    深度神经网络
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/match/">
+<span class="md-ellipsis">
+    
+  
+    如何做四六级考试的段落匹配题
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/BP/">
+<span class="md-ellipsis">
+    
+  
+    前馈神经网络的反向传播
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/RL/">
+<span class="md-ellipsis">
+    
+  
+    RL学习笔记 - 上篇
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/SVM_SMO/">
+<span class="md-ellipsis">
+    
+  
+    SMO 算法的推导
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_3_6" type="checkbox"/>
+<label class="md-nav__link" for="__nav_3_6" id="__nav_3_6_label" tabindex="0">
+<span class="md-ellipsis">
+    
+  
+    Wp
+  
+
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_3_6_label" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="__nav_3_6">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    Wp
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/WP/aiwp/">
+<span class="md-ellipsis">
+    
+  
+    MISC-AI 方向 WriteUp
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_3_7" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../DNN/model-attack/">
+<span class="md-ellipsis">
+    
+  
+    深度学习模型攻击理论与复现归档
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_3_7" id="__nav_3_7_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_3_7_label" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="__nav_3_7">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    深度学习模型攻击理论与复现归档
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-attack/hsja/">
+<span class="md-ellipsis">
+    
+  
+    HSJA 攻击
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-attack/BadNets/">
+<span class="md-ellipsis">
+    
+  
+    BadNets
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-attack/CandW/">
+<span class="md-ellipsis">
+    
+  
+    C&amp;W 攻击
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-attack/pgd/">
+<span class="md-ellipsis">
+    
+  
+    PGD 攻击
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-attack/fgsm/">
+<span class="md-ellipsis">
+    
+  
+    FGSM 攻击
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_3_8" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../DNN/model-expr/">
+<span class="md-ellipsis">
+    
+  
+    深度学习相关模型理论与复现归档
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_3_8" id="__nav_3_8_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_3_8_label" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="__nav_3_8">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    深度学习相关模型理论与复现归档
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-expr/DDPM/">
+<span class="md-ellipsis">
+    
+  
+    扩散模型理论篇: 从多阶段变分自编码器到概率流常微分方程采样器系列
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-expr/S-and-D-models-replication/">
+<span class="md-ellipsis">
+    
+  
+    图像语义分割和目标检测相关模型复现手记
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-expr/Image-models-replication/">
+<span class="md-ellipsis">
+    
+  
+    图像分类相关模型复现手记
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/model-expr/DC-GAN-%E8%80%81%E5%A9%86%E7%94%9F%E6%88%90%E5%99%A8/">
+<span class="md-ellipsis">
+    
+  
+    DC-GAN 老婆生成器
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_3_9" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../DNN/optimizer/">
+<span class="md-ellipsis">
+    
+  
+    优化器
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_3_9" id="__nav_3_9_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_3_9_label" class="md-nav" data-md-level="2">
+<label class="md-nav__title" for="__nav_3_9">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    优化器
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/optimizer/misc/">
+<span class="md-ellipsis">
+    
+  
+    后续的写作计划
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/optimizer/SignGD/">
+<span class="md-ellipsis">
+    
+  
+    符号梯度下降
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/optimizer/Adaptive/">
+<span class="md-ellipsis">
+    
+  
+    自适应学习率改进策略
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DNN/optimizer/SGD/">
+<span class="md-ellipsis">
+    
+  
+    SGD 系列算法
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_4" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../misc/">
+<span class="md-ellipsis">
+    
+  
+    配置和杂谈笔记
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_4_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_4">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    配置和杂谈笔记
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../misc/test/">
+<span class="md-ellipsis">
+    
+  
+    功能测试页面
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle" id="__nav_5" type="checkbox"/>
+<div class="md-nav__link md-nav__container">
+<a class="md-nav__link" href="../../algorithm/">
+<span class="md-ellipsis">
+    
+  
+    传统算法与性能
+  
+
+    
+  </span>
+</a>
+<label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+<span class="md-nav__icon md-icon"></span>
+</label>
+</div>
+<nav aria-expanded="false" aria-labelledby="__nav_5_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_5">
+<span class="md-nav__icon md-icon"></span>
+            
+  
+    传统算法与性能
+  
+
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../algorithm/benchmark-on-stl/">
+<span class="md-ellipsis">
+    
+  
+    STL的一些性能测试
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../algorithm/stl-wheels/">
+<span class="md-ellipsis">
+    
+  
+    嗯造轮子
+  
+
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../algorithm/template-on-numeric-ring/">
+<span class="md-ellipsis">
+    
+  
+    整数环取模模板
+  
+
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="目录" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#18-19-a">
+<span class="md-ellipsis">
+      
+        18-19 A
+      
+    </span>
+</a>
+<nav aria-label="18-19 A" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#10110">
+<span class="md-ellipsis">
+      
+        一、判断题（共10小题，每小题1分，共10分）
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#10220">
+<span class="md-ellipsis">
+      
+        二、单项选择题（共10小题，每小题2分，共20分）
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#10220_1">
+<span class="md-ellipsis">
+      
+        三、填空题（共10小题，每空2分，共20分）
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#5630">
+<span class="md-ellipsis">
+      
+        四、计算和解答题（共5小题，每小题6分，共30分）
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#21020">
+<span class="md-ellipsis">
+      
+        五、证明题（共2小题，每题10分，共20分）
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#18-19-b">
+<span class="md-ellipsis">
+      
+        18-19 B
+      
+    </span>
+</a>
+<nav aria-label="18-19 B" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#10110_1">
+<span class="md-ellipsis">
+      
+        一、判断题 (共10小题,每小题1分,共10分)
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#10220_2">
+<span class="md-ellipsis">
+      
+        二、单项选择题(共10小题,每小题2分,共20分)
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#10230">
+<span class="md-ellipsis">
+      
+        三、填空题(共10小题,每空2分,共30分)
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#1-5661040">
+<span class="md-ellipsis">
+      
+        四、计算和解答题(1-5每小题6分,6小题10分,共40分)
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#2021a">
+<span class="md-ellipsis">
+      
+        2021A
+      
+    </span>
+</a>
+<nav aria-label="2021A" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#10110_2">
+<span class="md-ellipsis">
+      
+        一、判断题（共10小题，每小题1分，共10分）
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#10110_3">
+<span class="md-ellipsis">
+      
+        二、单项选择题（共10小题，每小题1分，共10分）
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#15230">
+<span class="md-ellipsis">
+      
+        三、填空题（共15空，每空2分，共30分）
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#5630_1">
+<span class="md-ellipsis">
+      
+        四、计算与解答题(共5小题，每小题6分，共30分)
+      
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#320">
+<span class="md-ellipsis">
+      
+        五、证明题(共3小题，共20分)
+      
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-content" data-md-component="content">
+<article class="md-content__inner md-typeset">
+<h1 id="_1">《离散数学》部分期末题目题解<a class="headerlink" href="#_1" title="Permanent link">¶</a></h1>
+<div class="admonition info">
+<p class="admonition-title">📖 阅读信息</p>
+<p>阅读时间约 <strong>49</strong> 分钟　|　约 <strong>4082</strong> 字　|　约 <strong>293</strong> 个公式　|　约 <strong>8</strong> 行代码</p>
+</div>
+<h2 id="18-19-a">18-19 A<a class="headerlink" href="#18-19-a" title="Permanent link">¶</a></h2>
+<h3 id="10110">一、判断题（共10小题，每小题1分，共10分）<a class="headerlink" href="#10110" title="Permanent link">¶</a></h3>
+<ol>
+<li>若 <span class="arithmatex">\(|A|+|B|=|A∪B|\)</span> ，则 <span class="arithmatex">\(A∩B=∅\)</span>  （）</li>
+</ol>
+<blockquote>
+<p>对。说明并集没有删元素，所以是交集是空集。</p>
+</blockquote>
+<ol>
+<li>若 <span class="arithmatex">\(A⊆B\)</span> ，则 <span class="arithmatex">\(A - B=∅\)</span>  （）</li>
+</ol>
+<blockquote>
+<p>对。集合的差就是排除操作。A-B 就是把 B 的所有元素排除出 A。</p>
+</blockquote>
+<ol>
+<li>自然数的小于关系是等价关系 （）</li>
+</ol>
+<blockquote>
+<p>错。等价关系满足自反性，对称性和传递性。但是小于不满足自反性和对称性。</p>
+</blockquote>
+<ol>
+<li>存在6个顶点，16条边的简单无向图 （）</li>
+</ol>
+<blockquote>
+<p>错。6 个顶点形成的图里面，边数最少的是链，6 条边；最多的是 6 阶完全图，6 * 5 / 2 = 15 条边。</p>
+</blockquote>
+<ol>
+<li>非同构的3个结点的有向树的个数是3 （）</li>
+</ol>
+<blockquote>
+<p>错。三个节点连两条边，一共 4 种可能。两种链状是同构的，放射状的算另一种，向中间汇聚的不是树。因此加起来是 2 个。</p>
+</blockquote>
+<ol>
+<li>可逆函数一定是满射的 （）</li>
+</ol>
+<blockquote>
+<p>对。可逆 = 满射+单射。</p>
+</blockquote>
+<ol>
+<li>在正整数集上加法和减法运算都可以保证封闭性 （）</li>
+</ol>
+<blockquote>
+<p><strong>群论不考</strong> 错。减法不满足</p>
+</blockquote>
+<ol>
+<li>“水星上面有水”不是命题。 （）</li>
+</ol>
+<blockquote>
+<p>错。简单陈述句，真假二元。是命题。</p>
+</blockquote>
+<ol>
+<li><span class="arithmatex">\(&lt;Z, +&gt;\)</span> 是群，单位元是0，每个 <span class="arithmatex">\(i∈Z\)</span> 的逆元是 <span class="arithmatex">\(-i\)</span>  （）</li>
+</ol>
+<blockquote>
+<p><strong>群论不考</strong></p>
+</blockquote>
+<ol>
+<li>自然数集是可数集 （）</li>
+</ol>
+<blockquote>
+<p>是。对比：NZQ都是可数的，R和C不是，参考希尔伯特对角线论证。</p>
+</blockquote>
+<h3 id="10220">二、单项选择题（共10小题，每小题2分，共20分）<a class="headerlink" href="#10220" title="Permanent link">¶</a></h3>
+<ol>
+<li>
+<p>半群、群及独异点的关系是（）</p>
+<p>A．{半群}⊂{独异点}⊂{群}</p>
+<p>B．{独异点}⊂{半群}⊂{群}</p>
+<p>C．{独异点}⊂{群}⊂{半群}</p>
+<p>D．{半群}⊂{群}⊂{独异点}</p>
+</li>
+</ol>
+<blockquote>
+<p><strong>群论不考</strong></p>
+</blockquote>
+<ol>
+<li>
+<p>下述能构成集合 <span class="arithmatex">\(S=\{Alice,Bob,Tom,Jane\}\)</span> 的分划的是（）</p>
+<p>A． <span class="arithmatex">\(\{\{Alice\},\{Bob,Alice,Tom\},\{Jane\}\}\)</span> </p>
+<p>B． <span class="arithmatex">\(\{\{Alice\},\{Bob,Jane\},\{Tom\}\}\)</span> </p>
+<p>C． <span class="arithmatex">\(\{\{Bob\},\{Jane\}\}\)</span> </p>
+<p>D． <span class="arithmatex">\(\{\{Cindy\},\{Bob\},\{Tom\},\{Jane\}\}\)</span> </p>
+</li>
+</ol>
+<blockquote>
+<p>B。分划的意思就是不重不漏做分割。</p>
+</blockquote>
+<ol>
+<li>
+<p>设 <span class="arithmatex">\(A=\{a,b,c,d\}\)</span> ，A上的关系 <span class="arithmatex">\(ρ=\{(a,a),(a,c),(b,b),(b,d),(c,c),(c,a),(d,a)\}\)</span> ，则 <span class="arithmatex">\(ρ\)</span> 是（）</p>
+<p>A．自反的</p>
+<p>B．对称的</p>
+<p>C．传递的</p>
+<p>D．以上均不是</p>
+</li>
+</ol>
+<blockquote>
+<p>D。由于不存在 (d,d) 因此不是自反的；由于存在 (b,d) 但是不存在 (d,b) 因此不是对称的；由于存在 (d,a) (a,c) 但是不存在 (d,c) 因此不是传递的。</p>
+</blockquote>
+<ol>
+<li>
+<p>设简单无向图G所有结点的度数之和为24，则G中某一结点的度数可能为（）</p>
+<p>A．15</p>
+<p>B．14</p>
+<p>C．13</p>
+<p>D．12</p>
+</li>
+</ol>
+<blockquote>
+<p>D。由于握手定理可知，边数只有 12。那么这个节点度数怎么都不可能超过 12.</p>
+</blockquote>
+<ol>
+<li>
+<p>已知 <span class="arithmatex">\(f:A→B\)</span> 为一可逆函数，则下列说法可能成立的是（）</p>
+<p>A． <span class="arithmatex">\(|A|=3, |B|=2\)</span> </p>
+<p>B．f不是满射</p>
+<p>C．A为整数集，B为偶数集</p>
+<p>D．f的逆函数不是单射</p>
+</li>
+</ol>
+<blockquote>
+<p>C。如果可逆，则 AB 至少要等势或者数量相等，A 排除。可逆=单射+满射， B 排除。C 两个集合是等势的。可逆函数的逆也是可逆的，也就是说 D 错误</p>
+</blockquote>
+<ol>
+<li>
+<p>下列构成群的是（）</p>
+<p>A． <span class="arithmatex">\(&lt;整数集Z, *&gt;\)</span> </p>
+<p>B． <span class="arithmatex">\(&lt;有理数集Q, *&gt;\)</span> </p>
+<p>C． <span class="arithmatex">\(&lt;整数集Z, +&gt;\)</span> </p>
+<p>D． <span class="arithmatex">\(&lt;自然数集N, -&gt;\)</span> </p>
+</li>
+</ol>
+<blockquote>
+<p>群论不考。</p>
+</blockquote>
+<ol>
+<li>
+<p>已知简单无向图G有n个结点，n-2条边（n&gt;3），则下列说法错误的是（）</p>
+<p>A．至少存在一个结点，没有边与之相连</p>
+<p>B．G中一定没有回路</p>
+<p>C．G所有结点的度数之和为2n-4</p>
+<p>D．G一定不是连通的</p>
+</li>
+</ol>
+<blockquote>
+<p>AB</p>
+<p>注意 n 个节点，n-1 条边的连通图是树，树的每一条边都是割边，因此 G 可以是两棵树构成的森林。当然，我们也可以考虑将森林的边相互挪动以制造更多的连通分量。但无论如何我们看看选项。</p>
+<p>A：考虑 4 个节点，两条边连接 12 和 34，证伪 A。</p>
+<p>B: 考虑 5 个节点，由两个孤立点和一个三元环构成，这证伪 B。</p>
+<p>C: 对的，因为握手定理。</p>
+<p>D：看上面的分析。</p>
+</blockquote>
+<ol>
+<li>
+<p>下列不是可数集的是（）</p>
+<p>A．0到1之间的所有实数</p>
+<p>B．0到5之间的所有有理数</p>
+<p>C．所有偶数</p>
+<p>D．1到100之间的所有奇数</p>
+</li>
+</ol>
+<blockquote>
+<p>A。不解释。</p>
+</blockquote>
+<ol>
+<li>
+<p>下列公式中为永真式的是（）</p>
+<p>A． <span class="arithmatex">\((P→Q)∧(¬P)→Q\)</span> </p>
+<p>B． <span class="arithmatex">\((P→Q)∧(R→Q)→(P→R)\)</span> </p>
+<p>C． <span class="arithmatex">\((P→Q)∧(Q→P)→(P∧Q)\)</span> </p>
+<p>D． <span class="arithmatex">\((P→Q)∧(Q→R)→(P→R)\)</span> </p>
+</li>
+</ol>
+<blockquote>
+<p>D</p>
+<p>首先分析一下题目的所有式子都是类似 <span class="arithmatex">\(A\land B\rightarrow C\)</span> 类型的。</p>
+<p>A：考虑 P 是假，则前面一坨是真，这个时候真值由 Q 决定，不是重言式。</p>
+<p>B：考虑 Q 是真，同理前面一坨是真，真值取决于 P 和 R。</p>
+<p>C: 前面一坨就是等价，也就需要 P 和 Q 的真值相等。但是 P=Q=0 时后件为假。</p>
+<p>D: 这个从语义层面比较明显。考虑前件为真的情况，如果 P 是 1 那么后续 Q 和 R 就得是 1；如果 P 是 0 那么后件默认是 1。</p>
+</blockquote>
+<ol>
+<li>
+<p>已知简单无向图G是树，且G有2020个顶点，则G一定有（）</p>
+<p>A．2018条边</p>
+<p>B．2019条边</p>
+<p>C．2020条边</p>
+<p>D．2021条边</p>
+</li>
+</ol>
+<blockquote>
+<p>B。不解释，之前说过了。</p>
+</blockquote>
+<h3 id="10220_1">三、填空题（共10小题，每空2分，共20分）<a class="headerlink" href="#10220_1" title="Permanent link">¶</a></h3>
+<ol>
+<li>写出 <span class="arithmatex">\(A=\{m,n\}\)</span> ，则A的幂集 <span class="arithmatex">\(2^A=\)</span> ______。</li>
+</ol>
+<blockquote>
+<p><span class="arithmatex">\(\{\emptyset, \{m\}, \{n\}, \{m,n\}\}\)</span></p>
+</blockquote>
+<ol>
+<li>已知 <span class="arithmatex">\(g,h:R→R\)</span> ， <span class="arithmatex">\(g(x)=3x+1\)</span> ， <span class="arithmatex">\(h(x)=x-2\)</span> 。则复合函数 <span class="arithmatex">\((g∘h)(x)=\)</span> ______。</li>
+</ol>
+<blockquote>
+<p><span class="arithmatex">\(3(x-2)+1 = 3x-5\)</span></p>
+</blockquote>
+<ol>
+<li>设 <span class="arithmatex">\(A=\{1,2,3,4\}\)</span> 上关系 <span class="arithmatex">\(ρ_1=\{(1,2),(2,4),(3,3)\}\)</span> ， <span class="arithmatex">\(ρ_2=\{(2,3),(2,4),(4,2)\}\)</span> ，则复合关系 <span class="arithmatex">\(ρ_1∘ρ_2=\)</span> ______。</li>
+</ol>
+<blockquote>
+<p><span class="arithmatex">\(\{(1,3),(1.4),(2,2)\}\)</span></p>
+</blockquote>
+<ol>
+<li>设 <span class="arithmatex">\(*\)</span> 是集合S上的二元运算，若运算 <span class="arithmatex">\(*\)</span> 满足结合律且存在______，则称 <span class="arithmatex">\(&lt;S, *&gt;\)</span> 为独异点。</li>
+</ol>
+<blockquote>
+<p>群论不考。</p>
+</blockquote>
+<ol>
+<li>每个连通分支都是树的无向图称为______。</li>
+</ol>
+<blockquote>
+<p>Forest</p>
+</blockquote>
+<ol>
+<li>设 <span class="arithmatex">\(A=\{1,2,3,4\}\)</span> ， <span class="arithmatex">\(R=\{(1,2),(3,4),(2,2)\}\)</span> ，则R的自反闭包 <span class="arithmatex">\(r(R)=\)</span> ______。</li>
+</ol>
+<blockquote>
+<p>先把自己写出来，再往后面加自反。<span class="arithmatex">\(\{(1,2),(3,4),(2,2),(1,1),(3,3),(4,4)\}\)</span></p>
+</blockquote>
+<ol>
+<li>设有向图 <span class="arithmatex">\(G&lt;V,E&gt;\)</span> ， <span class="arithmatex">\(V=\{v_1,v_2,v_3,v_4\}\)</span> ，若G的邻接矩阵 <span class="arithmatex">\(A=\begin{bmatrix} 0&amp;1&amp;0&amp;1\\ 1&amp;0&amp;1&amp;0\\ 0&amp;1&amp;0&amp;1\\ 1&amp;0&amp;1&amp;0 \end{bmatrix}\)</span> ，则结点 <span class="arithmatex">\(v_1\)</span> 的入度=______。</li>
+</ol>
+<blockquote>
+<p>2。由邻接矩阵可知。</p>
+</blockquote>
+<ol>
+<li>设 <span class="arithmatex">\(P(x)\)</span> 表示x是小鸟， <span class="arithmatex">\(Q(x)\)</span> 表示x有羽毛，将命题“有羽毛的不都是小鸟”符号化______。</li>
+</ol>
+<blockquote>
+<p>换句话说，存在一只小鸟，且它没有羽毛。 <span class="arithmatex">\(\exists x(P(x)\land \neg Q(x))\)</span></p>
+</blockquote>
+<ol>
+<li><span class="arithmatex">\(A=\{x∈Z|1&lt;x&lt;10\}\)</span> ， <span class="arithmatex">\(B=\{x|x为偶数\}\)</span> ， <span class="arithmatex">\(A∩B=\)</span> ______。</li>
+</ol>
+<blockquote>
+<p><span class="arithmatex">\(\{2,4,6,8\}\)</span></p>
+</blockquote>
+<ol>
+<li>设G为一27阶循环群， <span class="arithmatex">\(g\)</span> 为其生成元，则满足 <span class="arithmatex">\(g^{3m}=e\)</span> 的最小正数 <span class="arithmatex">\(m=\)</span> ______。</li>
+</ol>
+<blockquote>
+<p>群论不考。</p>
+</blockquote>
+<h3 id="5630">四、计算和解答题（共5小题，每小题6分，共30分）<a class="headerlink" href="#5630" title="Permanent link">¶</a></h3>
+<ol>
+<li>二年级共有学生180人，运动会有短跑、铅球、跳高三个项目。已知有28人三个项目都参加了，有65人至少参加了两个项目。若该年级参加比赛的总人次是220人次，问有多少学生没有参加任何项目。</li>
+</ol>
+<blockquote>
+<p>排斥原理的变体。一共 220 人次，那么二元交集(65-28)算了 1 次，三元交集(28)算了 2 次。</p>
+<p>也就是 180 - (220 - 65 - 28) = 53 人。</p>
+</blockquote>
+<ol>
+<li>构造命题公式 <span class="arithmatex">\((P∧¬Q)\)</span> 的真值表。</li>
+</ol>
+<blockquote>
+<p>如下。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th><span class="arithmatex">\(P\)</span></th>
+<th><span class="arithmatex">\(Q\)</span></th>
+<th style="text-align: center;"><span class="arithmatex">\(P\land \neg Q\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>0</td>
+<td style="text-align: center;">0</td>
+</tr>
+<tr>
+<td>0</td>
+<td>1</td>
+<td style="text-align: center;">0</td>
+</tr>
+<tr>
+<td>1</td>
+<td>0</td>
+<td style="text-align: center;">1</td>
+</tr>
+<tr>
+<td>1</td>
+<td>1</td>
+<td style="text-align: center;">0</td>
+</tr>
+</tbody>
+</table>
+<ol>
+<li>判断函数 <span class="arithmatex">\(f:R→R, f(x)=(x+3)(x+2)\)</span> 是否是可逆函数？</li>
+</ol>
+<blockquote>
+<p>不是。显然对于 <span class="arithmatex">\(y=0\)</span> 而言，有 <span class="arithmatex">\(x=3,x=2\)</span> 两个解。</p>
+</blockquote>
+<ol>
+<li>一棵树T有2个度为4的结点，3个度为3的结点，5个度为2的结点，其余均是度为1的结点，问T有几个度为1的结点？</li>
+</ol>
+<blockquote>
+<p>考虑有 x 个节点，然后度数之和根据握手定理是 2x-2 个，于是可以列方程：</p>
+<p>2x-2 = 8 + 9 + 10 + x - 10 =&gt; x = 19</p>
+<p>x - 10 = 9，有 9 个。</p>
+</blockquote>
+<ol>
+<li>已知图G如下：</li>
+</ol>
+<p><img alt="alt text" src="../image-163.png"/></p>
+<p>（1）写出一条从 <span class="arithmatex">\(v_3\)</span> 到 <span class="arithmatex">\(v_7\)</span> 长度为3的通路；</p>
+<blockquote>
+<p><span class="arithmatex">\(v_3e_8v_6e_5v_7\)</span></p>
+</blockquote>
+<p>（2）写出一条长度为5的回路。</p>
+<blockquote>
+<p><span class="arithmatex">\(v_1e_3v_3e_8v_6e_5v_7e_2v_2e_1v_1\)</span></p>
+</blockquote>
+<h3 id="21020">五、证明题（共2小题，每题10分，共20分）<a class="headerlink" href="#21020" title="Permanent link">¶</a></h3>
+<ol>
+<li>形式证明： <span class="arithmatex">\(P→(Q∨R), Q→¬P, S→¬R ⇒ P→¬S\)</span> </li>
+</ol>
+<div class="arithmatex">\[
+\begin{align*}
+    P→(Q∨R)&amp;,\quad 前提\\
+    P&amp;,\quad 附加前提\\
+    (Q∨R)&amp;,\quad (1)(2) 假言推理\\
+    Q→¬P&amp;,\quad 前提\\
+    P&amp;,\quad 附加前提\\
+    \neg Q&amp;,\quad (2)(4) 拒取式\\
+    R&amp;,\quad (3)(5) 析取三段论\\
+    S→¬R&amp;,\quad 前提\\
+    \neg S&amp;,\quad (6)(7) 拒取式\\
+    P→¬S&amp;,\quad CP
+\end{align*}
+\]</div>
+<ol>
+<li>构造下面推理的证明。
+“如果小明生病了，那么小明不能参加考试；如果小明不爱锻炼身体，那么小明一定会生病；小明参加了考试，所以小明一定喜爱锻炼身体。”</li>
+</ol>
+<p>首先定义：</p>
+<p><span class="arithmatex">\(P\)</span> 是“小明生病了”，<span class="arithmatex">\(Q\)</span> 是小明参加考试，<span class="arithmatex">\(R\)</span> 是小明爱锻炼身体。</p>
+<p>推理流程即：<span class="arithmatex">\(P\rightarrow \neg Q, \neg R \rightarrow P \Rightarrow Q\rightarrow R\)</span></p>
+<p>形式证明如下：</p>
+<div class="arithmatex">\[
+\begin{align*}
+    P→\neg Q&amp;,\quad 前提\\
+    Q&amp;,\quad 附加前提\\
+    \neg P&amp;,\quad (1)(2)拒取式\\
+    \neg R \rightarrow P&amp;,\quad 前提\\
+    R&amp;,\quad (3)(4)拒取式\\
+    Q\rightarrow R&amp;,\quad CP
+\end{align*}
+\]</div>
+<h2 id="18-19-b">18-19 B<a class="headerlink" href="#18-19-b" title="Permanent link">¶</a></h2>
+<h3 id="10110_1">一、判断题 (共10小题,每小题1分,共10分)<a class="headerlink" href="#10110_1" title="Permanent link">¶</a></h3>
+<ol>
+<li>若  <span class="arithmatex">\(a \in A\)</span> ，则  <span class="arithmatex">\(a \in A \cap B\)</span>  ( )</li>
+</ol>
+<blockquote>
+<p>错。可能位于差集。</p>
+</blockquote>
+<ol>
+<li>若  <span class="arithmatex">\(A \subseteq B\)</span> ，则  <span class="arithmatex">\(A \cap B = A\)</span>  ( )</li>
+</ol>
+<blockquote>
+<p>对。画 Venn 图即可。</p>
+</blockquote>
+<ol>
+<li>非同构的5个结点的无向树的个数是2。( )</li>
+</ol>
+<blockquote>
+<p>错。正戊烷、异戊烷和新戊烷。</p>
+</blockquote>
+<ol>
+<li>若T是一个n个节点m条边的树，则  <span class="arithmatex">\(m = n - 1\)</span> 。( )</li>
+</ol>
+<blockquote>
+<p>对。显然。</p>
+</blockquote>
+<ol>
+<li>“月球明年要撞击地球”不是命题。( )</li>
+</ol>
+<blockquote>
+<p>错。显然。</p>
+</blockquote>
+<ol>
+<li>只有双射函数才有逆函数。( )</li>
+</ol>
+<blockquote>
+<p>对。双射 = 可逆。</p>
+</blockquote>
+<ol>
+<li>若树T的每个分支点都恰好有r个儿子，则称T为r元正则树。( )</li>
+</ol>
+<blockquote>
+<p>对。正则树的定义就是要么没有儿子要么有固定数量的儿子。</p>
+</blockquote>
+<ol>
+<li><span class="arithmatex">\(K_{3,3}\)</span>  不是平面图， <span class="arithmatex">\(K_{5}\)</span>  是平面图。( )</li>
+</ol>
+<blockquote>
+<p>错。参考库拉图斯基定理。</p>
+</blockquote>
+<ol>
+<li><i,+> 是群，单位元是0，每个  <span class="arithmatex">\(i \in I\)</span>  的逆元是  <span class="arithmatex">\(-i\)</span> 。( )</i,+></li>
+</ol>
+<blockquote>
+<p>群论不考。</p>
+</blockquote>
+<ol>
+<li>个体域为整数集合Z， <span class="arithmatex">\(\forall x \exists y(x + y = 0)\)</span>  为真命题。( )</li>
+</ol>
+<blockquote>
+<p>对。<span class="arithmatex">\(y=-x\)</span> 即可。</p>
+</blockquote>
+<h3 id="10220_2">二、单项选择题(共10小题,每小题2分,共20分)<a class="headerlink" href="#10220_2" title="Permanent link">¶</a></h3>
+<ol>
+<li>令P:今天下雪了，Q:路滑，则命题“虽然今天下雪了，但是路不滑”可符号化为( )</li>
+</ol>
+<p>A.  <span class="arithmatex">\(P \to \neg Q\)</span> </p>
+<p>B.  <span class="arithmatex">\(P \vee \neg Q\)</span> </p>
+<p>C.  <span class="arithmatex">\(P \wedge Q\)</span> </p>
+<p>D.  <span class="arithmatex">\(P \wedge \neg Q\)</span> </p>
+<blockquote>
+<p>D。</p>
+<p>简单的合取。</p>
+</blockquote>
+<ol>
+<li>设  <span class="arithmatex">\(A = \{a, b, c\}\)</span> ，R是A上的二元关系， <span class="arithmatex">\(R = \{&lt;a, a&gt;, &lt;a, b&gt;, &lt;a, c&gt;, &lt;c, a&gt;\}\)</span> ，那么R是( )</li>
+</ol>
+<p>A. 反自反的</p>
+<p>B. 反对称的</p>
+<p>C. 可传递的</p>
+<p>D. 不可传递的</p>
+<blockquote>
+<p>C.</p>
+<p>A: 由于存在 <a,a> 因此不是反自反的。</a,a></p>
+<p>B: 由于存在 <a,a> 因此不是反对称的。</a,a></p>
+<p>C: 验证一下就知道了</p>
+<p>D: 同上。</p>
+</blockquote>
+<ol>
+<li>设集合  <span class="arithmatex">\(A = \{a, b, c\}\)</span>  上的关系如下，不具有对称性的是( )</li>
+</ol>
+<p>A.  <span class="arithmatex">\(R = \{&lt;a, c&gt;, &lt;c, a&gt;, &lt;a, b&gt;, &lt;b, a&gt;\}\)</span> </p>
+<p>B.  <span class="arithmatex">\(R = \{&lt;a, c&gt;, &lt;b, c&gt;, &lt;c, a&gt;\}\)</span> </p>
+<p>C.  <span class="arithmatex">\(R = \{&lt;a, b&gt;, &lt;c, c&gt;, &lt;b, a&gt;\}\)</span> </p>
+<p>D.  <span class="arithmatex">\(R = \{&lt;a, a&gt;, &lt;b, b&gt;\}\)</span> </p>
+<blockquote>
+<p>B。缺了个 <c,b></c,b></p>
+</blockquote>
+<ol>
+<li>若T是一个(n,m)树，则( )</li>
+</ol>
+<p>A.  <span class="arithmatex">\(m = n - 1\)</span> </p>
+<p>B.  <span class="arithmatex">\(n = m - 1\)</span> </p>
+<p>C.  <span class="arithmatex">\(n - m + k = 2\)</span> </p>
+<p>D.  <span class="arithmatex">\(m = 2n - 1\)</span> </p>
+<blockquote>
+<p>A. 题目大致可能是想问 n 个节点 m 条边的树。</p>
+</blockquote>
+<ol>
+<li>下述式子错误的是( )</li>
+</ol>
+<p>A.  <span class="arithmatex">\(\phi \in \{\phi\}\)</span> </p>
+<p>B.  <span class="arithmatex">\(\phi \subseteq \{\phi\}\)</span> </p>
+<p>C.  <span class="arithmatex">\(\phi \in \{\{\phi\}\}\)</span> </p>
+<p>D.  <span class="arithmatex">\(\phi \subseteq \phi\)</span> </p>
+<blockquote>
+<p>C。“含空集作为唯一元素的集合的集合”的唯一元素是“含空集作为唯一元素的集合”。</p>
+</blockquote>
+<ol>
+<li>下述不能构成  <span class="arithmatex">\(A = \{1,2,3,4\}\)</span>  的分划的是( )</li>
+</ol>
+<p>A.  <span class="arithmatex">\(\{\{1\}, \{2,3\}, \{4\}\}\)</span> </p>
+<p>B.  <span class="arithmatex">\(\{\{1\}, \{1,2,3\}, \{4\}\}\)</span> </p>
+<p>C.  <span class="arithmatex">\(\{A\}\)</span> </p>
+<p>D.  <span class="arithmatex">\(\{\{1\}, \{2\}, \{3\}, \{4\}\}\)</span> </p>
+<blockquote>
+<p>B。出现了重复。</p>
+</blockquote>
+<ol>
+<li>设集合  <span class="arithmatex">\(A = \{1,2,3\}\)</span> ，下列关系R中不是等价关系的是( )</li>
+</ol>
+<p>A.  <span class="arithmatex">\(R = \{&lt;1,1&gt;, &lt;2,2&gt;, &lt;3,3&gt;\}\)</span> </p>
+<p>B.  <span class="arithmatex">\(R = \{&lt;1,1&gt;, &lt;2,2&gt;, &lt;3,3&gt;, &lt;3,2&gt;, &lt;2,3&gt;\}\)</span> </p>
+<p>C.  <span class="arithmatex">\(R = \{&lt;1,1&gt;, &lt;2,2&gt;, &lt;3,3&gt;, &lt;1,2&gt;\}\)</span> </p>
+<p>D.  <span class="arithmatex">\(R = \{&lt;1,1&gt;, &lt;2,2&gt;, &lt;3,3&gt;, &lt;1,2&gt;, &lt;2,1&gt;, &lt;1,3&gt;, &lt;3,1&gt;, &lt;2,3&gt;, &lt;3,2&gt;\}\)</span> </p>
+<blockquote>
+<p>C。比如说 &lt;1,2&gt; 就不满足对称性。</p>
+</blockquote>
+<ol>
+<li>下列函数中为双射的是( )</li>
+</ol>
+<p>A.  <span class="arithmatex">\(f: Z \to Z, f(i) = i^2\)</span> </p>
+<p>B.  <span class="arithmatex">\(f: N \to N, f(j) = \begin{cases}1, j 是奇数 \\ 0, j 是偶数 \end{cases}\)</span> </p>
+<p>C.  <span class="arithmatex">\(f: Z \to N, f(j) = |2j| + 1\)</span> </p>
+<p>D.  <span class="arithmatex">\(f: R \to R, f(r) = 2r - 15\)</span> </p>
+<blockquote>
+<p>D。显然里面没有不可逆操作。</p>
+</blockquote>
+<ol>
+<li>下列命题公式为重言式的是( )</li>
+</ol>
+<p>A.  <span class="arithmatex">\(q \leftrightarrow (p \wedge q)\)</span> </p>
+<p>B.  <span class="arithmatex">\(p \to (p \wedge q)\)</span> </p>
+<p>C.  <span class="arithmatex">\((p \wedge q) \to p\)</span> </p>
+<p>D.  <span class="arithmatex">\((p \vee q) \to q\)</span> </p>
+<blockquote>
+<p>C。前件为真时，后件一定为真。</p>
+</blockquote>
+<ol>
+<li>
+<p>在有n个结点的连通图中，其边数( )</p>
+<p>A. 至少有n-1条</p>
+<p>B. 最多有n-1条</p>
+<p>C. 至少有n条</p>
+<p>D. 最多有n条</p>
+</li>
+</ol>
+<blockquote>
+<p>A。树。</p>
+</blockquote>
+<h3 id="10230">三、填空题(共10小题,每空2分,共30分)<a class="headerlink" href="#10230" title="Permanent link">¶</a></h3>
+<ol>
+<li><span class="arithmatex">\(A = \{a, \{a\}\}\)</span> ，则A的幂集  $P(A) = $ ________</li>
+</ol>
+<blockquote>
+<p><span class="arithmatex">\(\{\emptyset, \{a\}, \{\{a\}\}, \{a, \{a\}\}\}\)</span></p>
+</blockquote>
+<ol>
+<li>利用哈夫曼算法求带权为1,2,3,4,5的最优2元树T，则T的权  <span class="arithmatex">\(W(T) =\)</span> ________</li>
+</ol>
+<blockquote>
+<p>如下：</p>
+</blockquote>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
+<span class="normal"><a href="#__codelineno-0-2">2</a></span>
+<span class="normal"><a href="#__codelineno-0-3">3</a></span>
+<span class="normal"><a href="#__codelineno-0-4">4</a></span>
+<span class="normal"><a href="#__codelineno-0-5">5</a></span>
+<span class="normal"><a href="#__codelineno-0-6">6</a></span>
+<span class="normal"><a href="#__codelineno-0-7">7</a></span>
+<span class="normal"><a href="#__codelineno-0-8">8</a></span>
+<span class="normal"><a href="#__codelineno-0-9">9</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1"></a>       15
+<a id="__codelineno-0-2" name="__codelineno-0-2"></a>      /  \
+<a id="__codelineno-0-3" name="__codelineno-0-3"></a>    6      9
+<a id="__codelineno-0-4" name="__codelineno-0-4"></a>   / \    / \
+<a id="__codelineno-0-5" name="__codelineno-0-5"></a>  3   3  4   5
+<a id="__codelineno-0-6" name="__codelineno-0-6"></a> / \
+<a id="__codelineno-0-7" name="__codelineno-0-7"></a>1   2
+<a id="__codelineno-0-8" name="__codelineno-0-8"></a>
+<a id="__codelineno-0-9" name="__codelineno-0-9"></a>W = 1 * 3 + 2 * 3 + 3 * 2 + 4 * 2 + 5 * 2 = 3 + 6 + 6 + 8 + 10 = 33
+</code></pre></div></td></tr></table></div>
+<ol>
+<li>对于如右图所示二元有序树T，后序行遍的结果为________</li>
+</ol>
+<p><img alt="alt text" src="../image-164.png"/></p>
+<blockquote>
+<p>BDECA</p>
+</blockquote>
+<ol>
+<li>命题公式  <span class="arithmatex">\((P \wedge Q) \to \neg P\)</span>  的成假指派为________</li>
+</ol>
+<blockquote>
+<p>PQ = 11</p>
+</blockquote>
+<ol>
+<li>设  <span class="arithmatex">\(P(x)\)</span>  表示x发光， <span class="arithmatex">\(Q(x)\)</span>  表示x是金子，将命题“发光的不都是金子”符号化________</li>
+</ol>
+<blockquote>
+<p><span class="arithmatex">\(\exists x (P(x)\land \neg Q(x))\)</span></p>
+</blockquote>
+<ol>
+<li>Z为整数集，设全集  <span class="arithmatex">\(U = \{i | i \in Z 且 1 \leq i &lt; 10\}\)</span> ， <span class="arithmatex">\(A = \{1,4,5,6,8\}\)</span> ， <span class="arithmatex">\(B = \{4,5,9\}\)</span> ，则  <span class="arithmatex">\(\sim A \cap B =\)</span> ________， <span class="arithmatex">\(A - B =\)</span> ________</li>
+</ol>
+<blockquote>
+<p><span class="arithmatex">\(\{9\}\)</span>, <span class="arithmatex">\(\{1,6,8\}\)</span></p>
+</blockquote>
+<ol>
+<li>关系  <span class="arithmatex">\(R = \{&lt;1,0&gt;, &lt;0,1&gt;, &lt;2,1&gt;, &lt;3,0&gt;\}\)</span> ，则R的定义域为________，值域为________</li>
+</ol>
+<blockquote>
+<p><span class="arithmatex">\(\{0,1,2,3\}\)</span>, <span class="arithmatex">\(\{0,1\}\)</span></p>
+</blockquote>
+<ol>
+<li>设  <span class="arithmatex">\(A = \{1,2,3,4\}\)</span> ， <span class="arithmatex">\(R \subseteq A × A\)</span> ， <span class="arithmatex">\(R = \{&lt;1,2&gt;, &lt;3,4&gt;, &lt;2,2&gt;\}\)</span> ，则R的自反闭包  <span class="arithmatex">\(r(R) =\)</span> ________，对称闭包  <span class="arithmatex">\(s(R) =\)</span> ________</li>
+</ol>
+<blockquote>
+<p><span class="arithmatex">\(\{&lt;1,2&gt;,&lt;3,4&gt;,&lt;1,1&gt;,&lt;2,2&gt;,&lt;3,3&gt;,&lt;4,4&gt;\}\)</span> 和 <span class="arithmatex">\(\{&lt;1,2&gt;,&lt;2,1&gt;,&lt;3,4&gt;,&lt;4,3&gt;,&lt;2,2&gt;\}\)</span></p>
+</blockquote>
+<ol>
+<li>设  <span class="arithmatex">\(A = \{1,2,3,4\}\)</span>  上关系  <span class="arithmatex">\(R = \{&lt;1,2&gt;, &lt;2,4&gt;, &lt;3,3&gt;\}\)</span> ， <span class="arithmatex">\(S = \{&lt;2,3&gt;, &lt;2,4&gt;, &lt;4,2&gt;\}\)</span> ，则复合关系  <span class="arithmatex">\(R \circ S =\)</span> ________， <span class="arithmatex">\(S \circ R =\)</span> ________</li>
+</ol>
+<blockquote>
+<p><span class="arithmatex">\(R \circ S =\{&lt;1,3&gt;, &lt;1,4&gt;, &lt;2,2&gt;\}\)</span>, <span class="arithmatex">\(S \circ R =\{&lt;2,3&gt;, &lt;4,4&gt;\}\)</span></p>
+</blockquote>
+<ol>
+<li>有理数集Q中的 * 运算定义如下： <span class="arithmatex">\(a^* b = a + b - ab\)</span> ，则 * 运算的单位是________</li>
+</ol>
+<blockquote>
+<p>群论不考。</p>
+</blockquote>
+<h3 id="1-5661040">四、计算和解答题(1-5每小题6分,6小题10分,共40分)<a class="headerlink" href="#1-5661040" title="Permanent link">¶</a></h3>
+<ol>
+<li>集合  <span class="arithmatex">\(A = \{a, b, c, d\}\)</span> ，A上的关系  <span class="arithmatex">\(R = \{&lt;a, a&gt;, &lt;b, b&gt;, &lt;a, b&gt;, &lt;b, a&gt;, &lt;c, c&gt;, &lt;d, d&gt;\}\)</span> ，判断R是否为等价关系，如果是等价关系，给出对应于R的A的等价分划。</li>
+</ol>
+<blockquote>
+<p>显然是，这对应了图的三个连通分量，对应的分划是：</p>
+<p><span class="arithmatex">\(\{\{a,b\},\{c\},\{d\}\}\)</span></p>
+</blockquote>
+<ol>
+<li>集合  <span class="arithmatex">\(A = \{1,2,3,4\}\)</span> ，A上的关系  <span class="arithmatex">\(R = \{&lt;1,2&gt;, &lt;2,3&gt;, &lt;3,4&gt;, &lt;3,1&gt;, &lt;4,3&gt;\}\)</span> 。画出关系R的关系图，并计算逆关系  <span class="arithmatex">\(R^{-1}\)</span>  和复合关系  <span class="arithmatex">\(R^2\)</span> 。</li>
+</ol>
+<p><img alt="alt text" src="../image-165.png"/></p>
+<blockquote>
+<p>逆关系只需要颠倒次序即可。<span class="arithmatex">\(R^{-1} = \{&lt;2,1&gt;, &lt;3,2&gt;, &lt;4,3&gt;, &lt;1,3&gt;, &lt;3,4&gt;\}\)</span></p>
+<p>复合关系的获取方法同前。<span class="arithmatex">\(R^2 = \{&lt;1,3&gt;, &lt;2,4&gt;, &lt;2, 1&gt;, &lt;3,3&gt;, &lt;3,2&gt;, &lt;4,4&gt;, &lt;4,1&gt;\}\)</span></p>
+</blockquote>
+<ol>
+<li>构造命题公式  <span class="arithmatex">\(((P \vee Q) \to (Q \wedge R)) \to (P \wedge \neg R)\)</span>  的真值表，并给出其主析取范式。</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th><span class="arithmatex">\(P\)</span></th>
+<th><span class="arithmatex">\(Q\)</span></th>
+<th><span class="arithmatex">\(R\)</span></th>
+<th style="text-align: center;"><span class="arithmatex">\(((P \vee Q) \to (Q \wedge R)) \to (P \wedge \neg R)\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td style="text-align: center;">0</td>
+</tr>
+<tr>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td style="text-align: center;">0</td>
+</tr>
+<tr>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td style="text-align: center;">1</td>
+</tr>
+<tr>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td style="text-align: center;">0</td>
+</tr>
+<tr>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td style="text-align: center;">1</td>
+</tr>
+<tr>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td style="text-align: center;">1</td>
+</tr>
+<tr>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td style="text-align: center;">1</td>
+</tr>
+<tr>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td style="text-align: center;">0</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>主析取范式只需要成真赋值即可。<span class="arithmatex">\((P\land \neg Q \land R)\lor(\neg P\land Q \land R)\lor(\neg P\land Q \land \neg R)\lor(\neg P\land \neg Q \land R)\)</span></p>
+</blockquote>
+<ol>
+<li>无向图G如下所示。</li>
+</ol>
+<p><img alt="alt text" src="../image-166.png"/></p>
+<p>(1) G是否是欧拉图？是否存在欧拉通路，若存在欧拉通路请给出。</p>
+<blockquote>
+<p>只有 v3 和 v4 两个度数是奇数的节点，因此是存在欧拉通路的，但不存在欧拉回路，因此不是欧拉图。</p>
+<p>欧拉通路：<span class="arithmatex">\(v_3v_1v_2v_6v_5v_2v_4v_5v_3v_4\)</span></p>
+</blockquote>
+<p>(2) 给出G的最小生成树，并计算最小生成树的权。</p>
+<blockquote>
+<p>这里简单用克鲁斯卡尔算法。计算的权为 1+2+1+4+6 = 14</p>
+</blockquote>
+<p><img alt="alt text" src="../image-167.png"/></p>
+<ol>
+<li>构造下面推理的证明。
+   “如果肖寒是理科生，那么他的逻辑思维能力应该不差。如果肖寒不是文科生，一定是理科生。肖寒的逻辑思维能力很差，所以肖寒一定是文科生。”</li>
+</ol>
+<blockquote>
+<p>符号约定：</p>
+<p><span class="arithmatex">\(P\)</span>: 肖寒是理科生</p>
+<p><span class="arithmatex">\(Q\)</span>: 肖寒是文科生</p>
+<p><span class="arithmatex">\(R\)</span>: 肖寒的逻辑思维能力很差</p>
+<p>推理内容即 <span class="arithmatex">\(P\rightarrow\neg R, \neg Q \rightarrow P, R\rightarrow Q\)</span></p>
+<p>构造符号化证明：</p>
+</blockquote>
+<div class="arithmatex">\[
+\begin{align*}
+    P→\neg R&amp;,\quad 前提\\
+    R&amp;,\quad 附加前提\\
+    \neg P&amp;,\quad (1)(2)拒取式\\
+    \neg Q \rightarrow P&amp;,\quad 前提\\
+    Q&amp;,\quad (3)(4)拒取式\\
+    R\rightarrow Q&amp;,\quad CP
+\end{align*}
+\]</div>
+<h2 id="2021a">2021A<a class="headerlink" href="#2021a" title="Permanent link">¶</a></h2>
+<h3 id="10110_2">一、判断题（共10小题，每小题1分，共10分）<a class="headerlink" href="#10110_2" title="Permanent link">¶</a></h3>
+<ol>
+<li>论述“ <span class="arithmatex">\(2+2=4\)</span> 当且仅当3是奇数”是复合命题.（）</li>
+</ol>
+<blockquote>
+<p>对。这是两个原子命题用等价联结词联结而成的复合命题。</p>
+</blockquote>
+<ol>
+<li>有向图的邻接矩阵不一定具有对称性.（）</li>
+</ol>
+<blockquote>
+<p>对。考虑单向边。</p>
+</blockquote>
+<ol>
+<li>两个图如果满足结点数相同，边数相同且度数相同的结点数目相同，则同构.（）</li>
+</ol>
+<blockquote>
+<p>错。同构没有多项式的判断条件。一个很简单的反例是 <span class="arithmatex">\(K_{3,3}\)</span> 和下面的图不同构，但是满足条件：</p>
+</blockquote>
+<p><img alt="alt text" src="../image-168.png"/></p>
+<ol>
+<li>集合 <span class="arithmatex">\(A\)</span> 的对称关系一定不是反对称的.（）</li>
+</ol>
+<blockquote>
+<p>错。反对称的定义是如果交换关系里面元素次序还成立，可以推出两元素相等。比如说恒等关系就满足。这和对称关系不构成对立。</p>
+</blockquote>
+<ol>
+<li>任何树 <span class="arithmatex">\(T\)</span> 都至少有两片叶子.（）</li>
+</ol>
+<blockquote>
+<p>错。反例是平凡树。</p>
+</blockquote>
+<ol>
+<li>有向图 <span class="arithmatex">\(G=(V,E)\)</span> ，其中 <span class="arithmatex">\(V=\{a,b,c,d\}\)</span> ， <span class="arithmatex">\(E=\{\lt a,b\gt, \lt a,d\gt, \lt b,c\gt, \lt c,d\gt\}\)</span> ，则图 <span class="arithmatex">\(G\)</span> 为强连通图.（）</li>
+</ol>
+<blockquote>
+<p>错。验证即可。注意是有向图。</p>
+</blockquote>
+<ol>
+<li>5个基本联结词的运算顺序为： <span class="arithmatex">\(\neg, \land, \lor, \leftrightarrow, \to\)</span> .（）</li>
+</ol>
+<blockquote>
+<p>错。注意等价的优先级最低。</p>
+</blockquote>
+<ol>
+<li>设 <span class="arithmatex">\(A、B、C\)</span> 为任意的3个集合，则笛卡尔积： <span class="arithmatex">\(A \times (B \times C) = (A \times B) \times C\)</span> .（）</li>
+</ol>
+<blockquote>
+<p>错。注意这不是多元笛卡尔积。</p>
+</blockquote>
+<ol>
+<li>函数 <span class="arithmatex">\(f: N \to N,f(n) = 2n + 1\)</span> 是单射函数.（）</li>
+</ol>
+<blockquote>
+<p>对。函数值相等确实可以推出自变量相等。</p>
+</blockquote>
+<ol>
+<li>在谓词演算中， <span class="arithmatex">\(P(a)\)</span> 是 <span class="arithmatex">\(\forall xP(x)\)</span> 的有效结论，根据的是存在推广规则.（）</li>
+</ol>
+<blockquote>
+<p>错。根据的是全称指定规则。从 <span class="arithmatex">\(P(a)\)</span> 推导 <span class="arithmatex">\(\exists x P(x)\)</span> 才是存在推广规则。</p>
+</blockquote>
+<h3 id="10110_3">二、单项选择题（共10小题，每小题1分，共10分）<a class="headerlink" href="#10110_3" title="Permanent link">¶</a></h3>
+<ol>
+<li>下列句子哪一个是真命题：（）.</li>
+</ol>
+<p>A. 我正在说谎</p>
+<p>B. 如果 <span class="arithmatex">\(1+1=0\)</span> ，那么雪是黑色的</p>
+<p>C.  <span class="arithmatex">\(9+5&gt;18\)</span> </p>
+<p>D. 存在最大的素数</p>
+<blockquote>
+<p>B</p>
+<p>A 是悖论，不是命题；B 前件为假则默认为真；C 显然假；D 显然假。</p>
+</blockquote>
+<ol>
+<li>设 <span class="arithmatex">\(M(x):x\)</span> 是人， <span class="arithmatex">\(P(x):x\)</span> 会犯错误，则命题“没有不犯错误的人”可符号化为（）.</li>
+</ol>
+<p>A.  <span class="arithmatex">\(\forall x(M(x)\land P(x))\)</span> </p>
+<p>B.  <span class="arithmatex">\(\neg(\exists x(M(x)\to \neg P(x)))\)</span> </p>
+<p>C.  <span class="arithmatex">\(\neg(\exists x(M(x)\land P(x)))\)</span> </p>
+<p>D.  <span class="arithmatex">\(\neg(\exists x(M(x)\land \neg P(x)))\)</span> </p>
+<blockquote>
+<p>D.</p>
+<p>首先 A B 都不满足搭配规则。C 说的是不存在犯错误的人。</p>
+</blockquote>
+<ol>
+<li>下图描述的偏序集中，子集 <span class="arithmatex">\(\{b,e,f\}\)</span> 的上界为（）.</li>
+</ol>
+<p><img alt="alt text" src="../image-169.png"/></p>
+<p>A.  <span class="arithmatex">\(a,c\)</span> </p>
+<p>B.  <span class="arithmatex">\(a,b\)</span> </p>
+<p>C.  <span class="arithmatex">\(b\)</span> </p>
+<p>D.  <span class="arithmatex">\(a,b,c\)</span> </p>
+<blockquote>
+<p>C。根据偏序关系可以知道 <span class="arithmatex">\(b\ge e, b\ge f\)</span> 因此上界是 <span class="arithmatex">\(b\)</span>。</p>
+</blockquote>
+<ol>
+<li>设 <span class="arithmatex">\(A=\{\{1, 2\}, \{3\}, \{4, 5\}, \{6, 7, 8\}\}\)</span> ，下列选项正确的是（）.</li>
+</ol>
+<p>A.  <span class="arithmatex">\(1 \in A\)</span> </p>
+<p>B.  <span class="arithmatex">\(\{1,2,3\} \in A\)</span> </p>
+<p>C.  <span class="arithmatex">\(\{4, 5\} \in A\)</span> </p>
+<p>D.  <span class="arithmatex">\(\varnothing \in A\)</span> </p>
+<blockquote>
+<p>C。只需要匹配元素即可。</p>
+</blockquote>
+<ol>
+<li>设集合 <span class="arithmatex">\(A = \{1, 2, 3, 4\}\)</span> ， <span class="arithmatex">\(A\)</span> 上的关系 <span class="arithmatex">\(R=\{\lt1,1\gt, \lt2,2\gt, \lt1,3\gt\}\)</span> ，则 <span class="arithmatex">\(R\)</span> 具备（）.</li>
+</ol>
+<p>A. 自反性</p>
+<p>B. 传递性</p>
+<p>C. 对称性</p>
+<p>D. 都不对</p>
+<blockquote>
+<p>D。原题。</p>
+</blockquote>
+<ol>
+<li>所有使命题公式 <span class="arithmatex">\(P \lor (Q \land \neg R)\)</span> 为真的赋值为（）.</li>
+</ol>
+<p>A.  <span class="arithmatex">\(010,100,101,110,111\)</span> </p>
+<p>B.  <span class="arithmatex">\(010,100,101,111\)</span> </p>
+<p>C. 全体赋值</p>
+<p>D. 不存在</p>
+<blockquote>
+<p>A。 首先测试 000 排除 C，然后测试 010 排除 D，最后测试 110 排除 B。</p>
+</blockquote>
+<ol>
+<li>设 <span class="arithmatex">\(A=\{1,2,3\}\)</span> ， <span class="arithmatex">\(B=\{a,b\}\)</span> ，下列各二元关系中是 <span class="arithmatex">\(A\)</span> 到 <span class="arithmatex">\(B\)</span> 的函数的是（）.</li>
+</ol>
+<p>A.  <span class="arithmatex">\(R = \{\lt1,a\gt,\lt2,a\gt,\lt3,a\gt\}\)</span> </p>
+<p>B.  <span class="arithmatex">\(R = \{\lt1,a\gt,\lt2,a\gt,\lt2,b\gt,\lt3,a\gt\}\)</span> </p>
+<p>C.  <span class="arithmatex">\(R = \{\lt1,a\gt,\lt2,b\gt\}\)</span> </p>
+<p>D.  <span class="arithmatex">\(R = \{\lt2,a\gt,\lt2,b\gt\}\)</span> </p>
+<blockquote>
+<p>A。B 和 D 存在一对多，C 没有覆盖 A。</p>
+</blockquote>
+<ol>
+<li>设 <span class="arithmatex">\(R\)</span> 为实数集，映射 <span class="arithmatex">\(f: R \to R\)</span> ， <span class="arithmatex">\(f(x) = x^2+2x-1\)</span> ，则 <span class="arithmatex">\(f\)</span> 是（）.</li>
+</ol>
+<p>A. 单射而非满射</p>
+<p>B. 满射而非单射</p>
+<p>C. 双射</p>
+<p>D. 既不是单射，也不是满射</p>
+<blockquote>
+<p>D。首先 f 有最小值，这意味着它没有射满 <span class="arithmatex">\(R\)</span>，对于同一个函数值，有两个解，意味着不是单射。</p>
+</blockquote>
+<ol>
+<li>设个体域为整数域，下列公式真值为1的是（）.</li>
+</ol>
+<p>A.  <span class="arithmatex">\(\forall x\exists y(x + y = 0)\)</span> </p>
+<p>B.  <span class="arithmatex">\(\exists y\forall x(x + y = 0)\)</span> </p>
+<p>C.  <span class="arithmatex">\(\forall x\forall y(x + y = 0)\)</span> </p>
+<p>D.  <span class="arithmatex">\(\neg\exists x\exists y(x + y = 0)\)</span> </p>
+<blockquote>
+<p>A。里面东西都是 x+y=0 那么很容易想到正确表述是对于所有整数 x 都存在一整数 y 使得 x+y = 0 这就对应 A。</p>
+</blockquote>
+<ol>
+<li>下图属于（）图.</li>
+</ol>
+<p><img alt="alt text" src="../image-170.png"/></p>
+<p>A. 偶图</p>
+<p>B. 欧拉图</p>
+<p>C. 哈密顿图</p>
+<p>D. 偶图、哈密顿图</p>
+<blockquote>
+<p>D。首先看它有没有长度为奇数的回路，发现没有于是是偶图；然后哈密顿回路也很好找，绕外圈快走完的时候拐到内圈即可。图里面有 8 个度数是奇数的顶点，因此不是欧拉图。</p>
+</blockquote>
+<h3 id="15230">三、填空题（共15空，每空2分，共30分）<a class="headerlink" href="#15230" title="Permanent link">¶</a></h3>
+<ol>
+<li>公式 <span class="arithmatex">\(\forall x(A(x) \to B(y,x))\land \exists zC(y,z) \to D(m)\)</span> 的自由变元是______，约束变元是______.</li>
+</ol>
+<blockquote>
+<p>x, z 和 y, m</p>
+</blockquote>
+<ol>
+<li><span class="arithmatex">\(n\)</span> 个顶点的无向完全图有边数______，每个结点的度数为______.</li>
+</ol>
+<blockquote>
+<p>n(n-1) / 2 和 n-1</p>
+</blockquote>
+<ol>
+<li>一棵树有2个2度顶点，1个3度顶点，3个4度顶点，则叶子结点有______个.</li>
+</ol>
+<blockquote>
+<p><span class="arithmatex">\(x + 2*2 + 1*3 + 3*4=2(x+2+1+3-1), x = 9\)</span></p>
+</blockquote>
+<ol>
+<li>设 <span class="arithmatex">\(A=\{\{a,b\},\{c\}\},B=\{\{a\},\{b,c\},\{c\}\}\)</span> ，则 <span class="arithmatex">\(A \cup B =\)</span> ______，幂集 <span class="arithmatex">\(\rho(A) =\)</span> ______.</li>
+</ol>
+<blockquote>
+<p><span class="arithmatex">\(A\cup B=\{\{a,b\},\{c\},\{a\},\{b,c\}\}\)</span>, <span class="arithmatex">\(\rho(A) =\{\emptyset,\{\{a,b\}\},\{\{c\}\},\{\{a,b\},\{c\}\}\}\)</span></p>
+</blockquote>
+<ol>
+<li>设 <span class="arithmatex">\(A=\{1,2,3,4\}\)</span> ， <span class="arithmatex">\(A\)</span> 上的二元关系 <span class="arithmatex">\(R\)</span> 定义为： <span class="arithmatex">\(R=\{\lt1,2\gt,\lt2,1\gt,\lt2,3\gt,\lt3,4\gt\}\)</span> ，则 <span class="arithmatex">\(R\)</span> 的自反闭包为______，对称闭包为______，传递闭包为______.</li>
+</ol>
+<blockquote>
+<p><span class="arithmatex">\(r(R)=\{\lt1,2\gt,\lt2,1\gt,\lt2,3\gt,\lt3,4\gt,&lt;1,1&gt;,&lt;2,2&gt;,&lt;3,3&gt;,&lt;4,4&gt;\}\)</span></p>
+<p><span class="arithmatex">\(s(R)=\{\lt1,2\gt,\lt2,1\gt,\lt2,3\gt,&lt;3,2&gt;,\lt3,4\gt,&lt;4,3&gt;\}\)</span></p>
+<p><span class="arithmatex">\(t(R)=\{\lt1,2\gt,\lt2,1\gt,\lt2,3\gt,&lt;1,3&gt;,\lt3,4\gt,&lt;1,4&gt;,&lt;2,4&gt;\}\)</span></p>
+</blockquote>
+<ol>
+<li>在具有 <span class="arithmatex">\(n\)</span> 个顶点的有向图中，任何基本通路的长度都不超过______.</li>
+</ol>
+<blockquote>
+<p>最长需要把每个顶点访问一次，也就是 n-1。</p>
+</blockquote>
+<ol>
+<li>设 <span class="arithmatex">\(f(x)=1+x\)</span> ， <span class="arithmatex">\(g(x)=1+x^2\)</span> ，则 <span class="arithmatex">\(f\circ g =\)</span> ______.</li>
+</ol>
+<blockquote>
+<p><span class="arithmatex">\(2+x^2\)</span></p>
+</blockquote>
+<ol>
+<li>设无向图 <span class="arithmatex">\(G\)</span> 的邻接矩阵为 <span class="arithmatex">\(\begin{bmatrix}
+0 &amp; 1 &amp; 1 &amp; 1 &amp; 0 &amp; 1 \\
+1 &amp; 0 &amp; 1 &amp; 0 &amp; 1 &amp; 0 \\
+1 &amp; 1 &amp; 0 &amp; 1 &amp; 1 &amp; 1 \\
+1 &amp; 0 &amp; 1 &amp; 0 &amp; 1 &amp; 0 \\
+1 &amp; 0 &amp; 1 &amp; 1 &amp; 0 &amp; 1 \\
+1 &amp; 0 &amp; 1 &amp; 0 &amp; 1 &amp; 0
+\end{bmatrix}\)</span> ，则 <span class="arithmatex">\(G\)</span> 的顶点数与边数分别为______.</li>
+</ol>
+<blockquote>
+<p>6 和 11</p>
+</blockquote>
+<ol>
+<li>设 <span class="arithmatex">\(R\)</span> 是集合 <span class="arithmatex">\(A=\{1,2,...,10\}\)</span> 上的模7同余关系，则2的等价类 <span class="arithmatex">\([2]_R=\)</span> ______， <span class="arithmatex">\(R\)</span> 对应的 <span class="arithmatex">\(A\)</span> 的划分的秩为______.</li>
+</ol>
+<blockquote>
+<p><span class="arithmatex">\(\{2,9\}\)</span> 和 7</p>
+</blockquote>
+<h3 id="5630_1">四、计算与解答题(共5小题，每小题6分，共30分)<a class="headerlink" href="#5630_1" title="Permanent link">¶</a></h3>
+<ol>
+<li>(6分) 求公式 <span class="arithmatex">\(\neg(p\lor q)\lor r\)</span> 的主析取范式和主合取范式。</li>
+</ol>
+<blockquote>
+<p>列真值表即可。然后从成真赋值里面获得主析取范式，从成假赋值里面获得主合取范式。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th><span class="arithmatex">\(p\)</span></th>
+<th><span class="arithmatex">\(q\)</span></th>
+<th><span class="arithmatex">\(r\)</span></th>
+<th style="text-align: center;"><span class="arithmatex">\(\neg(p\lor q)\lor r\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td style="text-align: center;">1</td>
+</tr>
+<tr>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td style="text-align: center;">1</td>
+</tr>
+<tr>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td style="text-align: center;">0</td>
+</tr>
+<tr>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td style="text-align: center;">1</td>
+</tr>
+<tr>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td style="text-align: center;">0</td>
+</tr>
+<tr>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td style="text-align: center;">1</td>
+</tr>
+<tr>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td style="text-align: center;">0</td>
+</tr>
+<tr>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td style="text-align: center;">1</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>主析取范式：<span class="arithmatex">\((\neg p \land \neg q \land \neg r)\lor(\neg p \land \neg q \land r)\lor(\neg p \land q \land r)\lor(p \land \neg  q \land r)\lor(p \land q \land r)\)</span></p>
+<p>主合取范式：<span class="arithmatex">\((\neg p \lor q \lor \neg r)\land(p \lor \neg q \lor \neg r)\land(p \lor q \lor \neg r)\)</span></p>
+</blockquote>
+<ol>
+<li>(6分) 对102名学生调查表明，有35人学日语，20人学法语，45人学英语，15人既学日语又学英语，8人既学日语又学法语，10人既学法语又学英语，28人不学这3门课中的任何一门。</li>
+</ol>
+<p>（1）(2分) 求三门语言都学的人数；</p>
+<p>（2）(2分) 求至少学习两门语言的人数；</p>
+<p>（3）(2分) 求只学英语，只学法语，只学日语的人数。</p>
+<ol>
+<li>设 <span class="arithmatex">\(A=\{a,b,c,d\}\)</span> ， <span class="arithmatex">\(A\)</span> 上的关系 <span class="arithmatex">\(R=\{\lt a,a\gt,\lt a,b\gt,\lt a,c\gt,\lt c,a\gt,\lt c,b\gt,\lt c,c\gt,\lt d,a\gt,\lt d,b\gt,\lt d,c\gt\}\)</span> </li>
+</ol>
+<p>（1）(2分) 画出 <span class="arithmatex">\(R\)</span> 的关系图 <span class="arithmatex">\(G_R\)</span> ；</p>
+<p>（2）(2分) 判断 <span class="arithmatex">\(R\)</span> 所具有的性质（自反/反自反性、对称/反对称性和传递性）；</p>
+<p>（3）(2分) 求 <span class="arithmatex">\(R\)</span> 的关系矩阵 <span class="arithmatex">\(M_R\)</span> 。</p>
+<ol>
+<li>(6分) 利用避圈法或破圈法求以下带权图的最小生成树。</li>
+</ol>
+<p><img alt="alt text" src="../image-171.png"/></p>
+<ol>
+<li>(6分) 画一棵带权为3,4,5,6,7,8,9的最优二叉树，计算该树的权重。</li>
+</ol>
+<h3 id="320">五、证明题(共3小题，共20分)<a class="headerlink" href="#320" title="Permanent link">¶</a></h3>
+<ol>
+<li>
+<p>(6分) 构造推理证明：“所有牛都有角，有些动物是牛，所以有些动物有角。”</p>
+</li>
+<li>
+<p>(6分) 证明：若树中至少有一个节点的度大于等于 <span class="arithmatex">\(k\)</span> ，则树中至少有 <span class="arithmatex">\(k\)</span> 个度为1的结点。</p>
+</li>
+</ol>
+<p><img alt="alt text" src="../image-172.png"/></p>
+<ol>
+<li>(8分) 假设给定正整数的序偶集合 <span class="arithmatex">\(A\)</span> ，在 <span class="arithmatex">\(A\)</span> 上定义二元关系 <span class="arithmatex">\(R\)</span> 如下： <span class="arithmatex">\(\lt\lt x,y\gt,\lt u,v\gt\gt \in R\)</span> 当且仅当 <span class="arithmatex">\(xv=yu\)</span> ，证明 <span class="arithmatex">\(R\)</span> 为等价关系。</li>
+</ol>
+<div class="admonition info">
+<p class="admonition-title">📝 如果您需要引用本文</p>
+<p>Yan Li. (Jan. 10, 2026). 《离散数学》部分期末题目题解 [Blog post]. Retrieved from <a href="https://dicaeopolis.github.io/campus-sources/Discrete_exams">https://dicaeopolis.github.io/campus-sources/Discrete_exams</a></p>
+<p>在 BibTeX 格式中：
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-1-1">1</a></span>
+<span class="normal"><a href="#__codelineno-1-2">2</a></span>
+<span class="normal"><a href="#__codelineno-1-3">3</a></span>
+<span class="normal"><a href="#__codelineno-1-4">4</a></span>
+<span class="normal"><a href="#__codelineno-1-5">5</a></span>
+<span class="normal"><a href="#__codelineno-1-6">6</a></span>
+<span class="normal"><a href="#__codelineno-1-7">7</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1"></a>@online{Discrete_exams,
+<a id="__codelineno-1-2" name="__codelineno-1-2"></a>    title={《离散数学》部分期末题目题解},
+<a id="__codelineno-1-3" name="__codelineno-1-3"></a>    author={Yan Li},
+<a id="__codelineno-1-4" name="__codelineno-1-4"></a>    year={2026},
+<a id="__codelineno-1-5" name="__codelineno-1-5"></a>    month={Jan},
+<a id="__codelineno-1-6" name="__codelineno-1-6"></a>    url={\url{https://dicaeopolis.github.io/campus-sources/Discrete_exams}},
+<a id="__codelineno-1-7" name="__codelineno-1-7"></a>}
+</code></pre></div></td></tr></table></div></p>
+</div>
+<form class="md-feedback" hidden="" name="feedback">
+<fieldset>
+<legend class="md-feedback__title">
+        Was this page helpful?
+      </legend>
+<div class="md-feedback__inner">
+<div class="md-feedback__list">
+<button class="md-feedback__icon md-icon" data-md-value="1" title="This page was helpful" type="submit">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 12a8 8 0 0 0-8-8 8 8 0 0 0-8 8 8 8 0 0 0 8 8 8 8 0 0 0 8-8m2 0a10 10 0 0 1-10 10A10 10 0 0 1 2 12 10 10 0 0 1 12 2a10 10 0 0 1 10 10M10 9.5c0 .8-.7 1.5-1.5 1.5S7 10.3 7 9.5 7.7 8 8.5 8s1.5.7 1.5 1.5m7 0c0 .8-.7 1.5-1.5 1.5S14 10.3 14 9.5 14.7 8 15.5 8s1.5.7 1.5 1.5m-5 7.73c-1.75 0-3.29-.73-4.19-1.81L9.23 14c.45.72 1.52 1.23 2.77 1.23s2.32-.51 2.77-1.23l1.42 1.42c-.9 1.08-2.44 1.81-4.19 1.81"></path></svg>
+</button>
+<button class="md-feedback__icon md-icon" data-md-value="0" title="This page could be improved" type="submit">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 12a8 8 0 0 0-8-8 8 8 0 0 0-8 8 8 8 0 0 0 8 8 8 8 0 0 0 8-8m2 0a10 10 0 0 1-10 10A10 10 0 0 1 2 12 10 10 0 0 1 12 2a10 10 0 0 1 10 10m-6.5-4c.8 0 1.5.7 1.5 1.5s-.7 1.5-1.5 1.5-1.5-.7-1.5-1.5.7-1.5 1.5-1.5M10 9.5c0 .8-.7 1.5-1.5 1.5S7 10.3 7 9.5 7.7 8 8.5 8s1.5.7 1.5 1.5m2 4.5c1.75 0 3.29.72 4.19 1.81l-1.42 1.42C14.32 16.5 13.25 16 12 16s-2.32.5-2.77 1.23l-1.42-1.42C8.71 14.72 10.25 14 12 14"></path></svg>
+</button>
+</div>
+<div class="md-feedback__note">
+<div data-md-value="1" hidden="">
+              
+              
+                
+              
+              
+              
+                
+                
+              
+              Thanks for your feedback!
+            </div>
+<div data-md-value="0" hidden="">
+              
+              
+                
+              
+              
+              
+                
+                
+              
+              Thanks for your feedback! Help us improve this page by using our <a href="..." rel="noopener" target="_blank">feedback form</a>.
+            </div>
+</div>
+</div>
+</fieldset>
+</form>
+</article>
+</div>
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+</div>
+</main>
+<footer class="md-footer">
+<div class="md-footer-meta md-typeset">
+<div class="md-footer-meta__inner md-grid">
+<div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" rel="noopener" target="_blank">
+      Material for MkDocs
+    </a>
+</div>
+</div>
+</div>
+</footer>
+</div>
+<div class="md-dialog" data-md-component="dialog">
+<div class="md-dialog__inner md-typeset"></div>
+</div>
+<script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.code.copy", "content.code.select", "navigation.titles", "navigation.tabs", "navigation.indexes"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+<script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+<script src="../../assets/js/custom.js"></script>
+<script src="../../themes/js/custom.js"></script>
+<script src="../../themes/js/simpleLightbox.min.js"></script>
+<script src="../../themes/js/optionalConfig.js"></script>
+<script src="../../themes/js/mermaidloader.js"></script>
+<script src="../../themes/js/umlconvert.js"></script>
+<script src="../../themes/js/mathjax.js"></script>
+<script src="../../themes/js/katex.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.17.1/flowchart.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.3.0/raphael.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.13.6/underscore-min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mermaid-js/mermaid-mindmap@9.3.0/dist/diagram-definition.0faef4c2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/markdown-it-plantuml@1.4.1/index.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/webfont/1.6.28/webfontloader.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-chtml.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-chtml-full.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-svg-full.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+</body>
+</html>
