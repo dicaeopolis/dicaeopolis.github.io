@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>特殊赤道仪寻星计算器</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f0f2f5; padding: 20px; max-width: 600px; margin: 0 auto; color: #333; }
+        h2 { text-align: center; color: #2c3e50; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        label { display: block; margin-top: 10px; font-weight: bold; font-size: 0.9em; color: #555; }
+        input[type="text"], input[type="number"], input[type="datetime-local"] { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
+        .row { display: flex; gap: 10px; }
+        .col { flex: 1; }
+        button { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; margin-top: 15px; transition: background 0.3s; }
+        button:hover { background: #0056b3; }
+        button.secondary { background: #6c757d; margin-top: 5px; }
+        .result-box { background: #e9ecef; padding: 15px; border-radius: 8px; margin-top: 15px; text-align: center; border: 2px solid #dee2e6; }
+        .result-title { font-size: 1.1em; font-weight: bold; margin-bottom: 5px; color: #007bff; }
+        .result-val { font-size: 1.5em; font-weight: bold; color: #212529; font-family: monospace; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; font-size: 0.9em; }
+        .info-item { background: #f8f9fa; padding: 8px; border-radius: 4px; text-align: center; }
+        .highlight { color: #d63384; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <h2>赤道仪寻星计算器</h2>
+
+    <div class="card">
+        <h3>1. 基础设置</h3>
+        <div class="row">
+            <div class="col">
+                <label>经度 (度, 东经为正)</label>
+                <input type="number" id="lon" placeholder="116.4" step="0.0001">
+            </div>
+            <div class="col">
+                <label>纬度 (仅参考)</label>
+                <input type="number" id="lat" placeholder="39.9" step="0.0001">
+            </div>
+        </div>
+        <button class="secondary" onclick="getLocation()">📍 获取当前定位</button>
+
+        <label>云台 A 初始刻度 (A0)</label>
+        <input type="number" id="a0" value="123" placeholder="例如 0 或 123">
+        
+        <label>观测时间 (本地)</label>
+        <div class="row">
+            <input type="datetime-local" id="obsTime">
+            <button style="width: 80px; margin-top:5px;" onclick="setNow()">此刻</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>2. 目标天体坐标</h3>
+        <div class="row">
+            <div class="col">
+                <label>赤经 RA (时:分:秒)</label>
+                <input type="text" id="ra" placeholder="05:35:17" value="00:00:00">
+            </div>
+            <div class="col">
+                <label>赤纬 Dec (度:分:秒)</label>
+                <input type="text" id="dec" placeholder="-05:23:28" value="00:00:00">
+            </div>
+        </div>
+        <button onclick="calculate()">🚀 计算云台刻度</button>
+    </div>
+
+    <div class="card" id="results" style="display:none;">
+        <h3>3. 计算结果</h3>
+        
+        <div class="info-grid">
+            <div class="info-item">
+                <div>地方恒星时 (LST)</div>
+                <div id="dispLST" class="highlight">--:--:--</div>
+            </div>
+            <div class="info-item">
+                <div>目标时角 (HA)</div>
+                <div id="dispHA" class="highlight">--° --'</div>
+            </div>
+        </div>
+
+        <!-- 方案 1 -->
+        <div class="result-box">
+            <div class="result-title">方案 1 (B轴 逆时针侧)</div>
+            <div class="result-val">
+                A: <span id="resA1">---</span>°<br>
+                B: <span id="resB1">---</span>°
+            </div>
+            <div style="font-size:0.8em; color:#666; margin-top:5px;">
+                逻辑: A = A0 + 90 - HA, B = 90 - Dec
+            </div>
+        </div>
+
+        <!-- 方案 2 -->
+        <div class="result-box">
+            <div class="result-title">方案 2 (B轴 顺时针侧)</div>
+            <div class="result-val">
+                A: <span id="resA2">---</span>°<br>
+                B: <span id="resB2">---</span>°
+            </div>
+            <div style="font-size:0.8em; color:#666; margin-top:5px;">
+                逻辑: A = A0 - 90 - HA, B = 270 + Dec
+            </div>
+        </div>
+    </div>
+
+<script>
+    // 初始化时间
+    setNow();
+
+    function setNow() {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('obsTime').value = now.toISOString().slice(0,16);
+    }
+
+    function getLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                document.getElementById('lon').value = position.coords.longitude.toFixed(4);
+                document.getElementById('lat').value = position.coords.latitude.toFixed(4);
+            }, function(error) {
+                alert("无法获取定位，请手动输入。");
+            });
+        } else {
+            alert("浏览器不支持地理定位。");
+        }
+    }
+
+    // 辅助函数：度分秒转小数度
+    function dmsToDeg(str) {
+        let parts = str.split(/[:\s]/).map(parseFloat);
+        let d = parts[0] || 0;
+        let m = parts[1] || 0;
+        let s = parts[2] || 0;
+        let sign = d < 0 || str.trim().startsWith('-') ? -1 : 1;
+        return (Math.abs(d) + m/60 + s/3600) * sign;
+    }
+    
+    // 辅助函数：时分秒转小数时
+    function hmsToHrs(str) {
+        let parts = str.split(/[:\s]/).map(parseFloat);
+        return (parts[0] || 0) + (parts[1] || 0)/60 + (parts[2] || 0)/3600;
+    }
+
+    // 辅助函数：正模运算 (处理负数)
+    function mod(n, m) {
+        return ((n % m) + m) % m;
+    }
+
+    // 小数度转度分
+    function degToDm(deg) {
+        let d = Math.floor(deg);
+        let m = Math.round((deg - d) * 60);
+        return `${d}° ${m}'`;
+    }
+
+    // 小数时转时分秒
+    function hrsToHms(hrs) {
+        let h = Math.floor(hrs);
+        let m = Math.floor((hrs - h) * 60);
+        let s = Math.round(((hrs - h) * 60 - m) * 60);
+        return `${h}h ${m}m ${s}s`;
+    }
+
+    // 计算恒星时 (Greenwich Sidereal Time)
+    function getGST(date) {
+        // 基于 J2000 计算
+        // JD
+        let time = date.getTime();
+        let jd = (time / 86400000) + 2440587.5;
+        let d = jd - 2451545.0;
+        let gm0 = 18.697374558 + 24.06570982441908 * d;
+        return mod(gm0, 24);
+    }
+
+    function calculate() {
+        // 1. 获取输入
+        let lon = parseFloat(document.getElementById('lon').value);
+        let a0 = parseFloat(document.getElementById('a0').value);
+        let raStr = document.getElementById('ra').value;
+        let decStr = document.getElementById('dec').value;
+        let timeStr = document.getElementById('obsTime').value;
+
+        if (isNaN(lon) || isNaN(a0) || !timeStr) {
+            alert("请填写经度、A0刻度和时间。");
+            return;
+        }
+
+        // 2. 解析坐标
+        let raHrs = hmsToHrs(raStr); // 赤经 (小时)
+        let decDeg = dmsToDeg(decStr); // 赤纬 (度)
+        let obsDate = new Date(timeStr);
+
+        // 3. 计算 LST (地方恒星时)
+        let gst = getGST(obsDate);
+        let lstHrs = mod(gst + lon / 15.0, 24);
+
+        // 4. 计算 HA (时角)
+        // HA = LST - RA
+        let haHrs = lstHrs - raHrs;
+        // 规范化 HA 到 -12 ~ +12 用于显示，0~360 用于计算
+        let haDeg = mod(haHrs * 15, 360); 
+
+        // 5. 计算 A, B 刻度
+        // 方案 1: B逆时针侧 (A = A0 + 90 - HA, B = 90 - Dec)
+        // 注意：HA 增加代表向西。A刻度减小代表向东（顺时针），A刻度增加代表向西（逆时针）。
+        // 公式推导结果： A = A0 + 90 - HA
+        let a1 = mod(a0 + 90 - haDeg, 360);
+        let b1 = mod(90 - decDeg, 360);
+
+        // 方案 2: B顺时针侧 (A = A0 - 90 - HA, B = 270 + Dec)
+        let a2 = mod(a0 - 90 - haDeg, 360);
+        let b2 = mod(270 + decDeg, 360);
+
+        // 6. 显示结果
+        document.getElementById('results').style.display = 'block';
+        document.getElementById('dispLST').innerText = hrsToHms(lstHrs);
+        document.getElementById('dispHA').innerText = haDeg.toFixed(2) + "°";
+        
+        document.getElementById('resA1').innerText = a1.toFixed(2);
+        document.getElementById('resB1').innerText = b1.toFixed(2);
+        
+        document.getElementById('resA2').innerText = a2.toFixed(2);
+        document.getElementById('resB2').innerText = b2.toFixed(2);
+    }
+</script>
+
+</body>
+</html>
