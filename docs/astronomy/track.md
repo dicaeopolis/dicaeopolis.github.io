@@ -31,7 +31,7 @@
 引入地方恒星时 (Local Sidereal Time, $LST$)，它定义为春分点经过本地子午线的时刻。则时角计算公式为：
 
 $$
-HA = 360 \degree + LST - \alpha_{star}\mod{360 \degree}
+HA = 360^\circ + LST - \alpha_{star}\mod{360^\circ}
 $$
 
 其实就是一个简单的相对位置计算。而我们的目标转化为：如何通过旋转云台A和B，将相机光轴矢量对准 $(\delta, HA)$。
@@ -48,12 +48,21 @@ $$
 
 在云台A看来，相机的“本地时角”是 $90^\circ$（正西）。换句话说其实就是，先给云台A转个90度，就能够让它变成一个标准的德式赤道仪。
 
-设云台A的向西旋转量为 $\Delta A$，则有相位叠加关系：
-$$\text{最终指向} = \text{云台A的旋转} + \text{相机相对A的偏移}$$
-$$HA = \Delta A + 90^\circ$$
+设云台A的向西旋转量为 $\Delta A$ ，则有相位叠加关系：
+
+$$
+\text{最终指向} = \text{云台A的旋转} + \text{相机相对A的偏移}
+$$
+
+$$
+HA = \Delta A + 90^\circ
+$$
 
 解得云台A需要的旋转量：
-$$\Delta A = HA - 90^\circ$$
+
+$$
+\Delta A = HA - 90^\circ
+$$
 
 也就是：
 
@@ -65,6 +74,7 @@ B = 90^\circ - \delta
 $$
 
 第二组解，让 A, B 各转 180 度：
+
 $$
 \begin{cases}
 A = A_0 + (HA + 90^\circ) \\

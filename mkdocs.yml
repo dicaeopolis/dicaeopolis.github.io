@@ -149,12 +149,12 @@ extra_javascript:
 nav:
   - 天文摄影理论和实践:
     - 'astronomy/index.md'
+    - 关于（半）自动寻星与拍摄的一点思路: 'astronomy/GOTO.md'
+    - 一种简易的半自动寻星法: 'astronomy/track.md'
     - 深空影集: 'astronomy/gallery.md'
     - 看不见北极星怎么办: 'astronomy/polar.md'
     - 方位调节: 'astronomy/方位调节.md'
     - 纬度调节: 'astronomy/纬度调节.md'
-    - 关于（半）自动寻星与拍摄的一点思路: 'astronomy/GOTO.md'
-    - 一种简易的半自动寻星法: 'astronomy/track.md'
   - 校内课程知识:
     - 'campus-sources/index.md'
     - 《计算机组成与设计》部分历年题目题解: 'campus-sources/SDC-exams.md'
