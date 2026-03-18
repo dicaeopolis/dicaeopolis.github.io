@@ -199,6 +199,7 @@ nav:
   - 配置和杂谈笔记:
     - 'misc/index.md'
     - 功能测试页面: 'misc/test.md'
+    - 一条Web对话风格约束提示词: 'misc/prompt.md'
   - 传统算法与性能:
     - 'algorithm/index.md'
     - STL的一些性能测试: 'algorithm/benchmark-on-stl.md'
