@@ -33,4 +33,4 @@ short_title: 欢迎
 
 ## 友链
 
-![https://blog.scarletborder.cn)](d6ce6ee51de113aeca70012a1aecbb3c.png)
+[![blog.scarletborder.cn](d6ce6ee51de113aeca70012a1aecbb3c.png)](https://blog.scarletborder.cn/)
